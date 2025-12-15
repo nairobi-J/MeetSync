@@ -9,11 +9,7 @@
 <%
      Calendar cal = Calendar.getInstance();
      int day = 1;
-     int year;
-     String yearValue = request.getParameter("yearValue");
-     if(yearValue != null) year = Integer.parseInt(yearValue);
-     else year = cal.get(Calendar.YEAR);
-     
+     int year = cal.get(Calendar.YEAR);
      int month = cal.get(Calendar.MONTH);
      /* cal.set(year,month, 1);
      int firstDayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1;
@@ -32,56 +28,28 @@
          month = Integer.parseInt(monthParam);
          
      }
-     yearValue = request.getParameter("yearValue");
-     if (yearValue != null) {
-         year = Integer.parseInt(yearValue);
-     }
-     String yearAction = request.getParameter("yearAction");
-     if ("add".equals(yearAction)) {
-         year++;
-     } else if ("sub".equals(yearAction)) {
-         year--;
-     }
-
-      
      cal.set(year,month, 1);
-     
      int firstDayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1;
      int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-     
 
      //cal.set(year + 1, month - 1, 1);
      
 %>
-<form method="post" style="display:flex; gap:10px;">
-    <button type="submit" name="yearAction" value="sub">-</button>
-
-    <strong><%= year %></strong>
-
-    <button type="submit" name="yearAction" value="add">+</button>
-
-    <!-- persist state -->
-    <input type="hidden" name="yearValue" value="<%= year %>">
-    <input type="hidden" name="month" value="<%= month %>">
-</form>
-
-
 <form method="post" style="display:flex; gap:10px;">
 <%
     for (int i = 0; i < 12; i++) {
 %>
     <button type="submit" name="month" value="<%= i %>">
         <%= months[i] %>
-      
+        <%cal.set(year,i, 1); %>
     </button>
-    <input type="hidden" name="yearValue" value="<%= year %>">
    
 <%
     }
 %>
 </form>
 
-<%= months[month] %>
+<%= month %>
 <table>
       <tr>
           <th>Sun</th>
