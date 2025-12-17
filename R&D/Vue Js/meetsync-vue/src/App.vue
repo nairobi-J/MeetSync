@@ -1,39 +1,38 @@
-<script setup>
-import {ref} from 'vue'
-const name = ref('right')
-const year = ref('2025');
+<script setup >
+import HelloWorld from './components/HelloWorld.vue'
+import Calendar from './components/Calendar.vue';
 </script>
 
 <template>
-  <header>
-   <span>{{emoji}}</span>
-   </header>
-   <main>
-    <h1> Hello, {{name}} </h1>
-    <p> I am about to learn <a href="https://vuejs.org/" target="_blank">Vue.js</a>!</p>
-    </main>
-
-    <footer>
-    <p>&copy;{{year}} </p>
-    </footer>
+  <div class="app-container">
+    <header>
+      <h1>Scheduling Calendar</h1>
+      <p>Drag to select dates and times</p>
+    </header>
+    
+    <Calendar/>
+  </div>
 </template>
 
 <style scoped>
-header span{
-  font-size:3rem;
-}
-main h1{
-  display:block;
-}
-main a{
-  color: rgba(13, 3, 56, 1)
+.app-container {
+  min-height: 100vh;
+  padding: 2rem;
 }
 
-footer{
-  position: fixed;
-  bottom: 0;
-  left: 48%;
-  padding-bottom:20px;
+header {
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+p {
+  color: #7f8c8d;
+  font-size: 1rem;
+}
 </style>
