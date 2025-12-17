@@ -2,135 +2,217 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Time Slot Picker</title>
+<title>Event Calendar</title>
 
 <style>
 body {
     font-family: Arial, sans-serif;
+    padding: 20px;
 }
 
 .controls {
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
 .calendar {
     display: grid;
     grid-template-columns: 70px 1fr;
-    width: 500px;
+    width: 520px;
     border: 1px solid #ccc;
-}
-
-.hours {
-    background: #f5f5f5;
+    user-select: none;
 }
 
 .hour {
     height: 60px;
     border-bottom: 1px solid #ddd;
+    font-size: 12px;
     text-align: right;
     padding-right: 6px;
-    font-size: 12px;
     line-height: 60px;
+    background: #f5f5f5;
 }
 
 .timeline {
     position: relative;
-    height: 1440px; /* 24h * 60min */
+    height: 1440px;
     background: white;
+    cursor: crosshair;
 }
 
-.slot {
+.selection {
     position: absolute;
     left: 10px;
     right: 10px;
-    border: 1px solid #1a73e8;
-    background: #e3f2fd;
+    background: rgba(66,133,244,0.5);
     border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    padding: 2px 4px;
+    pointer-events: none;
 }
 
-.slot.selected {
-    background: #1a73e8;
+.event {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    background: #34a853;
     color: white;
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 12px;
+}
+
+/* MODAL */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 15px;
+    border-radius: 6px;
+    width: 300px;
 }
 </style>
-
-<script>
-let selected = null;
-
-function buildSlots() {
-    const duration = parseInt(document.getElementById("duration").value);
-    const timeline = document.getElementById("timeline");
-    timeline.innerHTML = "";
-
-    for (let min = 0; min < 1440; min += duration) {
-        const h = Math.floor(min / 60);
-        const m = min % 60;
-
-        const slot = document.createElement("div");
-        slot.className = "slot";
-        slot.style.top = min + "px";
-        slot.style.height = duration + "px";
-        slot.dataset.time =
-            String(h).padStart(2,'0') + ":" +
-            String(m).padStart(2,'0');
-
-        slot.innerHTML = slot.dataset.time;
-
-        slot.onclick = function () {
-            if (selected) selected.classList.remove("selected");
-            this.classList.add("selected");
-            selected = this;
-            document.getElementById("selectedTime").innerText =
-                this.dataset.time + " (" + duration + " min)";
-        };
-
-        timeline.appendChild(slot);
-    }
-}
-</script>
-
 </head>
 <body>
 
-<h2>Time Slot Picker</h2>
+<h2>Event Calendar</h2>
 
 <div class="controls">
-    Slot Duration:
-    <select id="duration" onchange="buildSlots()">
-        <option value="15">15 minutes</option>
-        <option value="20">20 minutes</option>
-        <option value="25">25 minutes</option>
-        <option value="30" selected>30 minutes</option>
-        <option value="60">1 hour</option>
-    </select>
+    Start: <input type="time" id="startTime">
+    End: <input type="time" id="endTime">
+    <button onclick="openModal()">Create Event</button>
 </div>
 
 <div class="calendar">
 
-    <!-- HOURS (JSP LOOP) -->
-    <div class="hours">
+    <div>
         <% for (int h = 0; h < 24; h++) { %>
-            <div class="hour">
-                <%= String.format("%02d:00", h) %>
-            </div>
+            <div class="hour"><%= String.format("%02d:00", h) %></div>
         <% } %>
     </div>
 
-    <!-- TIME SLOTS -->
     <div class="timeline" id="timeline"></div>
-
 </div>
 
-<p>
-    Selected Slot:
-    <strong id="selectedTime">None</strong>
-</p>
+<!-- MODAL -->
+<div class="modal" id="eventModal">
+    <div class="modal-content">
+        <h4>Event Name</h4>
+        <input type="text" id="eventName" style="width:100%">
+        <br><br>
+        <button onclick="saveEvent()">Save</button>
+        <button onclick="closeModal()">Cancel</button>
+    </div>
+</div>
 
 <script>
-buildSlots(); // initial render
+const timeline = document.getElementById("timeline");
+
+let selection = null;
+let isDragging = false;
+let startMin = 0;
+let selectedStart = null;
+let selectedEnd = null;
+
+let events = []; // {start, end, name}
+
+function timeToMinutes(t) {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+}
+
+function minutesToTime(m) {
+    return String(Math.floor(m / 60)).padStart(2,'0') + ":" +
+           String(m % 60).padStart(2,'0');
+}
+
+function updateInputs(start, end) {
+    startTime.value = minutesToTime(start);
+    endTime.value = minutesToTime(end);
+}
+
+function drawSelection(start, end) {
+    if (!selection) {
+        selection = document.createElement("div");
+        selection.className = "selection";
+        timeline.appendChild(selection);
+    }
+    selection.style.top = start + "px";
+    selection.style.height = (end - start) + "px";
+}
+
+timeline.addEventListener("mousedown", e => {
+    isDragging = true;
+    startMin = Math.floor(e.offsetY);
+});
+
+timeline.addEventListener("mousemove", e => {
+    if (!isDragging) return;
+
+    const current = Math.floor(e.offsetY);
+    selectedStart = Math.min(startMin, current);
+    selectedEnd = Math.max(startMin, current);
+
+    drawSelection(selectedStart, selectedEnd);
+    updateInputs(selectedStart, selectedEnd);
+});
+
+document.addEventListener("mouseup", () => {
+    isDragging = false;
+});
+
+
+
+function openModal() {
+    if (selectedStart == null || selectedEnd == null || selectedEnd <= selectedStart) {
+        alert("Select a valid time range first");
+        return;
+    }
+
+    if (hasConflict(selectedStart, selectedEnd)) {
+    	 if (selection) selection.remove();
+    	    selection = null;
+    	    selectedStart = selectedEnd = null;
+        alert("Time conflicts with existing event");
+        return;
+    }
+
+    document.getElementById("eventModal").style.display = "flex";
+}
+
+function closeModal() {
+    document.getElementById("eventModal").style.display = "none";
+}
+
+function saveEvent() {
+    const name = document.getElementById("eventName").value.trim();
+    if (!name) return;
+
+    events.push({ start: selectedStart, end: selectedEnd, name });
+
+    const ev = document.createElement("div");
+    ev.className = "event";
+    ev.style.top = selectedStart + "px";
+    ev.style.height = (selectedEnd - selectedStart) + "px";
+    ev.innerText = name;
+    timeline.appendChild(ev);
+
+    
+    if (selection) selection.remove();
+    selection = null;
+    selectedStart = selectedEnd = null;
+    eventName.value = "";
+    closeModal();
+}
+
+function hasConflict(start, end) {
+	
+    return events.some(ev => !(end <= ev.start || start >= ev.end));
+}
 </script>
 
 </body>
