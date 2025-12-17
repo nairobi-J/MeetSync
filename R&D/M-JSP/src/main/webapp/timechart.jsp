@@ -133,6 +133,7 @@ function minutesToTime(m) {
 function updateInputs(start, end) {
     startTime.value = minutesToTime(start);
     endTime.value = minutesToTime(end);
+   
 }
 
 function drawSelection(start, end) {
@@ -163,6 +164,7 @@ timeline.addEventListener("mousemove", e => {
 
 document.addEventListener("mouseup", () => {
     isDragging = false;
+    
 });
 
 
@@ -174,9 +176,10 @@ function openModal() {
     }
 
     if (hasConflict(selectedStart, selectedEnd)) {
-    	 if (selection) selection.remove();
-    	    selection = null;
-    	    selectedStart = selectedEnd = null;
+    	 
+    	if (selection) selection.remove();
+	    selection = null;
+	    selectedStart = selectedEnd = null;
         alert("Time conflicts with existing event");
         return;
     }
@@ -185,11 +188,14 @@ function openModal() {
 }
 
 function closeModal() {
+	
     document.getElementById("eventModal").style.display = "none";
 }
 
 function saveEvent() {
+	
     const name = document.getElementById("eventName").value.trim();
+    
     if (!name) return;
 
     events.push({ start: selectedStart, end: selectedEnd, name });
@@ -200,13 +206,15 @@ function saveEvent() {
     ev.style.height = (selectedEnd - selectedStart) + "px";
     ev.innerText = name;
     timeline.appendChild(ev);
-
+    
     
     if (selection) selection.remove();
     selection = null;
+    
     selectedStart = selectedEnd = null;
     eventName.value = "";
     closeModal();
+    updateInputs(start, end);
 }
 
 function hasConflict(start, end) {
