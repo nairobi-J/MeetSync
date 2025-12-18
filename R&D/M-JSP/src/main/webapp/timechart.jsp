@@ -84,6 +84,7 @@ body {
 <div class="controls">
     Start: <input type="time" id="startTime">
     End: <input type="time" id="endTime">
+    
     <button onclick="openModal()">Create Event</button>
 </div>
 
@@ -188,7 +189,10 @@ function openModal() {
 }
 
 function closeModal() {
+	if (selection) selection.remove();
 	
+    selection = null;
+    updateInputs(0.00, 0.00)
     document.getElementById("eventModal").style.display = "none";
 }
 
@@ -211,15 +215,28 @@ function saveEvent() {
     if (selection) selection.remove();
     selection = null;
     
-    selectedStart = selectedEnd = null;
+    //selectedStart = selectedEnd = null;
     eventName.value = "";
     closeModal();
-    updateInputs(start, end);
+    updateInputs(selectedStart, selectedEnd);
 }
 
 function hasConflict(start, end) {
 	
     return events.some(ev => !(end <= ev.start || start >= ev.end));
+}
+const startInput = document.getElementById("startTime");
+const endInput = document.getElementById("endTime");
+startInput.addEventListener("input", drawFromInputs);
+endInput.addEventListener("input", drawFromInputs);
+function drawFromInputs(){
+	if(!startInput.value && !endInput.value) return;
+	const start = timeToMinutes(startInput.value);
+	const end = timeToMinutes(endInput.value);
+	if(end <= start) return;
+	selectedStart = start;
+    selectedEnd   = end;
+	drawSelection(start, end);
 }
 </script>
 
