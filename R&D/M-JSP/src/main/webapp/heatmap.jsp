@@ -40,8 +40,8 @@
     /* green heatmap */
     background-color: hsl(
         140,               /* green hue */
-        60%,               /* saturation */
-        calc(100% - var(--heat) * 12%)
+        90%,               /* saturation */
+        calc(100% - var(--heat) * 10%)
     );
 
     transition: background-color 0.15s ease;
