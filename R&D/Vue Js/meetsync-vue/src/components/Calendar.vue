@@ -1,12 +1,19 @@
-
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import EventCard from './EventCard.vue'
 
 const viewMode = ref('monthly') // 'daily' | 'weekly' | 'monthly' | 'yearly'
 const currentDate = ref(new Date())
 const selectedDates = ref(new Set())
+const events =ref([])
 const isDragging = ref(false)
 const dragStartDate = ref(null)
+const isInteractingWithEvent = ref(false) // Prevents dragging when clicking existing event
+
+
+const isCardOpen = ref(false)
+const editingEventId = ref(null) // ID of event being edited (null if new)
+const currentCardTitle = ref('')
 
 const monthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -29,6 +36,69 @@ const calendarTitle = computed(() => {
     return `${currentYear.value}`
   }
 })
+
+
+// Check if a slot is currently in the saved events
+const getEventBySlot = (slot) => {
+  return events.value.find(event => event.slots.includes(slot))
+}
+
+const isDateSelected = (dateString) => {
+  // Return true if currently dragging (temp selection) OR if saved in an event
+  if (selectedDates.value.has(dateString)) return true
+  
+  const savedEvent = getEventBySlot(dateString)
+  return !!savedEvent
+}
+
+const getSlotTitle = (dateString) => {
+  // Helper to show title inside the slot
+  const event = getEventBySlot(dateString)
+  return event ? event.title : ''
+}
+
+
+// --- Card / Event Management ---
+
+const openCreateCard = () => {
+  editingEventId.value = null
+  currentCardTitle.value = ''
+  isCardOpen.value = true
+}
+
+const openEditCard = (event) => {
+  editingEventId.value = event.id
+  currentCardTitle.value = event.title
+  isCardOpen.value = true
+}
+
+const saveEvent = (title) => {
+  if (editingEventId.value) {
+    // Update existing
+    const event = events.value.find(e => e.id === editingEventId.value)
+    if (event) {
+      event.title = title
+    }
+  } else {
+    // Create new
+    events.value.push({
+      id: Date.now(),
+      title: title,
+      slots: Array.from(selectedDates.value)
+    })
+    selectedDates.value.clear() // Clear temp selection as it's now saved
+  }
+  isCardOpen.value = false
+}
+
+const deleteEvent = () => {
+  if (editingEventId.value) {
+    events.value = events.value.filter(e => e.id !== editingEventId.value)
+  }
+  isCardOpen.value = false
+  selectedDates.value.clear()
+}
+
 
 const getDaysInMonth = (month, year) => {
   return new Date(year, month + 1, 0).getDate()
@@ -127,27 +197,51 @@ const toggleDateSelection = (dateString) => {
 }
 
 const handleMouseDown = (dateString) => {
+
+// Check if we clicked an existing event
+  const existingEvent = getEventBySlot(dateString)
+  
+  if (existingEvent && viewMode.value === 'daily') {
+    // We are clicking an existing event to edit it
+    isInteractingWithEvent.value = true
+    openEditCard(existingEvent)
+    return
+  }
+
   isDragging.value = true
+  isInteractingWithEvent.value = false
   dragStartDate.value = dateString
+
+  selectedDates.value.clear()
   toggleDateSelection(dateString)
 }
 
 const handleMouseEnter = (dateString) => {
-  if (isDragging.value) {
+  if (isDragging.value && !isInteractingWithEvent.value) {
     toggleDateSelection(dateString)
   }
 }
 
 const handleMouseUp = () => {
-  if (!isDragging.value) return
-  isDragging.value = false
-  dragStartDate.value = null
-  console.log('Selected Dates:', [...selectedDates.value].sort())
+
+  if (isInteractingWithEvent.value) {
+    isInteractingWithEvent.value = false
+    return
+  }
+
+  if (isDragging.value) {
+    isDragging.value = false
+    dragStartDate.value = null
+    console.log('Selected Dates:', [...selectedDates.value].sort())
+
+    // Trigger Card ONLY in Daily view and if we have selections
+    if (viewMode.value === 'daily' && selectedDates.value.size > 0) {
+      openCreateCard()
+    }
+  }
 }
 
-const isDateSelected = (dateString) => {
-  return selectedDates.value.has(dateString)
-}
+
 
 const previousPeriod = () => {
   if (viewMode.value === 'daily') {
@@ -278,14 +372,13 @@ onUnmounted(() => {
       </div>
     </div>
 
+    <!-- Daily View (MODIFIED for Events) -->
     <div v-else-if="viewMode === 'daily'" class="calendar-grid daily">
       <div class="daily-header">
         <h3>{{ currentDate.toLocaleDateString('en-US', { weekday: 'long' }) }}</h3>
       </div>
       <div class="daily-body">
-        <div
-          v-for="time in timeSlots"
-          :key="time"
+        <div v-for="time in timeSlots" :key="time"
           :class="[
             'time-slot-daily',
             { 'selected': isDateSelected(`${currentDate.toISOString().split('T')[0]}T${time}`) }
@@ -294,6 +387,10 @@ onUnmounted(() => {
           @mouseenter="handleMouseEnter(`${currentDate.toISOString().split('T')[0]}T${time}`)"
         >
           <span class="time-label">{{ time }}</span>
+          <!-- Display Title if Booked -->
+          <span class="event-title">
+             {{ getSlotTitle(`${currentDate.toISOString().split('T')[0]}T${time}`) }}
+          </span>
         </div>
       </div>
     </div>
@@ -317,6 +414,16 @@ onUnmounted(() => {
       <p><strong>Selected:</strong> {{ selectedDates.size }} date(s)</p>
       <small>Check console for detailed selection</small>
     </div>
+
+  <!-- The Popup Card Component -->
+    <EventCard 
+      :is-open="isCardOpen"
+      :initial-title="currentCardTitle"
+      :is-edit-mode="!!editingEventId"
+      @close="isCardOpen = false"
+      @save="saveEvent"
+      @delete="deleteEvent"
+    />
   </div>
 </template>
 
