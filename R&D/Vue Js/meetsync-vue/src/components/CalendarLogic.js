@@ -37,6 +37,7 @@ export function useCalendarLogic() {
     }
   })
 
+
   const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate()
   const getFirstDayOfMonth = (month, year) => new Date(year, month, 1).getDay()
 
@@ -123,6 +124,8 @@ export function useCalendarLogic() {
     })
   })
 
+  
+
   // --- METHODS ---
   const getEventBySlot = (slot) => events.value.find(event => event.slots.includes(slot))
 
@@ -167,11 +170,26 @@ export function useCalendarLogic() {
     selectedDates.value.clear()
   }
 
-  // Navigation
+  //Navigation
   const toggleDateSelection = (dateString) => {
     if (selectedDates.value.has(dateString)) selectedDates.value.delete(dateString)
     else selectedDates.value.add(dateString)
   }
+
+  // const toggleDateSelection = (dateString) => {
+  //   // 1. Create a clone of the current Set
+  //   const newSet = new Set(selectedDates.value)
+    
+  //   // 2. Modify the clone
+  //   if (newSet.has(dateString)) {
+  //     newSet.delete(dateString)
+  //   } else {
+  //     newSet.add(dateString)
+  //   }
+    
+  //   // 3. Reassign it back (This forces Vue to re-render the color!)
+  //   selectedDates.value = newSet
+  // }
 
   const handleMouseDown = (dateString) => {
     const existingEvent = getEventBySlot(dateString)
@@ -206,7 +224,7 @@ export function useCalendarLogic() {
       console.log('Selected Slots:', [...selectedDates.value].sort())
 
       
-      if (viewMode.value === 'daily' && selectedDates.value.size > 0) openCreateCard()
+      if ((viewMode.value === 'daily' || viewMode.value === 'weekly') && selectedDates.value.size > 0) openCreateCard()
     }
   }
 

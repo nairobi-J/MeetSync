@@ -9,6 +9,18 @@ const {
   previousPeriod, nextPeriod, goToToday, clearSelection, jumpToDate,
   isCardOpen, currentCardTitle, editingEventId, saveEvent, deleteEvent
 } = useCalendarLogic()
+
+const formatDateToLocalYMD = (date) => {
+  if (!date) return ''
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  const result = `${y}-${m}-${d}`
+  
+   console.log('Generating Date:', result) 
+  
+  return result
+}
 </script>
 
 
@@ -75,7 +87,11 @@ const {
             ]"
             @mousedown="handleMouseDown(`${day.dateString}T${time}`)"
             @mouseenter="handleMouseEnter(`${day.dateString}T${time}`)"
-          />
+          >
+          <span class="slot-event-title">
+            {{ getSlotTitle(`${day.dateString}T${time}`) }}
+          </span>
+          </div>
         </div>
       </div>
     </div>
@@ -89,15 +105,18 @@ const {
         <div v-for="time in timeSlots" :key="time"
           :class="[
             'time-slot-daily',
-            { 'selected': isDateSelected(`${currentDate.toISOString().split('T')[0]}T${time}`) }
+            { 'selected': isDateSelected(`${formatDateToLocalYMD(currentDate)}T${time}`) }
           ]"
-          @mousedown="handleMouseDown(`${currentDate.toISOString().split('T')[0]}T${time}`)"
-          @mouseenter="handleMouseEnter(`${currentDate.toISOString().split('T')[0]}T${time}`)"
+          @mousedown="handleMouseDown(`${formatDateToLocalYMD(currentDate)}T${time}`)"
+          @mouseenter="handleMouseEnter(`${formatDateToLocalYMD(currentDate)}T${time}`)"
         >
           <span class="time-label">{{ time }}</span>
           <!-- Display Title if Booked -->
-          <span class="event-title">
-             {{ getSlotTitle(`${currentDate.toISOString().split('T')[0]}T${time}`) }}
+          <span 
+            v-if="getSlotTitle(`${formatDateToLocalYMD(currentDate)}T${time}`)"
+            class="slot-event-title"
+          >
+             {{ getSlotTitle(`${formatDateToLocalYMD(currentDate)}T${time}`) }}
           </span>
         </div>
       </div>

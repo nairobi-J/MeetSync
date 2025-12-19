@@ -221,6 +221,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   min-height: 40px;
+  position: relative;
 }
 
 .time-slot:hover {
@@ -265,6 +266,7 @@
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .time-slot-daily:hover {
@@ -272,12 +274,37 @@
   border-color: #3498db;
 }
 
+
 .time-slot-daily.selected {
-  background: #3498db;
-  color: white;
-  border-color: #3498db;
+  background-color: #3b82f6 !important;
+  color: white !important;              
+  border-color: #2563eb !important;
 }
 
+
+.time-slot-daily .slot-event-title {
+  position: static; 
+  color: white;   
+  font-size: 0.85rem;
+  font-weight: 600;
+  pointer-events: none;  
+  flex-grow: 1;
+  text-align: center;
+}
+
+
+
+.slot-event-title {
+  display: block;
+  font-size: 10px;
+  line-height: 1;
+  color: white;       
+  overflow: hidden;   
+  white-space: nowrap; 
+  text-overflow: ellipsis; 
+  padding: 2px;
+  pointer-events: none; 
+}
 .calendar-grid.yearly {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
