@@ -48,7 +48,7 @@
 }
 
 .cell.temp {
-    outline: 2px solid rgba(66,133,244,0.8);
+    background: #34a853;
 }
 
 
@@ -90,17 +90,17 @@ document.addEventListener("mouseup", () => isMouseDown = false);
 
 document.querySelectorAll(".cell").forEach((cell, index) => {
 
-    //cell.dataset.key = index;
+   
 
-    // click select
+    // click select or delete select
     cell.addEventListener("click", () => {
-        cell.classList.add("temp");
+        cell.classList.toggle("temp");
     });
-
-    // drag select
+   
+    // drag select or drag delete select
     cell.addEventListener("mouseenter", () => {
         if (isMouseDown) {
-            cell.classList.add("temp");
+            cell.classList.toggle("temp");
         }
     });
 });
