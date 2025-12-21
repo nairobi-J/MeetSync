@@ -176,21 +176,6 @@ export function useCalendarLogic() {
     else selectedDates.value.add(dateString)
   }
 
-  // const toggleDateSelection = (dateString) => {
-  //   // 1. Create a clone of the current Set
-  //   const newSet = new Set(selectedDates.value)
-    
-  //   // 2. Modify the clone
-  //   if (newSet.has(dateString)) {
-  //     newSet.delete(dateString)
-  //   } else {
-  //     newSet.add(dateString)
-  //   }
-    
-  //   // 3. Reassign it back (This forces Vue to re-render the color!)
-  //   selectedDates.value = newSet
-  // }
-
   const handleMouseDown = (dateString) => {
     const existingEvent = getEventBySlot(dateString)
     if (existingEvent) {
@@ -245,7 +230,6 @@ export function useCalendarLogic() {
   }
 
   const goToToday = () => currentDate.value = new Date()
-  const clearSelection = () => selectedDates.value.clear()
   
   const jumpToDate = (dateString) => {
     const [y, m, d] = dateString.split('-').map(Number)
@@ -261,7 +245,7 @@ export function useCalendarLogic() {
     viewMode, currentDate, selectedDates, events, calendarTitle, monthNames, dayNames,
     calendarDays, weekDays, timeSlots, yearMonths,
     isDateSelected, getSlotTitle, handleMouseDown, handleMouseEnter,
-    previousPeriod, nextPeriod, goToToday, clearSelection, jumpToDate,
+    previousPeriod, nextPeriod, goToToday, jumpToDate,
     isCardOpen, currentCardTitle, editingEventId, saveEvent, deleteEvent
   }
 
