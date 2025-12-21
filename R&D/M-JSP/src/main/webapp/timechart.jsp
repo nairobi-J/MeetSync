@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Event Calendar</title>
+<title>Event creation</title>
 
 <style>
 body {
