@@ -101,6 +101,6 @@ application-prod.properties
 spring-boot-devtools.properties
 
 # Environment variables
-.env
-.env.local
 /.metadata/
+config.bat
+node_modules

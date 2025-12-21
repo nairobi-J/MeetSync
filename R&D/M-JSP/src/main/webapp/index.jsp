@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Basic Year calendar</title>
+<title>Year Calender</title>
 <style>
 body {
     font-family: Arial, sans-serif;
@@ -96,6 +96,13 @@ display: block;
 </style>
 </head>
 <body>
+<script>
+function openHeatmap(year, month) {
+    window.location.href =
+        "heatmap.jsp?year=" + year + "&month=" + month;
+}
+</script>
+
 <%
 Map<String, String> bdHolidays = new HashMap<>();
 
@@ -181,7 +188,7 @@ for (int month = 0; month < 12; month++) {
     int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
 %>
 
-<div class="month-card">
+<div class="month-card" onclick="openHeatmap(<%= year %>, <%= month %>)"> 
     <div class="month-title"><%= months[month] %></div>
 
     <table>
