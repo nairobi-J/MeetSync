@@ -7,7 +7,6 @@ import Calendar from './components/Calendar.vue';
   <div class="app-container">
     <header>
       <h1>Scheduling Calendar</h1>
-      <p>Drag to select dates and times</p>
     </header>
     
     <Calendar/>
