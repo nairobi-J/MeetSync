@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Today's Events</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .nav-bar {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-bar a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-bar a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-bar a.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .add-event-btn {
+            margin-left: auto;
+            background: #4caf50 !important;
+            color: white !important;
+            font-weight: 600;
+        }
+
+        .add-event-btn:hover {
+            background: #45a049 !important;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .calendar-info {
+            color: #666;
+            font-size: 0.95em;
+            margin-top: 10px;
+        }
+
+        .event-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+        }
+
+        .event-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .event-details {
+            display: grid;
+            gap: 10px;
+        }
+
+        .event-detail-item {
+            display: flex;
+            align-items: center;
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .event-detail-item svg {
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .event-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+        }
+
+        .event-link:hover {
+            background: #764ba2;
+        }
+
+        .no-events {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .no-events svg {
+            margin-bottom: 20px;
+        }
+
+        .no-events h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .no-events p {
+            color: #666;
+        }
+
+        .error-message {
+            background: #fee;
+            border: 2px solid #f88;
+            color: #c00;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-top: 10px;
+            margin-right: 8px;
+        }
+
+        .all-day-badge {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-badge {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .date-display {
+            font-weight: 600;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+        <a th:href="@{/home}">🏠 Home</a>
+        <a th:href="@{/myevents-today}" class="active">📅 Today's Events</a>
+        <a th:href="@{/events/week}">📆 This Week</a>
+        <a th:href="@{/events/all}">📋 All Events</a>
+        <a th:href="@{/events/add}" class="add-event-btn">➕ Add Event</a>
+        <a th:href="@{/google-login}" class="add-event-btn">login</a>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>📅 Today's Events</h1>
+        <div class="calendar-info">
+            <strong>Calendar:</strong> <span th:text="${calendarSummary} ?: 'N/A'">Calendar</span><br>
+            <strong>Timezone:</strong> <span th:text="${timeZone} ?: 'N/A'">Timezone</span><br>
+            <strong>Total Events:</strong> <span th:text="${eventCount} ?: 0">0</span>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div th:if="${error}" class="error-message">
+        <strong>⚠️ Error:</strong> <span th:text="${error}">Error message</span>
+    </div>
+
+    <!-- Events List -->
+    <div th:if="${hasEvents}">
+        <div th:each="event : ${events}" class="event-card">
+            <!-- Event Title -->
+            <div class="event-title" th:text="${event.summary} ?: 'Untitled Event'">Event Title</div>
+
+            <div class="event-details">
+                <!-- Date/Time Information -->
+                <div class="event-detail-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>
+                            <!-- All-day event -->
+                            <span th:if="${event.start?.date != null}">
+                                All Day Event
+                            </span>
+                        <!-- Timed event -->
+                            <span th:if="${event.start?.dateTime != null}">
+                                <span th:text="${#temporals.format(event.start.dateTime, 'hh:mm a')}">Start Time</span>
+                                <span th:if="${event.end?.dateTime != null}">
+                                    - <span th:text="${#temporals.format(event.end.dateTime, 'hh:mm a')}">End Time</span>
+                                </span>
+                            </span>
+                        </span>
+                </div>
+
+                <!-- Description -->
+                <div class="event-detail-item"
+                     th:if="${event.description != null and !#strings.isEmpty(event.description)}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <span th:text="${event.description}">Description</span>
+                </div>
+
+                <!-- Organizer -->
+                <div class="event-detail-item" th:if="${event.organizer?.email != null}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span>
+                            <span th:text="${event.organizer.email}">Organizer</span>
+                        </span>
+                </div>
+
+                <!-- Location -->
+                <div class="event-detail-item" th:if="${event.location != null}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <span th:text="${event.location}">Location</span>
+                </div>
+            </div>
+
+            <!-- Badges -->
+            <div style="margin-top: 15px;">
+                    <span th:if="${event.start?.date != null}" class="badge all-day-badge">
+                        All Day Event
+                    </span>
+                <span th:if="${event.transparency == 'transparent'}" class="badge">
+                        Free Time
+                    </span>
+                <span th:if="${event.status == 'confirmed'}" class="badge status-badge">
+                        Confirmed
+                    </span>
+                <span th:if="${event.organizer?.self}" class="badge">
+                        Organizer
+                    </span>
+            </div>
+
+            <!-- View in Google Calendar Link -->
+            <a th:if="${event.htmlLink}"
+               th:href="${event.htmlLink}"
+               target="_blank"
+               class="event-link">
+                View in Google Calendar →
+            </a>
+        </div>
+    </div>
+
+    <!-- No Events State -->
+    <div th:unless="${hasEvents}" class="no-events">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <h2>No Events Today</h2>
+        <p>You have a free day! Enjoy your time.</p>
+    </div>
+</div>
+</body>
+</html>

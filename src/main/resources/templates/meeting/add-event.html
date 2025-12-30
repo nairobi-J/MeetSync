@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Event</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .nav-bar {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-bar a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-bar a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-bar a.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .form-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .required {
+            color: #f44336;
+            margin-left: 4px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="time"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .time-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-message {
+            background: #fee;
+            border: 2px solid #f88;
+            color: #c00;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .helper-text {
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        #timeFields {
+            display: none;
+        }
+
+        #timeFields.show {
+            display: block;
+        }
+    </style>
+    <script>
+        function toggleTimeFields() {
+            const allDayCheckbox = document.getElementById('allDay');
+            const timeFields = document.getElementById('timeFields');
+
+            if (allDayCheckbox.checked) {
+                timeFields.classList.remove('show');
+            } else {
+                timeFields.classList.add('show');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            toggleTimeFields();
+        });
+    </script>
+</head>
+<body>
+<div class="container">
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+        <a th:href="@{/home}">🏠 Home</a>
+        <a th:href="@{/myevents-today}">📅 Today's Events</a>
+        <a th:href="@{/events/week}">📆 This Week</a>
+        <a th:href="@{/events/all}">📋 All Events</a>
+    </div>
+
+    <div class="form-container">
+        <h1>➕ Add New Event</h1>
+        <p class="subtitle">Create a new event in your Google Calendar</p>
+
+        <!-- Success Message -->
+        <div th:if="${success}" class="success-message">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span th:text="${success}">Event created successfully!</span>
+        </div>
+
+        <!-- Error Message -->
+        <div th:if="${error}" class="error-message">
+            <strong>⚠️ Error:</strong> <span th:text="${error}">Error message</span>
+        </div>
+
+        <!-- Add Event Form -->
+        <form th:action="@{/events/add}" method="post" th:object="${eventForm}">
+
+            <!-- Event Title -->
+            <div class="form-group">
+                <label for="summary">
+                    Event Title
+                    <span class="required">*</span>
+                </label>
+                <input type="text"
+                       id="summary"
+                       th:field="*{summary}"
+                       placeholder="e.g., Team Meeting, Birthday Party"
+                       required>
+            </div>
+
+            <!-- Event Date -->
+            <div class="form-group">
+                <label for="date">
+                    Event Date
+                    <span class="required">*</span>
+                </label>
+                <input type="date"
+                       id="date"
+                       th:field="*{date}"
+                       required>
+            </div>
+
+            <!-- All Day Event -->
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox"
+                           id="allDay"
+                           th:field="*{allDay}"
+                           onchange="toggleTimeFields()">
+                    <label for="allDay" style="margin: 0;">All Day Event</label>
+                </div>
+            </div>
+
+            <!-- Time Fields (Hidden for all-day events) -->
+            <div id="timeFields">
+                <div class="form-group">
+                    <div class="time-group">
+                        <div>
+                            <label for="startTime">Start Time</label>
+                            <input type="time"
+                                   id="startTime"
+                                   th:field="*{startTime}">
+                        </div>
+                        <div>
+                            <label for="endTime">End Time</label>
+                            <input type="time"
+                                   id="endTime"
+                                   th:field="*{endTime}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location -->
+            <div class="form-group">
+                <label for="location">Location</label>
+                <input type="text"
+                       id="location"
+                       th:field="*{location}"
+                       placeholder="e.g., Conference Room A, 123 Main St">
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description"
+                          th:field="*{description}"
+                          placeholder="Add event details, agenda, or notes..."></textarea>
+                <div class="helper-text">Optional: Add any additional information about the event</div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">
+                    ✓ Create Event
+                </button>
+                <a th:href="@{/myevents-today}" class="btn btn-secondary">
+                    ✕ Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
