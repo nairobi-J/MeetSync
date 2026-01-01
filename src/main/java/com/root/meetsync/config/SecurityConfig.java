@@ -22,7 +22,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login/**").permitAll()
+                        .requestMatchers("/", "/login/**","/event/create").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
@@ -30,6 +30,7 @@ public class SecurityConfig {
                                 .authorizationRequestResolver(authorizationRequestResolver(this.clientRegistrationRepository))
                         )
                         .defaultSuccessUrl("/api/users/me", true)
+
                 );
 
         return http.build();
