@@ -105,6 +105,5 @@ spring-boot-devtools.properties
 .env.local
 /.metadata/
 
-/.src/main/resources/application.properties
-
-
+src/main/resources/application.properties
+target/
