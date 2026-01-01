@@ -5,6 +5,7 @@ import com.root.meetsync.dto.UserResponseDto;
 import com.root.meetsync.entity.User;
 import com.root.meetsync.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,10 +22,22 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponseDto> getCurrentUser(OAuth2AuthenticationToken authentication) {
-        User user = userService.processOAuthUser(authentication);
+    public ResponseEntity<UserResponseDto> getCurrentUser(Authentication authentication) {
+        String email;
 
-        // Convert Entity to DTO
+
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            email = (String) oauthToken.getPrincipal().getAttributes().get("email");
+        } else {
+            //handles manual login
+            email = authentication.getName();
+        }
+
+
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+
         UserResponseDto dto = new UserResponseDto();
         dto.setId(user.getId());
         dto.setName(user.getName());
