@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <h2>Event Availability for <span th:text="${user.name}">User</span></h2>
+
+    <form th:action="@{/availability/submit}" method="post">
+        <input type="hidden" name="userId" th:value="${user.id}" />
+
+        <p>Select your available slots:</p>
+        <div th:each="slot : ${slots}">
+            <input type="checkbox" name="slotIds" th:value="${slot.id}" />
+            <label th:text="${slot.startTime}">Slot Time</label>
+        </div>
+
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
