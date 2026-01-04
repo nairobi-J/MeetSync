@@ -19,4 +19,8 @@ public class UserResponseDto {
     private boolean hasRefreshToken;
 
 
+    public UserResponseDto(UUID id) {
+        this.id = id;
+    }
+
 }
