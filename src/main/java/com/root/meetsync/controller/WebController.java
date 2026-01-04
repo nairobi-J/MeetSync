@@ -37,30 +37,24 @@ public class WebController {
 
     @GetMapping("/dashboard")
     public String dashboard(Authentication authentication, Model model) {
-        String email;
+        User user;
 
-        // Check if the user logged in via Google or Manual Email/Pass
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            email = (String) oauthToken.getPrincipal().getAttributes().get("email");
+            user = userService.processOAuthUser(oauthToken);
         } else {
-            // For manual login, the 'name' is the email/username
+            // For manual login, the user must exist.
+            String email;
             email = authentication.getName();
+            user = userService.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Manual user not found"));
         }
 
-        // Use the injected service to find the user
-        Optional<User> userOpt = userService.findByEmail(email);
 
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-
-            // If the user has no password (just signed up via Google), force them to set one
-            if (user.getPassword() == null) {
-                return "redirect:/set-password";
-            }
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            return "redirect:/set-password";
+        }
 
             model.addAttribute("userName", user.getName());
-        }
-
         return "dashboard"; // Returns dashboard.html
     }
 }
