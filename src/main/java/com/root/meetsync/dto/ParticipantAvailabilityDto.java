@@ -16,6 +16,6 @@ import lombok.Setter;
 public class ParticipantAvailabilityDto {
   private UUID id;
     private UUID eventSlotId; 
-    private UserResponseDto user;
+    private UUID userId;
     private LocalDateTime createdAt;
 }
