@@ -22,9 +22,9 @@ public class EventController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Event> createEvent(@RequestBody CreateEventRequest request,
+    public String createEvent(CreateEventRequest request,
                                              OAuth2AuthenticationToken auth) {
-        Event savedEvent = eventService.createEvent(request, auth);
-        return ResponseEntity.ok(savedEvent);
+        eventService.createEvent(request, auth);
+        return "redirect:/";
     }
 }

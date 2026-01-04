@@ -8,76 +8,90 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
 <div class="bg-white rounded-3xl shadow-xl p-10 max-w-5xl w-full flex flex-row gap-12">
-    <!-- FORM SECTION -->
-    <div class="flex-1">
-        <h2 class="text-2xl font-bold mb-6">Create Event</h2>
-        <div class="space-y-5">
-            <div>
-                <label class="block text-gray-400 text-sm mb-1">Event Name</label>
-                <input type="text" id="title" class="w-full border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-400">
-            </div>
 
-            <div class="flex gap-4">
-                <div class="flex-1">
-                    <label class="block text-gray-400 text-sm mb-1">Duration</label>
-                    <select id="duration" class="w-full border rounded-xl p-3 bg-white">
-                        <option value="60">60 mins</option>
-                    </select>
+    <form th:action="@{/api/events/create}" method="POST" class="flex-1 flex flex-row gap-12 w-full">
+        <div class="flex-1">
+            <h2 class="text-2xl font-bold mb-6">Create Event</h2>
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">Event Name</label>
+                    <input type="text" name="title" required class="w-full border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-400">
                 </div>
-                <div class="flex-1">
-                    <label class="block text-gray-400 text-sm mb-1">Time Zone</label>
-                    <select id="timezone" class="w-full border rounded-xl p-3 bg-white">
-                        <option value="GMT+6 BDT">GMT+6 BDT</option>
-                    </select>
-                </div>
-            </div>
 
-            <div class="flex gap-4">
-                <div class="flex-1">
-                    <label class="block text-gray-400 text-sm mb-1">Not Earlier Than</label>
-                    <input type="time" id="earliestTime" value="10:00" class="w-full border rounded-xl p-3">
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-gray-400 text-sm mb-1">Duration</label>
+                        <select class="w-full border rounded-xl p-3 bg-white">
+                            <option value="60">60 mins</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-gray-400 text-sm mb-1">Time Zone</label>
+                        <select name="timezone" class="w-full border rounded-xl p-3 bg-white">
+                            <option value="GMT+6">GMT+6 BDT</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="flex-1">
-                    <label class="block text-gray-400 text-sm mb-1">Not Later Than</label>
-                    <input type="time" id="latestTime" value="17:30" class="w-full border rounded-xl p-3">
+
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-gray-400 text-sm mb-1">Not Earlier Than</label>
+                        <input type="time" name="earliestTime" value="10:00" class="w-full border rounded-xl p-3">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-gray-400 text-sm mb-1">Not Later Than</label>
+                        <input type="time" name="latestTime" value="17:30" class="w-full border rounded-xl p-3">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- CALENDAR SECTION -->
-    <div class="w-80 flex flex-col items-center border-l pl-10">
-        <h3 id="month-label" class="font-bold mb-6 text-xl">Select Dates</h3>
-        <div id="calendar-grid" class="grid grid-cols-7 gap-2 text-center w-full">
-            <!-- Days of week -->
-            <div class="text-xs text-gray-400">S</div><div class="text-xs text-gray-400">M</div><div class="text-xs text-gray-400">T</div>
-            <div class="text-xs text-gray-400">W</div><div class="text-xs text-gray-400">T</div><div class="text-xs text-gray-400">F</div><div class="text-xs text-gray-400">S</div>
-            <!-- JS will fill days here -->
+        <div class="w-80 flex flex-col items-center border-l pl-10">
+            <div class="flex items-center justify-between w-full mb-6">
+                <button type="button" onclick="changeMonth(-1)" class="text-gray-400 hover:text-black"><i class="fas fa-chevron-left"></i></button>
+                <h3 id="month-label" class="font-bold text-xl">Select Dates</h3>
+                <button type="button" onclick="changeMonth(1)" class="text-gray-400 hover:text-black"><i class="fas fa-chevron-right"></i></button>
+            </div>
+
+            <div id="calendar-grid" class="grid grid-cols-7 gap-2 text-center w-full mb-4">
+                <div class="text-xs text-gray-400">S</div><div class="text-xs text-gray-400">M</div><div class="text-xs text-gray-400">T</div>
+                <div class="text-xs text-gray-400">W</div><div class="text-xs text-gray-400">T</div><div class="text-xs text-gray-400">F</div><div class="text-xs text-gray-400">S</div>
+            </div>
+
+            <div id="date-inputs-container"></div>
+
+            <button type="submit" class="mt-auto w-full bg-blue-500 text-white font-bold py-4 rounded-2xl hover:bg-blue-600 transition shadow-lg shadow-blue-200">
+                Create Event
+            </button>
         </div>
-
-        <button onclick="submitData()" class="mt-auto w-full bg-blue-500 text-white font-bold py-4 rounded-2xl hover:bg-blue-600 transition shadow-lg shadow-blue-200">
-            Create Event
-        </button>
-    </div>
+    </form>
 </div>
 <script>
-    let selectedDates = [];
-    const grid = document.getElementById('calendar-grid')
-    const monthLabel = document.getElementById('month-label');
+    let currentOffset = 0;
+    let selectedDates = new Set();
+    // const grid = document.getElementById('calendar-grid')
+    // const monthLabel = document.getElementById('month-label');
     const today = new Date();
     today.setHours(0,0,0,0);
+    function changeMonth(delta){
+        if(currentOffset + delta < 0 || currentOffset + delta > 2) return;
+        currentOffset += delta;
+        createCalendar(currentOffset);
+    }
     const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+     const currentYear = today.getFullYear();
     const maxDate = new Date(currentYear, currentMonth + 2, 0);
     //calendar creation
     function createCalendar(monthOffset = 0){
+        const grid = document.getElementById('calendar-grid')
         //previous month dates removed from grid
         grid.querySelectorAll(".day-cell").forEach(d => d.remove());
 
         const displayDate= new Date(currentYear, currentMonth + monthOffset, 1);
+        document.getElementById('month-label').textContent = displayDate.toLocaleString('default', { month: 'long', year: 'numeric' });
         const year = displayDate.getFullYear();
-        const month = displayDate.getMonth();
-        monthLabel.textContent = displayDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+         const month = displayDate.getMonth();
+        //monthLabel.textContent = displayDate.toLocaleString('default', { month: 'long', year: 'numeric' });
         const firstDay = displayDate.getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         for(let i = 0; i < firstDay;i++){
@@ -87,13 +101,15 @@
         }
         for(let day = 1; day <= daysInMonth; day++) {
             const cellDate = new Date(year, month, day);
+            const dateString = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
             const dayDiv = document.createElement("div");
             dayDiv.textContent = day;
             dayDiv.className = "day-cell p-2 rounded-xl cursor-pointer hover:bg-blue-100";
-            const dateString = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+
             if (cellDate < today || cellDate > maxDate) {
                 dayDiv.classList.add("text-gray-300", "cursor-not-allowed");
             } else {
+                if (selectedDates.has(dateString)) dayDiv.classList.add("bg-blue-500", "text-white");
                 dayDiv.onclick = () => toggleDate(dayDiv, dateString);
             }
             grid.appendChild(dayDiv)
@@ -102,53 +118,24 @@
         }
 
     }
-    function toggleDate(element, date){
-        if(selectedDates.includes(date)){
-            selectedDates = selectedDates.filter(d => d !== date);
+    function toggleDate(element, dateString){
+        const container = document.getElementById('date-inputs-container');
+        if(selectedDates.has(dateString)){
+            selectedDates.delete(dateString);
             element.classList.remove("bg-blue-500", "text-white");
+            document.getElementById('input-' + dateString).remove();
         }else {
-          selectedDates.push(date);
+          selectedDates.add(dateString);
           element.classList.add("bg-blue-500", "text-white");
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'selectedDates';
+            input.id = 'input-' + dateString;
+            input.value = dateString;
+            container.appendChild(input);
         }
     }
 
-    async function submitData(){
-        if (selectedDates.length === 0) {
-            alert("Please select at least one date!");
-            return;
-        }
-
-        const title = document.getElementById('title').value;
-        const earliest = document.getElementById('earliestTime').value;
-        const latest = document.getElementById('latestTime').value;
-        //const selectedDates = Array.from(document.querySelectorAll('.data-check:checked')).map(cb => cb.value);
-        const requestData = {
-            title: title,
-            timezone:"GMT+6",
-            earliestTime: earliest + ":00",
-            latestTime: latest + ":00",
-            selectedSlots: selectedDates.map(date => ({
-                date: date,
-                start: earliest + ":00"
-            }))
-        }
-        const response = await fetch('/api/events/create', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body:JSON.stringify(requestData)
-        })
-        if(response.ok){
-            alert("event created");
-            window.location.href = "/";
-
-        }else {
-            const error = await response.text();
-            alert("error: "+ error);
-        }
-
-
-
-    }
 
     createCalendar(0);
 </script>
