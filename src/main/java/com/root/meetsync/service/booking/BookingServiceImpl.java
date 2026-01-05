@@ -23,7 +23,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -88,14 +87,14 @@ public class BookingServiceImpl implements IBookingService {
         return mapToResponseDTO(saved);
     }
 
-    public List<BookingResponseDTO> getHostBookings(UUID hostId) {
+    public List<BookingResponseDTO> getHostBookings(Long hostId) {
         return bookingRepository.findByHostId(hostId).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public BookingResponseDTO confirmBooking(UUID bookingId) {
+    public BookingResponseDTO confirmBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
@@ -106,7 +105,7 @@ public class BookingServiceImpl implements IBookingService {
     }
 
     @Transactional
-    public BookingResponseDTO cancelBooking(UUID bookingId) {
+    public BookingResponseDTO cancelBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
@@ -130,7 +129,7 @@ public class BookingServiceImpl implements IBookingService {
         return dto;
     }
 
-    private void validateHostAvailability(UUID hostId, LocalDateTime requestedStart, LocalDateTime requestedEnd, UserMeetingPreference preference) {
+    private void validateHostAvailability(Long hostId, LocalDateTime requestedStart, LocalDateTime requestedEnd, UserMeetingPreference preference) {
         // Get host's availability settings
         List<UserAvailability> weeklyAvailability = userAvailabilityRepository.findByUserId(hostId);
         List<UserDateOverrideAvailability> dateOverrides = userDateOverrideAvailabilityRepository.findByUserId(hostId);

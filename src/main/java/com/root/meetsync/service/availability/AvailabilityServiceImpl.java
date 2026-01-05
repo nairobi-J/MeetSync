@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +31,7 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
     private final BookingRepository bookingRepository;
 
     @Transactional
-    public void setupAvailability(UUID userId, SetupAvailabilityRequest request) {
+    public void setupAvailability(Long userId, SetupAvailabilityRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -191,7 +190,7 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
         return slots;
     }
 
-    public String getUserBookingLink(UUID userId) {
+    public String getUserBookingLink(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
