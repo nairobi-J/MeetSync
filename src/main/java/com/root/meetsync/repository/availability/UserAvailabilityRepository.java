@@ -6,10 +6,10 @@ import org.springframework.stereotype.Repository;
 
 import java.time.DayOfWeek;
 import java.util.List;
-import java.util.UUID;
+
 
 @Repository
-public interface UserAvailabilityRepository extends JpaRepository<UserAvailability, UUID> {
-    List<UserAvailability> findByUserId(UUID userId);
-    List<UserAvailability> findByUserIdAndDayOfWeek(UUID userId, DayOfWeek dayOfWeek);
+public interface UserAvailabilityRepository extends JpaRepository<UserAvailability, Long> {
+    List<UserAvailability> findByUserId(Long userId);
+    List<UserAvailability> findByUserIdAndDayOfWeek(Long userId, DayOfWeek dayOfWeek);
 }

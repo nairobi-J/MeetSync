@@ -8,7 +8,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.UUID;
+
 
 @Entity
 @Table(name = "event_slots")
@@ -16,8 +16,8 @@ import java.util.UUID;
 @Setter
 public class EventSlot {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "event_id", nullable = false)

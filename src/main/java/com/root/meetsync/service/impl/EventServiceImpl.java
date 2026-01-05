@@ -21,27 +21,21 @@ import java.util.stream.Collectors;
 
 @Service
 public class EventServiceImpl implements EventService {
-
+    // Inject only what you need
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
-    private final HostAvailabilityRepository hostAvailabilityRepository; // Add this
 
-    public EventServiceImpl(EventRepository eventRepository,
-                            UserRepository userRepository,
-                            HostAvailabilityRepository hostAvailabilityRepository) {
+    public EventServiceImpl(EventRepository eventRepository, UserRepository userRepository) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
-        this.hostAvailabilityRepository = hostAvailabilityRepository;
     }
 
     @Override
     @Transactional
     public Event createEvent(CreateEventRequest request, OAuth2AuthenticationToken auth) {
-        String googleId = (String) auth.getPrincipal().getAttributes().get("sub");
-        User host = userRepository.findByGoogleId(googleId)
+        User host = userRepository.findByGoogleId((String) auth.getPrincipal().getAttributes().get("sub"))
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 1. Create the Event Policy
         Event event = new Event();
         event.setHost(host);
         event.setTitle(request.getTitle());
@@ -51,39 +45,20 @@ public class EventServiceImpl implements EventService {
         event.setSlotDuration(60);
         event.setShareLink(UUID.randomUUID().toString());
 
-        // 2. Validate and Map Slots
-        List<EventSlot> slots = request.getSelectedSlots().stream().map(s -> {
-            LocalTime slotStart = s.getStart();
-            LocalTime slotEnd = slotStart.plusHours(1);
-
-            // VALIDATION RULE:
-            if (slotStart.isBefore(request.getEarliestTime()) || slotEnd.isAfter(request.getLatestTime())) {
-                throw new RuntimeException("Error: Slot " + slotStart + " on " + s.getDate() +
-                        " is outside the allowed range of " +
-                        request.getEarliestTime() + " to " + request.getLatestTime());
-            }
-
+        // Map the List<LocalDate> directly to EventSlots
+        List<EventSlot> slots = request.getSelectedDates().stream().map(date -> {
             EventSlot slot = new EventSlot();
             slot.setEvent(event);
-            slot.setSlotDate(s.getDate());
-            slot.setStartTime(slotStart);
-            slot.setEndTime(slotEnd);
+            slot.setSlotDate(date);
+            slot.setStartTime(request.getEarliestTime());
+            slot.setEndTime(request.getEarliestTime().plusHours(1));
+
+            // Link HostAvailability here if your Entity has a List<HostAvailability>
+            // This allows JPA to save everything in one go.
             return slot;
         }).collect(Collectors.toList());
 
         event.setSlots(slots);
-        Event savedEvent = eventRepository.save(event);
-
-        // 3. Mark Host Availability
-        for (EventSlot slot : savedEvent.getSlots()) {
-            HostAvailability hostAvail = new HostAvailability();
-            hostAvail.setHost(host);
-            hostAvail.setEventSlot(slot);
-            hostAvailabilityRepository.save(hostAvail);
-        }
-
-        return savedEvent;
+        return eventRepository.save(event); // One save call handles it all
     }
-
-
 }
