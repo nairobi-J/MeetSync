@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Interactive Heatmap | MeetSync</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Personal Selection (Left Grid) */
+        .personal-cell.selected { background-color: #3b82f6 !important; border: 1px solid #1d4ed8; }
+
+        /* Heatmap Colors (Right Grid) */
+        .heat-0 { background-color: #ffffff; }
+        .heat-1 { background-color: #dcfce7; border: 1px solid #bbf7d0; } /* Light Green */
+        .heat-2 { background-color: #86efac; border: 1px solid #4ade80; } /* Medium Green */
+        .heat-3 { background-color: #22c55e; border: 1px solid #16a34a; } /* Dark Green */
+
+        .tooltip {
+            visibility: hidden; position: absolute; z-index: 50;
+            background: #1e293b; color: white; padding: 6px 10px;
+            border-radius: 6px; font-size: 11px; pointer-events: none;
+        }
+        .has-tooltip:hover .tooltip { visibility: visible; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<div id="loginSection" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+        <h2 class="text-2xl font-bold mb-4">Join Event</h2>
+        <input type="text" id="guestName" class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your name">
+        <button onclick="enterEvent()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700">View Heatmap</button>
+    </div>
+</div>
+
+<div id="mainContent" class="hidden max-w-[1600px] mx-auto p-6">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-black text-slate-800" th:text="${event.title}">Team Meeting</h1>
+        <div class="text-right">
+            <p class="text-sm font-bold text-slate-500">User: <span id="currentUserName" class="text-blue-600"></span></p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+            <h3 class="text-blue-700 font-bold uppercase text-xs tracking-widest mb-4 text-center">1. Select Your Slots</h3>
+            <div class="flex gap-2">
+                <button onclick="scrollGrid('left', 'personal')" class="p-2 hover:bg-slate-100 rounded-full border">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <button onclick="scrollGrid('right', 'personal')" class="p-2 hover:bg-slate-100 rounded-full border">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+            <div class="flex border rounded-xl overflow-hidden shadow-inner">
+                <div class="w-20 bg-slate-50 border-r border-slate-200">
+                    <div class="h-12 border-b"></div>
+                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h a')}"></div>
+                </div>
+                <div id="personal-viewport" class="flex-1 overflow-x-auto flex bg-white">
+                    <div th:each="slot : ${event.slots}" class="flex-1 min-w-[100px] border-r border-slate-100 last:border-0">
+                        <div class="h-12 border-b bg-slate-50 flex flex-col items-center justify-center text-[10px] font-bold text-slate-600">
+                            <span th:text="${#temporals.format(slot.slotDate, 'EEE')}"></span>
+                            <span th:text="${#temporals.format(slot.slotDate, 'd')}"></span>
+                        </div>
+                        <div th:each="time : ${hours}" class="personal-cell h-12 border-b border-slate-50 cursor-pointer hover:bg-blue-50 transition-colors" th:attr="data-date=${slot.slotDate}, data-time=${time}"></div>
+                    </div>
+                </div>
+            </div>
+            <button onclick="submitAvailability()" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95">Update Heatmap</button>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+            <h3 class="text-green-700 font-bold uppercase text-xs tracking-widest mb-4 text-center">2. Group Heatmap</h3>
+            <div class="flex border rounded-xl overflow-hidden shadow-inner">
+                <div class="w-20 bg-slate-50 border-r border-slate-200">
+                    <div class="h-12 border-b"></div>
+                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h a')}"></div>
+                </div>
+                <div class="flex-1 overflow-x-auto flex bg-white">
+                    <div th:each="slot : ${event.slots}" class="flex-1 min-w-[100px] border-r border-slate-100 last:border-0">
+                        <div class="h-12 border-b bg-slate-50 flex flex-col items-center justify-center text-[10px] font-bold text-slate-600">
+                            <span th:text="${#temporals.format(slot.slotDate, 'EEE')}"></span>
+                            <span th:text="${#temporals.format(slot.slotDate, 'd')}"></span>
+                        </div>
+                        <div th:each="time : ${hours}" class="heat-cell has-tooltip h-12 border-b border-slate-50 relative" th:attr="data-date=${slot.slotDate}, data-time=${time}">
+                            <div class="tooltip shadow-xl">No votes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentUser = "";
+    let isMouseDown = false;
+    let mySelections = new Set();
+
+    // Mock Data Store: { "date|time": ["User1", "User2"] }
+    let globalData = {
+        "2026-01-05|09:00": ["Alice", "Bob"],
+        "2026-01-05|10:00": ["Alice", "Bob", "Charlie"],
+        "2026-01-06|11:00": ["Charlie"]
+    };
+
+    function enterEvent() {
+        const input = document.getElementById('guestName');
+        if (!input.value.trim()) return;
+        currentUser = input.value.trim();
+        document.getElementById('currentUserName').innerText = currentUser;
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        refreshHeatmap();
+    }
+
+    // --- LEFT GRID LOGIC (Selection) ---
+    const personalCells = document.querySelectorAll('.personal-cell');
+    personalCells.forEach(cell => {
+        cell.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            togglePersonalSlot(cell);
+            e.preventDefault();
+        });
+        cell.addEventListener('mouseenter', () => {
+            if (isMouseDown) togglePersonalSlot(cell);
+        });
+    });
+
+    window.addEventListener('mouseup', () => isMouseDown = false);
+
+    function togglePersonalSlot(cell) {
+        const id = `${cell.dataset.date}|${cell.dataset.time}`;
+        if (mySelections.has(id)) {
+            mySelections.delete(id);
+            cell.classList.remove('selected');
+        } else {
+            mySelections.add(id);
+            cell.classList.add('selected');
+        }
+    }
+
+    // --- SUBMISSION LOGIC ---
+    function submitAvailability() {
+        // 1. Clear my old votes from the globalData
+        for (let key in globalData) {
+            globalData[key] = globalData[key].filter(name => name !== currentUser);
+        }
+
+        // 2. Add current blue selections to the globalData
+        mySelections.forEach(id => {
+            if (!globalData[id]) globalData[id] = [];
+            globalData[id].push(currentUser);
+        });
+
+        // 3. Update the Right Grid (Heatmap)
+        refreshHeatmap();
+    }
+
+    // --- RIGHT GRID LOGIC (Heatmap) ---
+    function refreshHeatmap() {
+        document.querySelectorAll('.heat-cell').forEach(cell => {
+            const id = `${cell.dataset.date}|${cell.dataset.time}`;
+            const users = globalData[id] || [];
+            const count = users.length;
+
+            // Apply Heatmap Colors
+            cell.classList.remove('heat-0', 'heat-1', 'heat-2', 'heat-3');
+            if (count >= 3) cell.classList.add('heat-3');
+            else if (count === 2) cell.classList.add('heat-2');
+            else if (count === 1) cell.classList.add('heat-1');
+            else cell.classList.add('heat-0');
+
+            // Update Tooltip
+            const tooltip = cell.querySelector('.tooltip');
+            tooltip.innerText = count > 0 ? `${count} available:\n${users.join('\n')}` : "No one available";
+        });
+    }
+    function scrollGrid(direction, type) {
+        const viewport = document.getElementById(`${type}-viewport`);
+        const scrollAmount = 240; // Roughly 2 columns
+        if (direction === 'left') {
+            viewport.scrollLeft -= scrollAmount;
+        } else {
+            viewport.scrollLeft += scrollAmount;
+        }
+    }
+</script>
+</body>
+</html>
