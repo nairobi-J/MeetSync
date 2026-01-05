@@ -12,7 +12,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+
 
 @Entity
 @Table(name = "users")
@@ -20,8 +20,8 @@ import java.util.UUID;
 @Setter
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "google_id", nullable = true, unique = true)
     private String googleId;
@@ -31,7 +31,7 @@ public class User {
     private String email;
     private String timezone;
     private String password;
-
+    
     @Column(unique = true)
     private String username; // For booking link: /u/{username}
 

@@ -10,7 +10,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/availability")
@@ -21,14 +20,14 @@ public class AvailabilityController {
 
     @PostMapping("/setup")
     public ResponseEntity<String> setupAvailability(
-            @RequestHeader("User-Id") UUID userId,
+            @RequestHeader("User-Id") Long userId,
             @RequestBody SetupAvailabilityRequest request) {
         availabilityService.setupAvailability(userId, request);
         return ResponseEntity.ok("Availability setup successfully");
     }
 
     @GetMapping("/link")
-    public ResponseEntity<String> getBookingLink(@RequestHeader("User-Id") UUID userId) {
+    public ResponseEntity<String> getBookingLink(@RequestHeader("User-Id") Long userId) {
         String link = availabilityService.getUserBookingLink(userId);
         return ResponseEntity.ok(link);
     }

@@ -4,11 +4,10 @@ import com.root.meetsync.entity.booking.BookingStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 public class BookingResponseDTO {
-    private UUID id;
+    private Long id;
     private String hostName;
     private String hostEmail;
     private String inviteeName;

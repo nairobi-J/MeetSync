@@ -5,9 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
-public interface UserMeetingPreferenceRepository extends JpaRepository<UserMeetingPreference, UUID> {
-    Optional<UserMeetingPreference> findByUserId(UUID userId);
+public interface UserMeetingPreferenceRepository extends JpaRepository<UserMeetingPreference, Long> {
+    Optional<UserMeetingPreference> findByUserId(Long userId);
 }
