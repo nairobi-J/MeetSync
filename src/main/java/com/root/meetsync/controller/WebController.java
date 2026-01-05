@@ -1,14 +1,13 @@
 package com.root.meetsync.controller;
 
-import com.root.meetsync.entity.User;
-import com.root.meetsync.service.UserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model; // Added this import
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import java.util.Optional;
+import com.root.meetsync.entity.User; // Added this import
+import com.root.meetsync.service.UserService;
 
 @Controller
 public class WebController {
@@ -55,6 +54,6 @@ public class WebController {
         }
 
             model.addAttribute("userName", user.getName());
-        return "dashboard"; // Returns dashboard.html
+        return "MainHome";
     }
 }

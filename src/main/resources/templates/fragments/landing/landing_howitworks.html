@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!-- How It Works Section Fragment -->
+    <section th:fragment="howitworks" class="py-20 px-6 bg-gray-50">
+        <div class="max-w-7xl mx-auto">
+            
+            <!-- Section Header -->
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                    How it works
+                </h2>
+                <p class="text-lg text-gray-600">
+                    Simplify your workflow in three easy steps.
+                </p>
+            </div>
+            
+            <!-- Steps Grid -->
+            <div class="grid md:grid-cols-3 gap-12">
+                
+                <!-- Step 1: Create Link -->
+                <div class="text-center group">
+                    <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-200 transition">
+                        <i class="fas fa-link text-blue-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Create Link</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Set your availability preferences and create a personalized booking link.
+                    </p>
+                </div>
+                
+                <!-- Step 2: Share -->
+                <div class="text-center group">
+                    <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-200 transition">
+                        <i class="fas fa-share-alt text-blue-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Share</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Send your link to guests or embed it on your website effortlessly.
+                    </p>
+                </div>
+                
+                <!-- Step 3: Meet -->
+                <div class="text-center group">
+                    <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-200 transition">
+                        <i class="fas fa-calendar-check text-blue-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Meet</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Meetings are automatically added to your calendar. No more conflicts.
+                    </p>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+</body>
+</html>
