@@ -2,135 +2,166 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Join Event | MeetSync</title>
+    <title>MeetSync | Interactive Heatmap</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Drag-to-select styling */
-        .slot-cell.selected {
-            background-color: #3b82f6 !important; /* Tailwind blue-500 */
+        .heat-0 { background-color: #ffffff; }
+        .heat-1 { background-color: #dcfce7; }
+        .heat-2 { background-color: #86efac; }
+        .heat-3 { background-color: #22c55e; }
+
+        .slot-cell.selected { background-color: #3b82f6 !important; border: 1px solid #2563eb; }
+
+        /* Tooltip styling */
+        .tooltip {
+            visibility: hidden;
+            position: absolute;
+            z-index: 50;
+            background: #1e293b;
+            color: white;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: pre-line;
         }
-        .slot-cell.selecting {
-            background-color: #93c5fd !important; /* Tailwind blue-300 */
-        }
-        /* Scroller styling for the grid */
-        .grid-scroll::-webkit-scrollbar {
-            height: 8px;
-        }
-        .grid-scroll::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
+        .has-tooltip:hover .tooltip { visibility: visible; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-<div class="max-w-7xl mx-auto p-4 md:p-10">
-    <div class="mb-8 border-l-4 border-blue-600 pl-6">
-        <h1 class="text-4xl font-black text-slate-800 tracking-tight" th:text="${event.title}">Team Sync</h1>
-        <div class="flex items-center gap-4 mt-2 text-slate-500 font-medium">
-            <span class="flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span th:text="${event.timezone}">UTC</span>
-            </span>
-            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs uppercase" th:text="${event.slotDuration + ' min slots'}">60 min</span>
-        </div>
+<div id="loginSection" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-4">Who are you?</h2>
+        <input type="text" id="guestName" class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your name">
+        <button onclick="enterEvent()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">Enter Event</button>
+    </div>
+</div>
+
+<div id="mainContent" class="hidden max-w-[1600px] mx-auto p-6">
+    <div class="mb-6">
+        <h1 class="text-3xl font-black text-slate-800" th:text="${event.title}">Event</h1>
+        <p class="text-slate-500">Logged in as: <span id="currentUserName" class="text-blue-600 font-bold"></span></p>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col md:flex-row">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
 
-        <div class="flex-none w-24 bg-slate-50 border-r border-slate-200">
-            <div class="h-20 border-b border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                Time
-            </div>
-            <div th:each="time : ${hours}"
-                 class="h-16 border-b border-slate-100 flex items-center justify-center text-xs font-bold text-slate-500"
-                 th:text="${#temporals.format(time, 'h a')}">
-                9 AM
-            </div>
-        </div>
-
-        <div class="flex-1 overflow-x-auto grid-scroll flex bg-slate-100">
-            <div th:each="slot : ${event.slots}" class="flex-1 min-w-[140px] bg-white border-r border-slate-200 last:border-r-0">
-
-                <div class="h-20 bg-slate-50 border-b border-slate-200 flex flex-col items-center justify-center gap-1">
-                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest" th:text="${#temporals.format(slot.slotDate, 'EEE')}">MON</span>
-                    <span class="text-lg font-bold text-slate-800" th:text="${#temporals.format(slot.slotDate, 'MMM d')}">JAN 5</span>
+        <div class="bg-white p-4 rounded-2xl shadow-lg border border-slate-200">
+            <h3 class="text-lg font-bold mb-4 text-center text-blue-700 uppercase tracking-wider">Your Availability</h3>
+            <div class="flex border rounded-xl overflow-hidden bg-slate-50">
+                <div class="w-20 flex-none bg-slate-100 border-r border-slate-200">
+                    <div class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400">TIME</div>
+                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-medium text-slate-500" th:text="${#temporals.format(time, 'h a')}"></div>
                 </div>
-
-                <div th:each="time : ${hours}"
-                     class="slot-cell h-16 border-b border-slate-100 cursor-crosshair relative transition-all duration-75"
-                     th:attr="data-date=${slot.slotDate}, data-time=${time}">
+                <div class="flex-1 overflow-x-auto flex">
+                    <div th:each="slot : ${event.slots}" class="flex-1 min-w-[80px] bg-white border-r last:border-0 border-slate-200">
+                        <div class="h-12 border-b bg-slate-50 flex flex-col items-center justify-center text-[10px] font-bold">
+                            <span th:text="${#temporals.format(slot.slotDate, 'EEE')}"></span>
+                            <span th:text="${#temporals.format(slot.slotDate, 'd')}"></span>
+                        </div>
+                        <div th:each="time : ${hours}" class="personal-cell h-12 border-b border-slate-100 cursor-pointer hover:bg-blue-50 transition-all" th:attr="data-date=${slot.slotDate}, data-time=${time}"></div>
+                    </div>
                 </div>
             </div>
+            <button onclick="submitAvailability()" class="w-full mt-4 bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700">Update My Slots</button>
         </div>
-    </div>
 
-    <div class="mt-8 flex justify-end">
-        <button id="saveSelection" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all active:scale-95">
-            Submit My Availability
-        </button>
+        <div class="bg-white p-4 rounded-2xl shadow-lg border border-slate-200">
+            <h3 class="text-lg font-bold mb-4 text-center text-green-700 uppercase tracking-wider">Group Availability (Heatmap)</h3>
+            <div class="flex border rounded-xl overflow-hidden bg-slate-50">
+                <div class="w-20 flex-none bg-slate-100 border-r border-slate-200">
+                    <div class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400">TIME</div>
+                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-medium text-slate-500" th:text="${#temporals.format(time, 'h a')}"></div>
+                </div>
+                <div class="flex-1 overflow-x-auto flex">
+                    <div th:each="slot : ${event.slots}" class="flex-1 min-w-[80px] bg-white border-r last:border-0 border-slate-200">
+                        <div class="h-12 border-b bg-slate-50 flex flex-col items-center justify-center text-[10px] font-bold">
+                            <span th:text="${#temporals.format(slot.slotDate, 'EEE')}"></span>
+                            <span th:text="${#temporals.format(slot.slotDate, 'd')}"></span>
+                        </div>
+                        <div th:each="time : ${hours}" class="heat-cell has-tooltip h-12 border-b border-slate-100 relative" th:attr="data-date=${slot.slotDate}, data-time=${time}">
+                            <div class="tooltip shadow-lg">No votes yet</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    // Selection Logic Variables
+    let currentUser = "";
     let isMouseDown = false;
-    const selectedSlots = new Set(); // Stores "date|time" strings
-    const cells = document.querySelectorAll('.slot-cell');
+    let mySelections = new Set();
 
-    cells.forEach(cell => {
-        // Start Drag
-        cell.addEventListener('mousedown', (e) => {
-            isMouseDown = true;
-            toggleSlot(cell);
-            e.preventDefault(); // Prevent text selection
-        });
+    // MOCK DATA: { "date|time": ["User1", "User2"] }
+    let globalData = {
+        "2026-01-05|09:00": ["Alice", "Bob"],
+        "2026-01-05|10:00": ["Alice", "Bob", "Charlie"],
+        "2026-01-06|11:00": ["Charlie"]
+    };
 
-        // Continue Drag
-        cell.addEventListener('mouseenter', () => {
-            if (isMouseDown) {
-                toggleSlot(cell);
-            }
-        });
+    function enterEvent() {
+        const nameInput = document.getElementById('guestName');
+        if (!nameInput.value.trim()) return;
+        currentUser = nameInput.value.trim();
+        document.getElementById('currentUserName').innerText = currentUser;
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        refreshHeatmap();
+    }
+
+    // SELECTION LOGIC (Left Grid)
+    document.querySelectorAll('.personal-cell').forEach(cell => {
+        cell.addEventListener('mousedown', (e) => { isMouseDown = true; toggleCell(cell); e.preventDefault(); });
+        cell.addEventListener('mouseenter', () => { if (isMouseDown) toggleCell(cell); });
     });
+    window.addEventListener('mouseup', () => isMouseDown = false);
 
-    // Global Mouseup to stop dragging
-    window.addEventListener('mouseup', () => {
-        isMouseDown = false;
-    });
-
-    function toggleSlot(element) {
-        const slotId = `${element.dataset.date}|${element.dataset.time}`;
-
-        if (selectedSlots.has(slotId)) {
-            selectedSlots.delete(slotId);
-            element.classList.remove('selected');
+    function toggleCell(cell) {
+        const id = `${cell.dataset.date}|${cell.dataset.time}`;
+        if (mySelections.has(id)) {
+            mySelections.delete(id);
+            cell.classList.remove('selected');
         } else {
-            selectedSlots.add(slotId);
-            element.classList.add('selected');
+            mySelections.add(id);
+            cell.classList.add('selected');
         }
     }
 
-    // Handle Submission
-    document.getElementById('saveSelection').addEventListener('click', () => {
-        const dataArray = Array.from(selectedSlots).map(s => {
-            const [date, time] = s.split('|');
-            return { date, time };
-        });
-
-        console.log("Submitting selection:", dataArray);
-
-        if(dataArray.length === 0) {
-            alert("Please select at least one time slot!");
-            return;
+    function submitAvailability() {
+        // 1. Remove currentUser from all slots in globalData first
+        for (let key in globalData) {
+            globalData[key] = globalData[key].filter(u => u !== currentUser);
         }
 
-        // Future step: Fetch API call to send 'dataArray' to your participant controller
-        alert(`You selected ${dataArray.length} slots. Ready for Heatmap integration!`);
-    });
-</script>
+        // 2. Add current selections to globalData
+        mySelections.forEach(id => {
+            if (!globalData[id]) globalData[id] = [];
+            if (!globalData[id].includes(currentUser)) globalData[id].push(currentUser);
+        });
 
+        refreshHeatmap();
+        alert("Heatmap updated with your selection!");
+    }
+
+    function refreshHeatmap() {
+        document.querySelectorAll('.heat-cell').forEach(cell => {
+            const id = `${cell.dataset.date}|${cell.dataset.time}`;
+            const users = globalData[id] || [];
+            const count = users.length;
+
+            // Set Heatmap Color
+            cell.classList.remove('heat-0', 'heat-1', 'heat-2', 'heat-3');
+            if (count >= 3) cell.classList.add('heat-3');
+            else if (count === 2) cell.classList.add('heat-2');
+            else if (count === 1) cell.classList.add('heat-1');
+            else cell.classList.add('heat-0');
+
+            // Set Tooltip Text
+            const tooltip = cell.querySelector('.tooltip');
+            tooltip.innerText = count > 0 ? `${count} available:\n${users.join('\n')}` : "No one available";
+        });
+    }
+</script>
 </body>
 </html>
