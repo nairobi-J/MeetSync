@@ -5,6 +5,8 @@ import com.root.meetsync.dto.availability.SetupAvailabilityRequest;
 import com.root.meetsync.service.availability.IAvailabilityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,4 +40,6 @@ public class AvailabilityController {
         List<AvailableSlotDTO> slots = availabilityService.getAvailableSlots(emailPrefix, timezone);
         return ResponseEntity.ok(slots);
     }
+
+  
 }

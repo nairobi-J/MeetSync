@@ -17,6 +17,7 @@ public class UserResponseDto {
     private String email;
     private String timezone;
     private boolean hasRefreshToken;
+    private String profilePic;
 
 
 }

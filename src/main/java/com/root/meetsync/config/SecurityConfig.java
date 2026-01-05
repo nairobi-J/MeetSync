@@ -33,8 +33,10 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/signup", "/css/**", "/js/**").permitAll()
                           
     // Public booking endpoints (for invitees)
-    .requestMatchers("/api/availability/**").permitAll()  // View slots
-    .requestMatchers("/api/bookings/u/**").permitAll()      // Create booking
+    .requestMatchers("/availability/setup/**").authenticated()
+        .requestMatchers("/user-info").authenticated()
+    .requestMatchers("/api/bookings/u/**").permitAll()   
+     .requestMatchers("/bookings/u/**").permitAll()    // Create booking
                        
                         // Set Password pages
                         .requestMatchers("/set-password", "/api/users/set-password").authenticated()

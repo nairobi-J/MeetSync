@@ -20,6 +20,7 @@ public class UserController {
         this.userService = userService;
     }
 
+
     @GetMapping("/me")
     public ResponseEntity<UserResponseDto> getCurrentUser(OAuth2AuthenticationToken authentication) {
         User user = userService.processOAuthUser(authentication);
@@ -30,6 +31,7 @@ public class UserController {
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
         dto.setTimezone(user.getTimezone());
+        
         dto.setHasRefreshToken(user.getOauthToken() != null && user.getOauthToken().getRefreshToken() != null);
 
         return ResponseEntity.ok(dto);
