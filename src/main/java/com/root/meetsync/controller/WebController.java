@@ -10,7 +10,7 @@ import com.root.meetsync.entity.User; // Added this import
 import com.root.meetsync.service.UserService;
 
 @Controller
-public class WebController {
+public class  WebController {
 
     private final UserService userService; // Added service injection
 
