@@ -112,3 +112,9 @@ src/main/resources/application.properties
 
 src/main/resources/application.properties
 target/
+
+
+
+
+# Documentation
+API_DOCUMENTATION.md

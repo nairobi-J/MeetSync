@@ -27,6 +27,7 @@ public class User {
     private String googleId;
 
     private String name;
+    private String profilePic;
     private String email;
     private String timezone;
     private String password;
