@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeetSync - Schedule meetings without the back-and-forth</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" th:href="@{/css/landing_style.css}">
+</head>
+<body class="bg-white">
+    
+    <div th:replace="~{fragments/landing/landing_nav :: navbar}"></div>
+ 
+    <div th:replace="~{fragments/landing/landing_hero :: hero}"></div>
+    
+    <div th:replace="~{fragments/landing/landing_howitworks :: howitworks}"></div>
+    
+    <div th:replace="~{fragments/landing/landing_features :: features}"></div>
+    
+    <div th:replace="~{fragments/landing/landing_cta :: cta}"></div>
+    
+    <div th:replace="~{fragments/landing/landing_footer :: footer}"></div>
+    
+    <script th:src="@{/js/landing_script.js}"></script>
+    
+</body>
+</html>
