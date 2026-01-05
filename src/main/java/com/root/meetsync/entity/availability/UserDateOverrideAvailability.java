@@ -1,39 +1,38 @@
-package com.root.meetsync.entity;
+package com.root.meetsync.entity.availability;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.root.meetsync.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-
 @Entity
-@Table(name = "event_slots")
+@Table(name = "user_date_override_availability")
 @Getter
 @Setter
-public class EventSlot {
+public class UserDateOverrideAvailability {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "event_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     @JsonBackReference
-    private Event event;
+    private User user;
 
     @Column(nullable = false)
-    private LocalDate slotDate;
+    private LocalDate date;
 
-    @Column(nullable = false)
+    @Column(name = "start_time")
     private LocalTime startTime;
 
-    @Column(nullable = false)
+    @Column(name = "end_time")
     private LocalTime endTime;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-
+    @Column(name = "unavailable")
+    private Boolean unavailable = false; // true = day off
 }
