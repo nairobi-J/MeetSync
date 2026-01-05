@@ -1,9 +1,12 @@
 package com.root.meetsync.controller;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -38,40 +41,56 @@ public class AvailabilityController {
     EventRepository eventRepository;
 
     @PostMapping("/availability/submit")
-    public String submitAvailability(@RequestParam UUID userId, @RequestParam List<UUID> slotIds) {
+    public String submitAvailability(@RequestParam String participantName, @RequestParam List<UUID> slotIds) {
 
-        availabilityService.saveAvailability(userId, slotIds);
+        availabilityService.saveAvailability(participantName, slotIds);
 
-       return "redirect:/availability/success";
+       return "redirect:/guest-view";
     } 
 
-   @GetMapping("/availability/test/{userId}/{eventId}")
-   public String showActualForm(@PathVariable UUID userId, @PathVariable UUID eventId, Model model) {
+//    @GetMapping("/availability/test/{userId}/{eventId}")
+//    public String showActualForm(@PathVariable UUID userId, @PathVariable UUID eventId, Model model) {
 
-      User user = userRepository.findById(userId).get();
-      List<EventSlot> slots = eventSlotRepository.findByEventId(eventId);
+//       User user = userRepository.findById(userId).get();
+//       List<EventSlot> slots = eventSlotRepository.findByEventId(eventId);
     
     
-      model.addAttribute("user", user);
-      model.addAttribute("slots", slots);
+//       model.addAttribute("user", user);
+//       model.addAttribute("slots", slots);
     
-      return "demo_submit";
-    }
+//       return "demo_submit";
+//     }
 
-    @GetMapping("/availability/success")
-      public String showSuccess() {
-       return "demo_success";
-     }
+//     @GetMapping("/event/{eventId}/heatmap")
+//      public String showHeatmap(@PathVariable UUID eventId, Model model) {
+//        Map<LocalDate, List<SlotCountDto>> stats = availabilityService.getHeatmapStat(eventId);
 
-    @GetMapping("/event/{eventId}/heatmap")
-     public String showHeatmap(@PathVariable UUID eventId, Model model) {
-       Map<LocalDate, List<SlotCountDto>> stats = availabilityService.getHeatmapStat(eventId);
+//         Event event = eventRepository.findById(eventId).orElse(null);
 
-        Event event = eventRepository.findById(eventId).orElse(null);
-
-        model.addAttribute("stats", stats);
-        model.addAttribute("event", event);
+//         model.addAttribute("stats", stats);
+//         model.addAttribute("event", event);
     
-    return "demo_success"; 
-    }
+//     return "demo_success"; 
+//     }
+
+    @GetMapping("/event/{eventId}/guest-view")
+public String showGuestView(@PathVariable UUID eventId, Model model) {
+    Event event = eventRepository.findById(eventId).orElseThrow();
+    
+    // Generate hours for the Y-axis (e.g., 00:00 to 23:00)
+    List<LocalTime> hours = IntStream.range(0, 24)
+            .mapToObj(h -> LocalTime.of(h, 0))
+            .collect(Collectors.toList());
+
+    model.addAttribute("event", event);
+    model.addAttribute("hours", hours);
+    
+    model.addAttribute("heatmapData", availabilityService.getHeatmapStat(eventId)); 
+    
+    return "guest-view";
+}
+
+
+
+    
 }

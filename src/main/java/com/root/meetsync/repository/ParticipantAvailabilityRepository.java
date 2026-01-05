@@ -15,7 +15,7 @@ import com.root.meetsync.entity.ParticipantAvailability;
 
 @Repository
 public interface ParticipantAvailabilityRepository extends JpaRepository<ParticipantAvailability, UUID>{
-   @Query("SELECT new com.root.meetsync.dto.SlotCountDto(es.id, es.startTime, es.slotDate, COUNT(pa.id)) " +
+   @Query("SELECT new com.root.meetsync.dto.SlotCountDto(es.id, es.startTime, es.slotDate, COUNT(pa.participantName)) " +
        "FROM EventSlot es " +
        "LEFT JOIN ParticipantAvailability pa ON pa.eventSlot = es " +
        "WHERE es.event.id = :eventId " +

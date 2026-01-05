@@ -27,9 +27,7 @@ public class ParticipantAvailability {
     @JoinColumn(name = "event_slot_id", nullable = false)
     private EventSlot eventSlot;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
+    private String participantName;
+    
     private LocalDateTime createdAt = LocalDateTime.now();
 }
