@@ -106,4 +106,4 @@ spring-boot-devtools.properties
 /.metadata/
 
 src/main/resources/application.properties
-target/
+/target

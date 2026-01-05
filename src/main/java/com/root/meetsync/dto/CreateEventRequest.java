@@ -13,13 +13,5 @@ public class CreateEventRequest {
     private String timezone;
     private LocalTime earliestTime;
     private LocalTime latestTime;
-    private List<SlotRequest> selectedSlots;
-
-    @Getter
-    @Setter
-    public static class SlotRequest {
-        private LocalDate date;
-        private LocalTime start;
-        private LocalTime end;
-    }
+    private List<LocalDate> selectedDates; // Just a simple list of dates
 }
