@@ -20,8 +20,8 @@ import lombok.Setter;
 @Table(name = "participant_availability")
 public class ParticipantAvailability {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_slot_id", nullable = false)

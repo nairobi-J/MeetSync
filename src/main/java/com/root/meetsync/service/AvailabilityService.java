@@ -19,9 +19,9 @@ import com.root.meetsync.repository.ParticipantAvailabilityRepository;
 public class AvailabilityService {
     @Autowired
     private ParticipantAvailabilityRepository participantAvailabilityRepository;
-    public void saveAvailability(String participantName, List<UUID> slotIds) {
+    public void saveAvailability(String participantName, List<Long> slotIds) {
 
-        for (UUID slotId : slotIds) {
+        for (Long slotId : slotIds) {
             ParticipantAvailability pa = new ParticipantAvailability();
             EventSlot slot = new EventSlot();
             slot.setId(slotId);
@@ -55,7 +55,7 @@ public class AvailabilityService {
 //     participantAvailabilityRepository.saveAll(availabilities);
 // }
 
-     public Map<LocalDate, List<SlotCountDto>> getHeatmapStat(UUID eventId){
+     public Map<LocalDate, List<SlotCountDto>> getHeatmapStat(Long eventId){
         List<SlotCountDto> slotCounts = participantAvailabilityRepository.countParticipantsBySlot(eventId);
 
         return slotCounts.stream().collect(

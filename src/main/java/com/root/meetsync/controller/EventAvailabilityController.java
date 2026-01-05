@@ -26,7 +26,7 @@ import com.root.meetsync.repository.UserRepository;
 import com.root.meetsync.service.AvailabilityService;
 
 @Controller
-public class AvailabilityController {
+public class EventAvailabilityController {
 
     @Autowired
     private AvailabilityService availabilityService;
@@ -41,7 +41,7 @@ public class AvailabilityController {
     EventRepository eventRepository;
 
     @PostMapping("/availability/submit")
-    public String submitAvailability(@RequestParam String participantName, @RequestParam List<UUID> slotIds) {
+    public String submitAvailability(@RequestParam String participantName, @RequestParam List<Long> slotIds) {
 
         availabilityService.saveAvailability(participantName, slotIds);
 
@@ -73,24 +73,21 @@ public class AvailabilityController {
 //     return "demo_success"; 
 //     }
 
-    @GetMapping("/event/{eventId}/guest-view")
-public String showGuestView(@PathVariable UUID eventId, Model model) {
-    Event event = eventRepository.findById(eventId).orElseThrow();
+  @GetMapping("/event/{eventId}/guest-view")
+public String showGuestView(@PathVariable Long eventId, Model model) {
+    Event event = eventRepository.findById(eventId)
+        .orElseThrow(() -> new RuntimeException("Event not found"));
     
-    // Generate hours for the Y-axis (e.g., 00:00 to 23:00)
     List<LocalTime> hours = IntStream.range(0, 24)
             .mapToObj(h -> LocalTime.of(h, 0))
             .collect(Collectors.toList());
 
     model.addAttribute("event", event);
     model.addAttribute("hours", hours);
-    
+    // This should return a Map<String, List<String>> or similar for the heatmap
     model.addAttribute("heatmapData", availabilityService.getHeatmapStat(eventId)); 
     
-    return "guest-view";
+    return "guest-view"; // Make sure your HTML file is named guest-view.html
 }
 
-
-
-    
 }

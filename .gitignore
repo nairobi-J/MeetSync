@@ -85,7 +85,7 @@ Desktop.ini
 application-local.properties
 application-dev.properties
 application-prod.properties
-!application.properties
+**/application.properties
 
 # H2 Database
 *.db
@@ -107,3 +107,14 @@ spring-boot-devtools.properties
 
 src/main/resources/application.properties
 /target
+
+
+
+src/main/resources/application.properties
+target/
+
+
+
+
+# Documentation
+API_DOCUMENTATION.md

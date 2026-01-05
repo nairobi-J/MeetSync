@@ -14,7 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SlotCountDto {
-    private UUID slotId;
+    private Long slotId;
     private LocalTime startTime;
     private LocalDate slotDate;
     private Long participantCount;
