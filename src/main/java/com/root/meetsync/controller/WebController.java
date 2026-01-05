@@ -56,4 +56,5 @@ public class WebController {
             model.addAttribute("userName", user.getName());
         return "MainHome";
     }
+
 }

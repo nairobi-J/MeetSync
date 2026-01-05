@@ -1,19 +1,15 @@
 package com.root.meetsync.service.impl;
 
-
 import com.root.meetsync.dto.CreateEventRequest;
-import com.root.meetsync.entity.Event;
-import com.root.meetsync.entity.EventSlot;
-import com.root.meetsync.entity.HostAvailability;
-import com.root.meetsync.entity.User;
-import com.root.meetsync.repository.EventRepository;
-import com.root.meetsync.repository.HostAvailabilityRepository;
-import com.root.meetsync.repository.UserRepository;
+import com.root.meetsync.entity.*;
+import com.root.meetsync.repository.*;
 import com.root.meetsync.service.EventService;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.core.Authentication; // Updated
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken; // Keep for instance check
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
@@ -21,7 +17,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class EventServiceImpl implements EventService {
-    // Inject only what you need
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
 
@@ -32,9 +27,19 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public Event createEvent(CreateEventRequest request, OAuth2AuthenticationToken auth) {
-        User host = userRepository.findByGoogleId((String) auth.getPrincipal().getAttributes().get("sub"))
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public Event createEvent(CreateEventRequest request, Authentication auth) {
+        String email;
+
+        // Extract email based on the type of login
+        if (auth instanceof OAuth2AuthenticationToken oauth) {
+            email = (String) oauth.getPrincipal().getAttributes().get("email");
+        } else {
+            email = auth.getName(); // Standard UsernamePasswordAuthenticationToken email
+        }
+
+        // Find user by email instead of Google ID
+        User host = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
 
         Event event = new Event();
         event.setHost(host);
@@ -45,20 +50,18 @@ public class EventServiceImpl implements EventService {
         event.setSlotDuration(60);
         event.setShareLink(UUID.randomUUID().toString());
 
-        // Map the List<LocalDate> directly to EventSlots
-        List<EventSlot> slots = request.getSelectedDates().stream().map(date -> {
-            EventSlot slot = new EventSlot();
-            slot.setEvent(event);
-            slot.setSlotDate(date);
-            slot.setStartTime(request.getEarliestTime());
-            slot.setEndTime(request.getEarliestTime().plusHours(1));
+        if (request.getSelectedDates() != null) {
+            List<EventSlot> slots = request.getSelectedDates().stream().map(date -> {
+                EventSlot slot = new EventSlot();
+                slot.setEvent(event);
+                slot.setSlotDate(date);
+                slot.setStartTime(request.getEarliestTime());
+                slot.setEndTime(request.getEarliestTime().plusHours(1));
+                return slot;
+            }).collect(Collectors.toList());
+            event.setSlots(slots);
+        }
 
-            // Link HostAvailability here if your Entity has a List<HostAvailability>
-            // This allows JPA to save everything in one go.
-            return slot;
-        }).collect(Collectors.toList());
-
-        event.setSlots(slots);
-        return eventRepository.save(event); // One save call handles it all
+        return eventRepository.save(event);
     }
 }
