@@ -1,6 +1,8 @@
 package com.root.meetsync.controller;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +13,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.root.meetsync.entity.Event;
 import com.root.meetsync.dto.SlotCountDto;
 import com.root.meetsync.entity.EventSlot;
 import com.root.meetsync.entity.User;
+import com.root.meetsync.repository.EventRepository;
 import com.root.meetsync.repository.EventSlotRepository;
 import com.root.meetsync.repository.UserRepository;
 import com.root.meetsync.service.AvailabilityService;
@@ -29,6 +33,9 @@ public class AvailabilityController {
 
     @Autowired
     EventSlotRepository eventSlotRepository;
+
+    @Autowired
+    EventRepository eventRepository;
 
     @PostMapping("/availability/submit")
     public String submitAvailability(@RequestParam UUID userId, @RequestParam List<UUID> slotIds) {
@@ -58,10 +65,12 @@ public class AvailabilityController {
 
     @GetMapping("/event/{eventId}/heatmap")
      public String showHeatmap(@PathVariable UUID eventId, Model model) {
-        List<SlotCountDto> stats = availabilityService.getHeatmapStat(eventId);
-    
+       Map<LocalDate, List<SlotCountDto>> stats = availabilityService.getHeatmapStat(eventId);
+
+        Event event = eventRepository.findById(eventId).orElse(null);
+
         model.addAttribute("stats", stats);
-        model.addAttribute("eventId", eventId);
+        model.addAttribute("event", event);
     
     return "demo_success"; 
     }

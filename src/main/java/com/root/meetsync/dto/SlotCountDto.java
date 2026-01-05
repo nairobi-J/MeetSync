@@ -1,5 +1,6 @@
 package com.root.meetsync.dto;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
 
@@ -15,5 +16,7 @@ import lombok.Setter;
 public class SlotCountDto {
     private UUID slotId;
     private LocalTime startTime;
+    private LocalDate slotDate;
     private Long participantCount;
+    
 }

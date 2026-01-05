@@ -10,6 +10,7 @@
         <div th:each="slot : ${slots}">
             <input type="checkbox" name="slotIds" th:value="${slot.id}" />
             <label th:text="${slot.startTime}">Slot Time</label>
+            <label th:text="${slot.endTime}">Slot End Time</label>
         </div>
 
         <button type="submit">Submit</button>
