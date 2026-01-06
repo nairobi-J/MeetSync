@@ -10,9 +10,9 @@
 
         /* Heatmap Colors (Right Grid) */
         .heat-0 { background-color: #ffffff; }
-        .heat-1 { background-color: #dcfce7; border: 1px solid #bbf7d0; } /* Light Green */
-        .heat-2 { background-color: #86efac; border: 1px solid #4ade80; } /* Medium Green */
-        .heat-3 { background-color: #22c55e; border: 1px solid #16a34a; } /* Dark Green */
+        .heat-1 { background-color: #dcfce7; border: 1px solid #bbf7d0; }
+        .heat-2 { background-color: #86efac; border: 1px solid #4ade80; } 
+        .heat-3 { background-color: #22c55e; border: 1px solid #16a34a; } 
 
         .tooltip {
             visibility: hidden; position: absolute; z-index: 50;
@@ -45,7 +45,7 @@
     <div class="flex justify-between items-center mb-8">
         <div>
             <h1 class="text-3xl font-black text-slate-800" th:text="${event.title}">Event Title</h1>
-            <p class="text-slate-500" th:text="${event.description}">Event Description</p>
+            <!-- <p class="text-slate-500" th:text="${event.description}">Event Description</p> -->
         </div>
         <div class="text-right">
             <p class="text-sm font-bold text-slate-500">Responding as: <span id="currentUserName" class="text-blue-600"></span></p>
@@ -71,21 +71,42 @@
                     <div class="h-12 border-b bg-slate-100/50"></div>
                     <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h a')}"></div>
                 </div>
-                <div id="personal-viewport" class="flex-1 overflow-x-auto flex bg-white viewport-scroll">
-                    <div th:each="slot : ${event.slots}" class="flex-1 min-w-[100px] border-r border-slate-100 last:border-0">
-                        <div class="h-12 border-b bg-slate-50 flex flex-col items-center justify-center text-[10px] font-bold text-slate-600">
-                            <span th:text="${#temporals.format(slot.slotDate, 'EEE')}"></span>
-                            <span th:text="${#temporals.format(slot.slotDate, 'MMM d')}"></span>
+                <div id="personal-viewport" class="flex-1 overflow-x-auto bg-white viewport-scroll">
+                    <div class="flex">
+                        <!-- Create one column for each date -->
+                        <div th:each="date : ${dates}" class="flex-shrink-0 min-w-[100px] border-r border-slate-100">
+                            <!-- Date header -->
+                            <div class="h-12 border-b bg-slate-50 flex flex-col items-center justify-center text-[10px] font-bold text-slate-600">
+                                <span th:text="${#temporals.format(date, 'EEE')}"></span>
+                                <span th:text="${#temporals.format(date, 'MMM d')}"></span>
+                            </div>
+                            
+                            <!-- Time slots for this date -->
+                            <div th:each="time : ${hours}" class="time-slot-container h-12 border-b border-slate-50 relative">
+                                <th:block th:with="slotKey=${date.toString() + '_' + time.toString()}, slot=${slotMap.get(slotKey)}">
+                                    <div th:if="${slot != null}"
+                                         class="personal-cell clickable-slot w-full h-full cursor-pointer hover:bg-blue-50 transition-colors" 
+                                         th:attr="data-slot-id=${slot.id}"
+                                         onclick="handleSlotClick(this)"></div>
+                                    <div th:if="${slot == null}"
+                                         class="w-full h-full bg-gray-100 opacity-50"></div>
+                                </th:block>
+                            </div>
                         </div>
-                        <div th:each="time : ${hours}" 
-                             class="personal-cell h-12 border-b border-slate-50 cursor-pointer hover:bg-blue-50 transition-colors" 
-                             th:attr="data-slot-id=${slot.id}"></div>
                     </div>
                 </div>
             </div>
-            <button onclick="submitAvailability()" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95">
-                Save My Availability
-            </button>
+            <form id="availabilityForm" th:action="@{/availability/submit}" method="POST">
+    <input type="hidden" name="eventId" th:value="${event.id}">
+    <input type="hidden" id="formGuestName" name="participantName">
+    <input type="hidden" id="selectedSlotsInput" name="slotIds">
+
+    <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+        <button type="button" onclick="handleFormSubmit()" class="w-full mt-6 bg-blue-600 ...">
+            Save My Availability
+        </button>
+    </div>
+</form>
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
@@ -106,16 +127,28 @@
                     <div class="h-12 border-b bg-slate-100/50"></div>
                     <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h a')}"></div>
                 </div>
-                <div id="heatmap-viewport" class="flex-1 overflow-x-auto flex bg-white viewport-scroll">
-                    <div th:each="slot : ${event.slots}" class="flex-1 min-w-[100px] border-r border-slate-100 last:border-0">
-                        <div class="h-12 border-b bg-slate-50 flex flex-col items-center justify-center text-[10px] font-bold text-slate-600">
-                            <span th:text="${#temporals.format(slot.slotDate, 'EEE')}"></span>
-                            <span th:text="${#temporals.format(slot.slotDate, 'MMM d')}"></span>
-                        </div>
-                        <div th:each="time : ${hours}" 
-                             class="heat-cell has-tooltip h-12 border-b border-slate-50 relative" 
-                             th:attr="data-slot-id=${slot.id}">
-                            <div class="tooltip shadow-xl">No votes</div>
+                <div id="heatmap-viewport" class="flex-1 overflow-x-auto bg-white viewport-scroll">
+                    <div class="flex">
+                        <!-- Create one column for each date -->
+                        <div th:each="date : ${dates}" class="flex-shrink-0 min-w-[100px] border-r border-slate-100">
+                            <!-- Date header -->
+                            <div class="h-12 border-b bg-slate-50 flex flex-col items-center justify-center text-[10px] font-bold text-slate-600">
+                                <span th:text="${#temporals.format(date, 'EEE')}"></span>
+                                <span th:text="${#temporals.format(date, 'MMM d')}"></span>
+                            </div>
+                            
+                            <!-- Time slots for this date -->
+                            <div th:each="time : ${hours}" class="time-slot-container h-12 border-b border-slate-50 relative">
+                                <th:block th:with="slotKey=${date.toString() + '_' + time.toString()}, slot=${slotMap.get(slotKey)}">
+                                    <div th:if="${slot != null}"
+                                         class="heat-cell has-tooltip w-full h-full" 
+                                         th:attr="data-slot-id=${slot.id}">
+                                        <div class="tooltip shadow-xl">No votes</div>
+                                    </div>
+                                    <div th:if="${slot == null}"
+                                         class="w-full h-full bg-gray-100 opacity-50"></div>
+                                </th:block>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -136,23 +169,34 @@
 </div>
 
 <script th:inline="javascript">
+
+    const globalData = /*[[${heatmapData}]]*/ {}; 
+    const eventId = /*[[${event.id}]]*/ 0;
+    
+    // 2. Variables
     let currentUser = "";
     let isMouseDown = false;
     let mySelections = new Set();
 
-    // 1. Data passed from Spring Boot
-    // Expected structure: Map<Long, List<String>> (slotId -> list of participant names)
-   const globalData = /*[[${heatmapData}]]*/ {}; 
-    const eventId = /*[[${event.id}]]*/ null;
-    function enterEvent() {
+    // 3. Functions - Explicitly attached to window to prevent ReferenceErrors
+    window.enterEvent = function() {
         const input = document.getElementById('guestName');
-        if (!input.value.trim()) return;
+        if (!input.value.trim()) {
+            alert("Please enter a name");
+            return;
+        }
         currentUser = input.value.trim();
         document.getElementById('currentUserName').innerText = currentUser;
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');
         refreshHeatmap();
-    }
+    };
+
+    window.scrollGrid = function(direction, type) {
+        const viewport = document.getElementById(`${type}-viewport`);
+        const scrollAmount = 300; 
+        viewport.scrollLeft += (direction === 'left' ? -scrollAmount : scrollAmount);
+    };
 
     // --- SELECTION LOGIC ---
     function togglePersonalSlot(cell) {
@@ -164,23 +208,53 @@
             mySelections.add(slotId);
             cell.classList.add('selected');
         }
+        console.log(`Toggled slot ${slotId}. Current selections:`, Array.from(mySelections));
     }
 
-    // Mouse Drag Listeners
-    document.querySelectorAll('.personal-cell').forEach(cell => {
-        cell.addEventListener('mousedown', (e) => {
-            isMouseDown = true;
-            togglePersonalSlot(cell);
-            e.preventDefault();
+   
+    window.handleSlotClick = function(element) {
+        const slotId = element.getAttribute('data-slot-id');
+        console.log(`Direct click on slot ${slotId}`);
+        if (slotId) {
+            togglePersonalSlot(element);
+        }
+    };
+
+    window.handleFormSubmit = function() {
+    if (mySelections.size === 0) {
+        alert("Please select at least one slot.");
+        return;
+    }
+
+    document.getElementById('formGuestName').value = currentUser;
+
+    document.getElementById('selectedSlotsInput').value = Array.from(mySelections).join(',');
+
+    document.getElementById('availabilityForm').submit();
+};
+
+    // --- HEATMAP RENDERING ---
+    function refreshHeatmap() {
+        document.querySelectorAll('.heat-cell').forEach(cell => {
+            const slotId = cell.dataset.slotId;
+            const participants = globalData[slotId] || [];
+            const count = participants.length;
+
+            cell.classList.remove('heat-0', 'heat-1', 'heat-2', 'heat-3');
+            if (count >= 3) cell.classList.add('heat-3');
+            else if (count === 2) cell.classList.add('heat-2');
+            else if (count === 1) cell.classList.add('heat-1');
+            else cell.classList.add('heat-0');
+
+            const tooltip = cell.querySelector('.tooltip');
+            tooltip.innerText = count > 0 
+                ? `${count} available:\n${participants.join('\n')}` 
+                : "No one available";
         });
-        cell.addEventListener('mouseenter', () => {
-            if (isMouseDown) togglePersonalSlot(cell);
-        });
-    });
-    window.addEventListener('mouseup', () => isMouseDown = false);
+    }
 
     // --- SUBMISSION ---
-    function submitAvailability() {
+    window.submitAvailability = function() {
         if (mySelections.size === 0) {
             alert("Please select at least one slot.");
             return;
@@ -195,41 +269,69 @@
             body: params
         })
         .then(response => {
-            // After submitting, we reload the view to see the new group heatmap
-            window.location.reload();
+            if(response.ok) window.location.reload();
+            else alert("Submission failed.");
         })
         .catch(err => {
             console.error(err);
             alert("Error saving availability.");
         });
-    }
+    };
 
-    // --- HEATMAP RENDERING ---
-    function refreshHeatmap() {
-        document.querySelectorAll('.heat-cell').forEach(cell => {
-            const slotId = cell.dataset.slotId;
-            const participants = globalData[slotId] || [];
-            const count = participants.length;
-
-            // Apply logic for heat levels (0 to 3)
-            cell.classList.remove('heat-0', 'heat-1', 'heat-2', 'heat-3');
-            if (count >= 3) cell.classList.add('heat-3');
-            else if (count === 2) cell.classList.add('heat-2');
-            else if (count === 1) cell.classList.add('heat-1');
-            else cell.classList.add('heat-0');
-
-            const tooltip = cell.querySelector('.tooltip');
-            tooltip.innerText = count > 0 
-                ? `${count} available:\n${participants.join('\n')}` 
-                : "No one available";
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("DOM loaded, attaching event listeners...");
+        
+       
+        const personalCells = document.querySelectorAll('.personal-cell');
+        const clickableSlots = document.querySelectorAll('.clickable-slot');
+        console.log(`Found ${personalCells.length} personal cells`);
+        console.log(`Found ${clickableSlots.length} clickable slots`);
+        
+        
+        clickableSlots.forEach((cell, index) => {
+            const slotId = cell.getAttribute('data-slot-id');
+            console.log(`Clickable slot ${index}: slot-id = ${slotId}`);
+            
+            if (slotId) {
+               
+                cell.addEventListener('click', (e) => {
+                    console.log(`Event listener click on slot ${slotId}`);
+                    togglePersonalSlot(cell);
+                    e.stopPropagation();
+                });
+                
+                cell.addEventListener('mousedown', (e) => {
+                    console.log(`Mousedown on slot ${slotId}`);
+                    isMouseDown = true;
+                    togglePersonalSlot(cell);
+                    e.preventDefault();
+                });
+                
+                cell.addEventListener('mouseenter', () => {
+                    if (isMouseDown) {
+                        console.log(`Dragged into slot ${slotId}`);
+                        togglePersonalSlot(cell);
+                    }
+                });
+            } else {
+                console.warn(`Clickable slot ${index} has no slot-id attribute`);
+            }
         });
-    }
+        
+        window.addEventListener('mouseup', () => isMouseDown = false);
+        
+        console.log("Heatmap data:", globalData);
+        
+        setTimeout(() => {
+            console.log("Testing slot detection...");
+            const testSlots = document.querySelectorAll('[data-slot-id]');
+            console.log(`Total slots with data-slot-id: ${testSlots.length}`);
+            testSlots.forEach((slot, i) => {
+                console.log(`Slot ${i}: ID=${slot.getAttribute('data-slot-id')}, classes=${slot.className}`);
+            });
+        }, 1000);
+    });
 
-    function scrollGrid(direction, type) {
-        const viewport = document.getElementById(`${type}-viewport`);
-        const scrollAmount = 300; 
-        viewport.scrollLeft += (direction === 'left' ? -scrollAmount : scrollAmount);
-    }
 </script>
 </body>
 </html>

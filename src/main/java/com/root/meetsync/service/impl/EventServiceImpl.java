@@ -4,10 +4,8 @@ package com.root.meetsync.service.impl;
 import com.root.meetsync.dto.CreateEventRequest;
 import com.root.meetsync.entity.Event;
 import com.root.meetsync.entity.EventSlot;
-import com.root.meetsync.entity.HostAvailability;
 import com.root.meetsync.entity.User;
 import com.root.meetsync.repository.EventRepository;
-import com.root.meetsync.repository.HostAvailabilityRepository;
 import com.root.meetsync.repository.UserRepository;
 import com.root.meetsync.service.EventService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -21,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class EventServiceImpl implements EventService {
-    // Inject only what you need
+    
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
 
@@ -45,20 +43,28 @@ public class EventServiceImpl implements EventService {
         event.setSlotDuration(60);
         event.setShareLink(UUID.randomUUID().toString());
 
-        // Map the List<LocalDate> directly to EventSlots
-        List<EventSlot> slots = request.getSelectedDates().stream().map(date -> {
-            EventSlot slot = new EventSlot();
-            slot.setEvent(event);
-            slot.setSlotDate(date);
-            slot.setStartTime(request.getEarliestTime());
-            slot.setEndTime(request.getEarliestTime().plusHours(1));
-
-            // Link HostAvailability here if your Entity has a List<HostAvailability>
-            // This allows JPA to save everything in one go.
-            return slot;
+        
+        List<EventSlot> slots = request.getSelectedDates().stream().flatMap(date -> {
+            List<EventSlot> dailySlots = new java.util.ArrayList<>();
+            LocalTime current = request.getEarliestTime();
+            
+            // Generate hourly slots
+            while (current.isBefore(request.getLatestTime())) {
+                EventSlot slot = new EventSlot();
+                slot.setEvent(event);
+                slot.setSlotDate(date);
+                slot.setStartTime(current);
+                slot.setEndTime(current.plusHours(1));
+                dailySlots.add(slot);
+                
+                current = current.plusHours(1);
+                
+            }
+            
+            return dailySlots.stream();
         }).collect(Collectors.toList());
 
         event.setSlots(slots);
-        return eventRepository.save(event); // One save call handles it all
+        return eventRepository.save(event);
     }
 }

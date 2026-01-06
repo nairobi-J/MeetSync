@@ -3,8 +3,6 @@ package com.root.meetsync.service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -61,5 +59,20 @@ public class AvailabilityService {
         return slotCounts.stream().collect(
             java.util.stream.Collectors.groupingBy(SlotCountDto::getSlotDate)
         );
+    }
+
+    public Map<String, List<String>> getHeatmapDataForGuestView(Long eventId) {
+       
+        List<ParticipantAvailability> availabilities = participantAvailabilityRepository.findByEventSlot_Event_Id(eventId);
+        
+      
+        return availabilities.stream()
+            .collect(java.util.stream.Collectors.groupingBy(
+                pa -> pa.getEventSlot().getId().toString(),
+                java.util.stream.Collectors.mapping(
+                    ParticipantAvailability::getParticipantName,
+                    java.util.stream.Collectors.toList()
+                )
+            ));
     }
 }
