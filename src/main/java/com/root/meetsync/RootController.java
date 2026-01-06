@@ -17,12 +17,13 @@ public class RootController {
     private final EventRepository eventRepository;
     private final EventSlotRepository eventSlotRepository;
     private final HostAvailabilityRepository hostAvailabilityRepository;
-
-    public RootController(EventRepository eventRepository, EventSlotRepository eventSlotRepository, HostAvailabilityRepository hostAvailabilityRepository, UserRepository userRepository) {
+    private final ParticipantAvailabilityRepository participantAvailabilityRepository;
+    public RootController(EventRepository eventRepository, EventSlotRepository eventSlotRepository, HostAvailabilityRepository hostAvailabilityRepository, UserRepository userRepository, ParticipantAvailabilityRepository participantAvailabilityRepository) {
         this.eventRepository = eventRepository;
         this.eventSlotRepository = eventSlotRepository;
         this.hostAvailabilityRepository = hostAvailabilityRepository;
         this.userRepository = userRepository;
+        this.participantAvailabilityRepository = participantAvailabilityRepository;
     }
     @GetMapping("/event-create")
     public String showCreateEventPage() {
@@ -105,7 +106,75 @@ public class RootController {
         return "redirect:/event/" + shareLink;
     }
 
+    @GetMapping("/event/{shareLink}/overview")
+    public String showEventOverview(@PathVariable String shareLink, Model model, Authentication auth) {
+        Event event = eventRepository.findByShareLink(shareLink)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
 
+        // 1. Setup Time Headers for the grid
+        List<LocalTime> hours = new ArrayList<>();
+        LocalTime current = event.getEarliestTime();
+        while (current.isBefore(event.getLatestTime())) {
+            hours.add(current);
+            current = current.plusHours(1);
+        }
+
+        // 2. Prepare Combined Heatmap Data (Host + Participants)
+        Map<Long, List<String>> combinedHeatmap = new HashMap<>();
+        // Initialize every slot with an empty list
+        event.getSlots().forEach(slot -> combinedHeatmap.put(slot.getId(), new ArrayList<>()));
+
+        // Add Host Selections
+        List<HostAvailability> hostVotes = hostAvailabilityRepository.findByEventSlot_Event_Id(event.getId());
+        for (HostAvailability ha : hostVotes) {
+            String hostName = ha.getHost().getName() != null ? ha.getHost().getName() : "Host";
+            combinedHeatmap.get(ha.getEventSlot().getId()).add(hostName + " (Host)");
+        }
+
+        // Add Participant Selections
+        List<ParticipantAvailability> guestVotes = participantAvailabilityRepository.findByEventSlot_Event_Id(event.getId());
+        for (ParticipantAvailability pa : guestVotes) {
+            combinedHeatmap.get(pa.getEventSlot().getId()).add(pa.getParticipantName());
+        }
+
+        // 3. Calculate Statistics (Best Time & Total People)
+        long maxVotes = 0;
+        EventSlot bestSlot = null;
+        for (EventSlot slot : event.getSlots()) {
+            int count = combinedHeatmap.get(slot.getId()).size();
+            if (count > maxVotes) {
+                maxVotes = count;
+                bestSlot = slot;
+            }
+        }
+
+        // Unique count of guest names + 1 for the Host
+        long uniqueGuests = guestVotes.stream().map(ParticipantAvailability::getParticipantName).distinct().count();
+
+        model.addAttribute("event", event);
+        model.addAttribute("hours", hours);
+        model.addAttribute("heatmapDataJson", convertMapToJson(combinedHeatmap)); // Uses your helper method
+        model.addAttribute("bestSlot", bestSlot);
+        model.addAttribute("totalParticipants", uniqueGuests + 1);
+
+        return "event-overview";
+    }
+    private String convertMapToJson(Map<Long, List<String>> map) {
+        StringBuilder sb = new StringBuilder("{");
+        Iterator<Map.Entry<Long, List<String>>> it = map.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Long, List<String>> entry = it.next();
+            sb.append("\"").append(entry.getKey()).append("\":[");
+            List<String> names = entry.getValue();
+            for (int j = 0; j < names.size(); j++) {
+                sb.append("\"").append(names.get(j)).append("\"");
+                if (j < names.size() - 1) sb.append(",");
+            }
+            sb.append("]");
+            if (it.hasNext()) sb.append(",");
+        }
+        return sb.append("}").toString();
+    }
     private String getEmailFromAuth(Authentication auth) {
         if (auth instanceof OAuth2AuthenticationToken oauth) return (String) oauth.getPrincipal().getAttributes().get("email");
         return auth != null ? auth.getName() : null;
