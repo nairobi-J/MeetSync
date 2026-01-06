@@ -29,17 +29,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        //public
-                        .requestMatchers("/login", "/signup", "/css/**", "/js/**").permitAll()
-                          
-    // Public booking endpoints (for invitees)
-    .requestMatchers("/availability/setup/**").authenticated()
-        .requestMatchers("/user-info").authenticated()
-    .requestMatchers("/api/bookings/u/**").permitAll()   
-     .requestMatchers("/bookings/u/**").permitAll()    // Create booking
-                       
-                        // Set Password pages
-                        .requestMatchers("/set-password", "/api/users/set-password").authenticated()
+                        .requestMatchers("/", "/login/**", "/create-event").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
