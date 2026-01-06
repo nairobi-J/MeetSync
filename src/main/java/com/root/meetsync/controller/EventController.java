@@ -1,6 +1,7 @@
 package com.root.meetsync.controller;
 
 import com.root.meetsync.dto.CreateEventRequest;
+import com.root.meetsync.entity.Event;
 import com.root.meetsync.service.EventService;
 import org.springframework.security.core.Authentication; // Updated import
 import org.springframework.stereotype.Controller;
@@ -20,7 +21,7 @@ public class EventController {
     @PostMapping("/create")
     public String createEvent(CreateEventRequest request, Authentication auth) {
 
-        Event savedEvent = eventService.createEvent(request, auth);
+       Event savedEvent = eventService.createEvent(request, auth);
         return "redirect:/event/" + savedEvent.getShareLink();
     }
 }

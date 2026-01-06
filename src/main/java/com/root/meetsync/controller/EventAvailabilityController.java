@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -75,24 +77,23 @@ public String showGuestView(@PathVariable Long eventId, Model model) {
     Event event = eventRepository.findById(eventId)
         .orElseThrow(() -> new RuntimeException("Event not found"));
     
-    // Generate time slots based on event's earliest and latest times
+    // time slots based on event's earliest and latest times
     List<LocalTime> hours = generateTimeSlots(event.getEarliestTime(), event.getLatestTime());
     
-    // Get unique dates from event slots
+    // unique dates from event slots
     List<LocalDate> dates = event.getSlots().stream()
             .map(slot -> slot.getSlotDate())
             .distinct()
             .sorted()
             .collect(Collectors.toList());
     
-    // Create a map for easier template lookup: "date_time" -> slot
+    //  map "date_time" -> slot
     Map<String, EventSlot> slotMap = event.getSlots().stream()
             .collect(Collectors.toMap(
                 slot -> slot.getSlotDate().toString() + "_" + slot.getStartTime().toString(),
                 slot -> slot
             ));
-    
-    // Debug: Log the slot map keys for troubleshooting
+  
     System.out.println("=== DEBUG: Slot Map Keys ===");
     System.out.println("Total slots in event: " + event.getSlots().size());
     event.getSlots().forEach(slot -> 
@@ -118,7 +119,7 @@ public String showGuestView(@PathVariable Long eventId, Model model) {
     return "guest-view";
 }
 
-private List<LocalTime> generateTimeSlots(LocalTime earliest, LocalTime latest) {
+public List<LocalTime> generateTimeSlots(LocalTime earliest, LocalTime latest) {
     List<LocalTime> slots = new ArrayList<>();
     LocalTime current = earliest;
     
@@ -134,13 +135,13 @@ private List<LocalTime> generateTimeSlots(LocalTime earliest, LocalTime latest) 
     return slots;
 }
 
-@PostMapping("/availability/submit")
+@PostMapping("/event/participant/submit")
 public String submitAvailability(
         @RequestParam String participantName, 
         @RequestParam String slotIds,
         @RequestParam Long eventId) {
 
-    // Parse comma-separated slot IDs
+   
     List<Long> slotIdList = java.util.Arrays.stream(slotIds.split(","))
             .map(String::trim)
             .filter(s -> !s.isEmpty())
@@ -149,8 +150,67 @@ public String submitAvailability(
 
     availabilityService.saveAvailability(participantName, slotIdList);
 
-    // Redirect back to the guest view for this specific event
     return "redirect:/event/" + eventId + "/guest-view";
 }
+
+
+private void populateGuestModel(Model model, Event event) {
+    // time slots based on event's earliest and latest times
+    List<LocalTime> hours = generateTimeSlots(event.getEarliestTime(), event.getLatestTime());
+    
+    // unique dates from event slots
+    List<LocalDate> dates = event.getSlots().stream()
+            .map(slot -> slot.getSlotDate())
+            .distinct()
+            .sorted()
+            .collect(Collectors.toList());
+    
+    //  map "date_time" -> slot
+    Map<String, EventSlot> slotMap = event.getSlots().stream()
+            .collect(Collectors.toMap(
+                slot -> slot.getSlotDate().toString() + "_" + slot.getStartTime().toString(),
+                slot -> slot
+            ));
+  
+    model.addAttribute("event", event);
+    model.addAttribute("hours", hours);
+    model.addAttribute("dates", dates);
+    model.addAttribute("slotMap", slotMap);
+    model.addAttribute("heatmapData", availabilityService.getHeatmapDataForGuestView(event.getId()));
+
+}
+
+ @GetMapping("/event/participant/{shareLink}")
+ public String showEventAvailabilityPage(@PathVariable String shareLink, Model model, Authentication auth) {
+        Event event = eventRepository.findByShareLink(shareLink)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        
+        boolean isHost = false;
+        if (auth != null && auth.isAuthenticated()) {
+            String currentUserEmail;
+            if (auth instanceof OAuth2AuthenticationToken oauth) {
+                currentUserEmail = (String) oauth.getPrincipal().getAttributes().get("email");
+            } else {
+                currentUserEmail = auth.getName();
+            }
+
+            if (event.getHost().getEmail().equals(currentUserEmail)) {
+                isHost = true;
+            }
+        }
+    
+        populateGuestModel(model, event);
+
+        if (isHost) {
+            // Add the full URL for the copy-link feature
+            String fullUrl = "http://localhost:8080/event/participant/" + shareLink;
+            model.addAttribute("fullUrl", fullUrl);
+            return "host-view"; // Return host-view.html
+        } else {
+            return "guest-view"; // Return guest-view.html
+        }
+    }
+
 
 }

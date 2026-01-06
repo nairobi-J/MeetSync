@@ -96,7 +96,7 @@
                     </div>
                 </div>
             </div>
-            <form id="availabilityForm" th:action="@{/availability/submit}" method="POST">
+            <form id="availabilityForm" th:action="@{/event/participant/submit}" method="POST">
     <input type="hidden" name="eventId" th:value="${event.id}">
     <input type="hidden" id="formGuestName" name="participantName">
     <input type="hidden" id="selectedSlotsInput" name="slotIds">
@@ -264,7 +264,7 @@
         params.append('participantName', currentUser);
         mySelections.forEach(id => params.append('slotIds', id));
 
-        fetch('/availability/submit', {
+        fetch('/event/participant/submit', {
             method: 'POST',
             body: params
         })
