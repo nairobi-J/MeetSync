@@ -4,16 +4,16 @@ import com.root.meetsync.dto.CreateEventRequest;
 import com.root.meetsync.entity.*;
 import com.root.meetsync.repository.*;
 import com.root.meetsync.service.EventService;
-import org.springframework.security.core.Authentication; // Updated
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken; // Keep for instance check
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class EventServiceImpl implements EventService {
@@ -34,10 +34,9 @@ public class EventServiceImpl implements EventService {
         if (auth instanceof OAuth2AuthenticationToken oauth) {
             email = (String) oauth.getPrincipal().getAttributes().get("email");
         } else {
-            email = auth.getName(); // Standard UsernamePasswordAuthenticationToken email
+            email = auth.getName();
         }
 
-        // Find user by email instead of Google ID
         User host = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found: " + email));
 
@@ -51,14 +50,24 @@ public class EventServiceImpl implements EventService {
         event.setShareLink(UUID.randomUUID().toString());
 
         if (request.getSelectedDates() != null) {
-            List<EventSlot> slots = request.getSelectedDates().stream().map(date -> {
-                EventSlot slot = new EventSlot();
-                slot.setEvent(event);
-                slot.setSlotDate(date);
-                slot.setStartTime(request.getEarliestTime());
-                slot.setEndTime(request.getEarliestTime().plusHours(1));
-                return slot;
-            }).collect(Collectors.toList());
+            List<EventSlot> slots = new ArrayList<>();
+
+            for (LocalDate date : request.getSelectedDates()) {
+                LocalTime timeTracker = request.getEarliestTime();
+
+
+                while (timeTracker.isBefore(request.getLatestTime())) {
+                    EventSlot slot = new EventSlot();
+                    slot.setEvent(event);
+                    slot.setSlotDate(date);
+                    slot.setStartTime(timeTracker);
+                    slot.setEndTime(timeTracker.plusHours(1));
+                    slots.add(slot);
+
+
+                    timeTracker = timeTracker.plusHours(1);
+                }
+            }
             event.setSlots(slots);
         }
 
