@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Meeting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day.available {
+            cursor: pointer;
+            font-weight: 500;
+            background: rgba(37, 99, 235, 0.2);
+            color: #2563eb;
+            border-radius: 50%;
+        
+        }
+
+        .calendar-day.available:hover {
+            transform: scale(1.05);
+            background-color: #f3f4f6;
+            border-radius: 50%;
+        }
+
+        .calendar-day.selected {
+            background: #2563eb !important;
+            color: white !important;
+            border-radius: 50% !important;
+        }
+
+        .calendar-day.disabled {
+            cursor: not-allowed;
+            font-weight: 500;
+        }
+
+        .time-slot {
+            transition: all 0.15s ease;
+        }
+
+        .time-slot:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gray-50 text-gray-900">
+    <div class="max-w-5xl mx-auto px-4 py-8">
+        <div class="mb-6">
+            <h1 class="text-2xl font-semibold text-gray-900 mb-1">Schedule a Meeting</h1>
+            <p class="text-sm text-gray-500" id="timezoneDisplay"></p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Calendar -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 lg:col-span-2">
+                <div class="flex items-center justify-between mb-6">
+                    <button type="button" id="prevMonth"
+                        class="w-10 h-10 flex items-center justify-center  font-medium transition">
+                        Previous
+                    </button>
+                    <h2 class="text-lg font-semibold text-gray-900" id="monthLabel"></h2>
+                    <button type="button" id="nextMonth"
+                        class="w-10 h-10 flex items-center justify-center  font-medium transition">
+                        Next
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-7 gap-2 mb-3">
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Sun</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Mon</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Tue</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Wed</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Thu</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Fri</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Sat</div>
+                </div>
+
+                <div id="calendarGrid" class="grid grid-cols-7 gap-2"></div>
+            </div>
+
+            <!-- Times + booking form -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-4">
+                <div class="pb-3 border-b border-gray-100">
+                    <p class="text-xs text-gray-500 mb-1">Selected date</p>
+                    <p class="text-base font-semibold text-gray-900" id="selectedDateLabel">Choose a date</p>
+                </div>
+
+                <div>
+                    <p class="text-xs font-medium text-gray-700 mb-3">Available times</p>
+                    <div id="timesContainer" class="grid grid-cols-2 gap-2"></div>
+                    <p id="noTimes" class="text-sm text-gray-400 text-center py-4 hidden">No times available</p>
+                </div>
+
+                <div class="border-t border-gray-100 pt-4 space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Name</label>
+                        <input id="inviteeName" type="text"
+                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Your name">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Email</label>
+                        <input id="inviteeEmail" type="email"
+                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="you@example.com">
+                    </div>
+                    <button id="bookBtn"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Confirm Booking
+                    </button>
+                    <p id="status" class="text-xs text-center"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const emailPrefix = /*[[${emailPrefix}]]*/ '';
+        const availableSlotsData = /*[[${availableSlots}]]*/[];
+        const localeTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+        let currentMonth = new Date();
+        currentMonth.setDate(1);
+        let slotsByDate = {};
+        let availableDates = [];
+        let selectedDate = null;
+        let selectedTime = null;
+
+        document.getElementById('timezoneDisplay').textContent = `Times shown in ${localeTz}`;
+
+        document.getElementById('prevMonth').onclick = goToPrevMonthWithSlots;
+        document.getElementById('nextMonth').onclick = goToNextMonthWithSlots;
+        document.getElementById('bookBtn').onclick = bookSlot;
+
+        // Load from server-side data
+        hydrateSlots(availableSlotsData);
+        setToFirstAvailableMonth();
+        renderCalendar();
+        autoSelectFirstAvailable();
+        renderSlotList(availableSlotsData);
+
+        function hydrateSlots(data) {
+            slotsByDate = {};
+            data.forEach(slot => {
+                if (!slot.startTime) return;
+                const [datePart, timePart] = slot.startTime.split('T');
+                if (!datePart || !timePart) return;
+                const time = timePart.substring(0, 5);
+                if (!slotsByDate[datePart]) slotsByDate[datePart] = [];
+                slotsByDate[datePart].push({ time, label: formatTime(time) });
+            });
+            availableDates = Object.keys(slotsByDate).sort();
+            availableDates.forEach(d => slotsByDate[d].sort((a, b) => a.time.localeCompare(b.time)));
+        }
+
+        function setToFirstAvailableMonth() {
+            if (availableDates.length === 0) return;
+            const firstDate = availableDates[0];
+            const [y, m, d] = firstDate.split('-').map(Number);
+            currentMonth = new Date(y, m - 1, 1);
+        }
+
+        function monthHasSlots(year, month) {
+            const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+            return availableDates.some(date => date.startsWith(monthStr));
+        }
+
+        function hasPrevMonthWithSlots() {
+            let testMonth = new Date(currentMonth);
+            testMonth.setMonth(testMonth.getMonth() - 1);
+            let attempts = 0;
+            while (attempts < 24) {
+                if (monthHasSlots(testMonth.getFullYear(), testMonth.getMonth())) {
+                    return true;
+                }
+                testMonth.setMonth(testMonth.getMonth() - 1);
+                attempts++;
+            }
+            return false;
+        }
+
+        function hasNextMonthWithSlots() {
+            let testMonth = new Date(currentMonth);
+            testMonth.setMonth(testMonth.getMonth() + 1);
+            let attempts = 0;
+            while (attempts < 24) {
+                if (monthHasSlots(testMonth.getFullYear(), testMonth.getMonth())) {
+                    return true;
+                }
+                testMonth.setMonth(testMonth.getMonth() + 1);
+                attempts++;
+            }
+            return false;
+        }
+
+        function goToPrevMonthWithSlots() {
+            let testMonth = new Date(currentMonth);
+            testMonth.setMonth(testMonth.getMonth() - 1);
+            let attempts = 0;
+            while (attempts < 24) { // search up to 2 years back
+                if (monthHasSlots(testMonth.getFullYear(), testMonth.getMonth())) {
+                    currentMonth = new Date(testMonth);
+                    renderCalendar();
+                    return;
+                }
+                testMonth.setMonth(testMonth.getMonth() - 1);
+                attempts++;
+            }
+        }
+
+        function goToNextMonthWithSlots() {
+            let testMonth = new Date(currentMonth);
+            testMonth.setMonth(testMonth.getMonth() + 1);
+            let attempts = 0;
+            while (attempts < 24) { // search up to 2 years forward
+                if (monthHasSlots(testMonth.getFullYear(), testMonth.getMonth())) {
+                    currentMonth = new Date(testMonth);
+                    renderCalendar();
+                    return;
+                }
+                testMonth.setMonth(testMonth.getMonth() + 1);
+                attempts++;
+            }
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevMonth');
+            const nextBtn = document.getElementById('nextMonth');
+            
+            const hasPrev = hasPrevMonthWithSlots();
+            const hasNext = hasNextMonthWithSlots();
+            
+            if (hasPrev) {
+                prevBtn.className = 'w-10 h-10 flex items-center justify-center  font-medium transition text-blue-500 ';
+                prevBtn.disabled = false;
+            } else {
+                prevBtn.className = 'w-10 h-10 flex items-center justify-center rounded-lg font-medium transition  text-gray-300 cursor-not-allowed';
+                prevBtn.disabled = true;
+            }
+            
+            if (hasNext) {
+                nextBtn.className = 'w-10 h-10 flex items-center justify-center  font-medium transition text-blue-500 ';
+                nextBtn.disabled = false;
+            } else {
+                nextBtn.className = 'w-10 h-10 flex items-center justify-center  font-medium transition  text-gray-300 cursor-not-allowed';
+                nextBtn.disabled = true;
+            }
+        }
+
+        function renderSlotList(data) {
+            const container = document.getElementById('slotsList');
+            if (!container) return;
+            container.innerHTML = '';
+            if (!data || !data.length) {
+                container.textContent = 'No available slots found.';
+                return;
+            }
+            const formatter = new Intl.DateTimeFormat([], {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+            data.forEach((slot, idx) => {
+                if (idx >= 100) return; // prevent overly long lists
+                const row = document.createElement('div');
+                const start = slot.startTime ? new Date(slot.startTime) : null;
+                const end = slot.endTime ? new Date(slot.endTime) : null;
+                const startLabel = start ? formatter.format(start) : 'Unknown start';
+                const endLabel = end ? formatter.format(end) : 'Unknown end';
+                const tz = slot.timezone || 'unspecified tz';
+                row.textContent = `${startLabel} → ${endLabel} (${tz})`;
+                container.appendChild(row);
+            });
+            if (data.length > 100) {
+                const note = document.createElement('div');
+                note.className = 'text-xs text-gray-500';
+                note.textContent = `Showing first 100 of ${data.length} slots.`;
+                container.appendChild(note);
+            }
+        }
+
+        function renderCalendar() {
+            document.getElementById('monthLabel').textContent = `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+            const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                const pad = document.createElement('div');
+                grid.appendChild(pad);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = formatDate(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+                const btn = document.createElement('button');
+                btn.textContent = day;
+                btn.className = 'calendar-day text-sm font-medium';
+
+                if (availableDates.includes(dateStr)) {
+                    btn.classList.add('available', 'text-gray-700', 'hover:bg-gray-100');
+                    btn.onclick = () => selectDate(dateStr);
+                    if (dateStr === selectedDate) {
+                        btn.classList.add('selected');
+                    }
+                } else {
+                    btn.classList.add('disabled', 'text-gray-300');
+                    btn.disabled = true;
+                }
+
+                grid.appendChild(btn);
+            }
+            
+            updateNavigationButtons();
+        }
+
+        function selectDate(dateStr) {
+            selectedDate = dateStr;
+            selectedTime = null;
+            renderCalendar();
+            renderTimes();
+            document.getElementById('selectedDateLabel').textContent = formatDateHuman(dateStr);
+        }
+
+        function renderTimes() {
+            const container = document.getElementById('timesContainer');
+            const noTimes = document.getElementById('noTimes');
+            container.innerHTML = '';
+            const times = slotsByDate[selectedDate] || [];
+            if (!times.length) {
+                noTimes.classList.remove('hidden');
+                return;
+            }
+            noTimes.classList.add('hidden');
+            times.forEach(t => {
+                const btn = document.createElement('button');
+                btn.textContent = t.label;
+                btn.className = 'time-slot text-sm px-3 py-2.5 rounded-lg border border-gray-300 bg-white hover:border-blue-500 hover:bg-blue-50 text-gray-700 font-medium';
+                if (selectedTime === t.time) {
+                    btn.className = 'time-slot text-sm px-3 py-2.5 rounded-lg border-2 border-blue-600 bg-blue-50 text-blue-700 font-medium';
+                }
+                btn.onclick = () => { selectedTime = t.time; renderTimes(); };
+                container.appendChild(btn);
+            });
+        }
+
+        function autoSelectFirstAvailable() {
+            if (availableDates.length === 0) return;
+            selectDate(availableDates[0]);
+        }
+
+        async function bookSlot() {
+            const name = document.getElementById('inviteeName').value.trim();
+            const email = document.getElementById('inviteeEmail').value.trim();
+            if (!selectedDate || !selectedTime) {
+                setStatus('Pick a date and time.', true);
+                return;
+            }
+            if (!name || !email) {
+                setStatus('Enter your name and email.', true);
+                return;
+            }
+            setStatus('Booking...', false);
+            document.getElementById('bookBtn').disabled = true;
+            try {
+                const res = await fetch(`/api/bookings/u/${emailPrefix}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        inviteeName: name,
+                        inviteeEmail: email,
+                        bookingDate: selectedDate,
+                        bookingTime: selectedTime
+                    })
+                });
+                if (!res.ok) throw new Error('Booking failed');
+                setStatus('Booked! Check your email for details.', false, true);
+            } catch (err) {
+                setStatus(err.message, true);
+            } finally {
+                document.getElementById('bookBtn').disabled = false;
+            }
+        }
+
+        function formatDate(y, mIndex, d) {
+            return `${y}-${String(mIndex + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        }
+
+        function formatDateHuman(dateStr) {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            const dt = new Date(y, m - 1, d);
+            return dt.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+        }
+
+        function formatTime(timeStr) {
+            const [h, m] = timeStr.split(':').map(Number);
+            const dt = new Date();
+            dt.setHours(h, m, 0, 0);
+            return dt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function setStatus(msg, isError = false, isSuccess = false) {
+            const el = document.getElementById('status');
+            el.textContent = msg || '';
+            el.className = 'text-xs text-center';
+            if (isError) el.classList.add('text-red-600');
+            else if (isSuccess) el.classList.add('text-green-600');
+            else el.classList.add('text-gray-500');
+        }
+    </script>
+</body>
+
+</html>

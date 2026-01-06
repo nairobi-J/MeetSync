@@ -55,7 +55,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
-
+<!-- Jackson JSR310 for Java 8 Date/Time support -->
+<dependency>
+    <groupId>com.fasterxml.jackson.datatype</groupId>
+    <artifactId>jackson-datatype-jsr310</artifactId>
+</dependency>
 		<!-- Database -->
 		<dependency>
 			<groupId>org.postgresql</groupId>
