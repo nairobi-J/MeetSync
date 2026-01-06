@@ -21,7 +21,7 @@ public class EventController {
     @PostMapping("/create")
     public String createEvent(CreateEventRequest request, Authentication auth) {
 
-        Event savedEvent = eventService.createEvent(request, auth);
+       Event savedEvent = eventService.createEvent(request, auth);
         return "redirect:/event/" + savedEvent.getShareLink();
     }
 }
