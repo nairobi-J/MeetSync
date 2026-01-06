@@ -2,6 +2,7 @@ package com.root.meetsync;
 
 import com.root.meetsync.entity.*;
 import com.root.meetsync.repository.*;
+import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
@@ -85,6 +86,7 @@ public class RootController {
         return "guest-view";
     }
 
+    @Transactional
     @PostMapping("/event/{shareLink}/host-availability")
     public String saveHostAvailability(@PathVariable String shareLink, @RequestParam(required = false) List<Long> slotIds, Authentication auth) {
         Event event = eventRepository.findByShareLink(shareLink).orElseThrow();
@@ -93,18 +95,29 @@ public class RootController {
 
         hostAvailabilityRepository.deleteByHostAndEventSlot_Event_Id(host, event.getId());
 
-        if (slotIds != null) {
+        if (slotIds != null && !slotIds.isEmpty()) {
+            List<HostAvailability> newAvailabilities = new ArrayList<>();
+
             for (Long id : slotIds) {
-                eventSlotRepository.findById(id).ifPresent(slot -> {
-                    HostAvailability ha = new HostAvailability();
-                    ha.setHost(host);
-                    ha.setEventSlot(slot);
-                    hostAvailabilityRepository.save(ha);
-                });
+                HostAvailability ha = new HostAvailability();
+                ha.setHost(host);
+
+                // USE THIS: getReferenceById doesn't hit the database!
+                // It just creates a "proxy" using the ID you already have.
+                ha.setEventSlot(eventSlotRepository.getReferenceById(id));
+
+                newAvailabilities.add(ha);
             }
+            // 3. Save all at once
+            hostAvailabilityRepository.saveAll(newAvailabilities);
         }
         return "redirect:/event/" + shareLink;
     }
+
+
+
+
+
 
     @GetMapping("/event/{shareLink}/overview")
     public String showEventOverview(@PathVariable String shareLink, Model model, Authentication auth) {

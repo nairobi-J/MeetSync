@@ -24,7 +24,15 @@
         <div class="flex gap-4">
             <a th:href="@{'/event/' + ${event.shareLink}}" class="bg-white border px-6 py-2 rounded-lg font-bold hover:bg-slate-50 transition">Manage Availability</a>
             <button class="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold shadow-lg hover:bg-blue-700">Confirm Schedule</button>
+            <button onclick="copyParticipantLink()" class="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 font-bold transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+                Copy Guest Link
+            </button>
         </div>
+        <input type="hidden" id="eventShareLink" th:value="${event.shareLink}">
+
     </div>
 
     <div class="grid grid-cols-12 gap-8">
@@ -102,8 +110,46 @@
             });
         });
     }
+    function copyLink() {
+        const link = document.getElementById('shareLinkValue').value;
+        navigator.clipboard.writeText(link).then(() => alert("Link copied to clipboard!"));
+    }
+    function copyParticipantLink() {
+        const shareLink = document.getElementById('eventShareLink').value;
+        const participantUrl = window.location.protocol + "//" + window.location.host + "/event/participant/" + shareLink;
+
+        // Attempt to get the button element safely
+        const btn = event.currentTarget || document.querySelector('button[onclick="copyParticipantLink()"]');
+        const originalContent = btn.innerHTML;
+
+        navigator.clipboard.writeText(participantUrl).then(() => {
+            // Visual Feedback: Change button state
+            btn.innerHTML = `
+            <span class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Link Copied
+            </span>
+        `;
+
+            // Swap colors to show success (Green)
+            const originalClasses = btn.className;
+            btn.className = "bg-green-600 text-white px-6 py-2 rounded-lg font-bold transition flex items-center gap-2";
+
+            // Revert back after 2 seconds
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.className = originalClasses;
+            }, 2000);
+
+        }).catch(err => {
+            console.error('Copy failed', err);
+        });
+    }
 
     initHeatmap();
 </script>
+
 </body>
 </html>

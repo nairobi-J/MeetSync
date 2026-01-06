@@ -27,9 +27,7 @@
     <div class="flex justify-between items-center mb-8">
         <h1 class="text-3xl font-black text-slate-800" th:text="${event.title}"></h1>
         <input type="hidden" id="shareLinkValue" th:value="${fullUrl}">
-        <button onclick="copyLink()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-bold transition">
-            Copy Share Link
-        </button>
+
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -146,22 +144,34 @@
 
     // 4. Persistence
     function submitAvailability() {
+        document.getElementById('screen-loader').classList.remove('hidden');
         const formData = new URLSearchParams();
         selectedSlotIds.forEach(id => formData.append('slotIds', id));
-        fetch(window.location.pathname + '/host-availability', {
+        const currentPath = window.location.pathname;
+
+        fetch(currentPath + '/host-availability', {
             method: 'POST',
             body: formData
-        }).then(() => location.reload());
+        }).then(response => {
+            if (response.ok) {
+                // Redirect to the overview page
+                window.location.href = currentPath + '/overview';
+            } else {
+                console.error("Save failed");
+            }
+        });
     }
 
-    // 5. Copy Link Logic (Hidden Link)
-    function copyLink() {
-        const link = document.getElementById('shareLinkValue').value;
-        navigator.clipboard.writeText(link).then(() => alert("Link copied to clipboard!"));
-    }
+
 
     // Run on load
     updateHeatmapUI();
 </script>
+<div id="screen-loader" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p class="font-bold text-slate-700">Finalizing your schedule...</p>
+    </div>
+</div>
 </body>
 </html>
