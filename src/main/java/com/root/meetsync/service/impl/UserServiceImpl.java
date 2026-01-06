@@ -76,6 +76,7 @@ public class UserServiceImpl implements UserService {
         String googleId = (String) attributes.get("sub");
         String email = (String) attributes.get("email");
         String name = (String) attributes.get("name");
+        String picture = (String) attributes.get("picture");
 
         // 2. Get the OAuth Tokens (Access & Refresh)
         OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
@@ -94,6 +95,7 @@ public class UserServiceImpl implements UserService {
             newUser.setEmail(email);
             newUser.setName(name);
             newUser.setTimezone("UTC");
+            newUser.setProfilePic(picture);
             return newUser;
         });
 

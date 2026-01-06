@@ -28,10 +28,14 @@ public class  WebController {
         return "signup";
     }
 
-    // This is the mapping to show your set-password.html file
     @GetMapping("/set-password")
     public String showSetPasswordPage() {
         return "set-password";
+    }
+
+    @GetMapping("/profile")
+    public String showProfilePage() {
+        return "userinfo"; // This looks for userInfo.html in templates folder
     }
 
     @GetMapping("/dashboard")
@@ -52,8 +56,6 @@ public class  WebController {
         if (user.getPassword() == null || user.getPassword().isEmpty()) {
             return "redirect:/set-password";
         }
-
-            model.addAttribute("userName", user.getName());
         return "MainHome";
     }
 }
