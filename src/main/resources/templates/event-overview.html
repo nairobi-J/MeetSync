@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Event Overview | MeetSync</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .heat-0 { background-color: #f8fafc; }
+        .heat-1 { background-color: #dcfce7; }
+        .heat-2 { background-color: #86efac; }
+        .heat-3 { background-color: #22c55e; }
+        .tooltip { visibility: hidden; position: absolute; z-index: 50; background: #1e293b; color: white; padding: 8px; border-radius: 4px; font-size: 12px; pointer-events: none; white-space: pre-line; }
+        .has-tooltip:hover .tooltip { visibility: visible; }
+    </style>
+</head>
+<body class="bg-slate-50 p-8">
+
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-start mb-10">
+        <div>
+            <h1 class="text-4xl font-black text-slate-800" th:text="${event.title}">Event Name</h1>
+            <p class="text-slate-500 mt-2">Schedule Pending • <span th:text="${event.timezone}"></span></p>
+        </div>
+        <div class="flex gap-4">
+            <a th:href="@{'/event/' + ${event.shareLink}}" class="bg-white border px-6 py-2 rounded-lg font-bold hover:bg-slate-50 transition">Manage Availability</a>
+            <button class="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold shadow-lg hover:bg-blue-700">Confirm Schedule</button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-8">
+        <div class="col-span-3">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="font-bold text-lg mb-4">Participants <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-sm ml-2" th:text="${totalParticipants}">0</span></h3>
+
+                <div th:if="${bestSlot != null}" class="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
+                    <p class="text-xs font-bold text-green-700 uppercase tracking-wider">Best Time Found</p>
+                    <p class="font-bold text-green-900 mt-1" th:text="${#temporals.format(bestSlot.slotDate, 'EEE, MMM d')}"></p>
+                    <p class="text-sm text-green-800" th:text="${#temporals.format(bestSlot.startTime, 'h:mm a')}"></p>
+                </div>
+
+                <p class="text-xs font-bold text-slate-400 uppercase mb-3">Available for Best Time</p>
+                <div id="availability-list" class="space-y-2 text-slate-700">
+                    <p class="text-sm italic text-slate-400">Hover over a time to see who is available</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-span-9 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex border rounded-xl overflow-hidden shadow-inner">
+                <div class="w-20 bg-slate-50 border-r border-slate-200">
+                    <div class="h-12 border-b"></div>
+                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h a')}"></div>
+                </div>
+                <div class="flex-1 flex overflow-x-auto">
+                    <div th:each="date : ${#lists.sort(#lists.toList(#sets.toSet(event.slots.![slotDate])))}" class="flex-1 min-w-[120px] border-r last:border-0">
+                        <div class="h-12 border-b bg-slate-50 flex flex-col items-center justify-center text-[10px] font-bold text-slate-600">
+                            <span th:text="${#temporals.format(date, 'MMM d')}"></span>
+                            <span th:text="${#temporals.format(date, 'EEE')}"></span>
+                        </div>
+                        <div th:each="time : ${hours}">
+                            <div th:each="slot : ${event.slots}"
+                                 th:if="${slot.slotDate == date && slot.startTime == time}"
+                                 class="heat-cell has-tooltip h-12 border-b border-slate-50 relative cursor-default"
+                                 th:attr="data-slot-id=${slot.id}">
+                                <div class="tooltip shadow-xl">No one available</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const heatmapData = [(${heatmapDataJson})];
+
+    function initHeatmap() {
+        document.querySelectorAll('.heat-cell').forEach(cell => {
+            const id = cell.dataset.slotId;
+            const voters = heatmapData[id] || [];
+            const count = voters.length;
+
+            // Color based on popularity
+            cell.classList.remove('heat-0', 'heat-1', 'heat-2', 'heat-3');
+            if (count >= 3) cell.classList.add('heat-3');
+            else if (count === 2) cell.classList.add('heat-2');
+            else if (count === 1) cell.classList.add('heat-1');
+            else cell.classList.add('heat-0');
+
+            const tooltip = cell.querySelector('.tooltip');
+            tooltip.innerText = count > 0 ? `${count} available:\n${voters.join('\n')}` : "No one available";
+
+            // Update sidebar on hover
+            cell.addEventListener('mouseenter', () => {
+                const list = document.getElementById('availability-list');
+                if(voters.length > 0) {
+                    list.innerHTML = voters.map(v => `<div class="flex items-center text-sm font-medium"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>${v}</div>`).join('');
+                } else {
+                    list.innerHTML = '<p class="text-sm italic text-slate-400">No one available</p>';
+                }
+            });
+        });
+    }
+
+    initHeatmap();
+</script>
+</body>
+</html>
