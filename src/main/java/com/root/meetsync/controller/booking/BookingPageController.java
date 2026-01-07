@@ -1,32 +1,44 @@
 package com.root.meetsync.controller.booking;
 
+import com.root.meetsync.dto.Notification.NotificationDTO;
 import com.root.meetsync.dto.availability.AvailableSlotDTO;
 import com.root.meetsync.dto.booking.BookingRequestDTO;
 import com.root.meetsync.dto.booking.BookingResponseDTO;
+import com.root.meetsync.entity.Notification;
 import com.root.meetsync.entity.User;
 import com.root.meetsync.entity.availability.UserMeetingPreference;
+import com.root.meetsync.service.NotificationService;
 import com.root.meetsync.service.UserService;
 import com.root.meetsync.service.availability.IAvailabilityService;
 import com.root.meetsync.service.booking.IBookingService;
 import lombok.RequiredArgsConstructor;
+
+import org.aspectj.weaver.ast.Not;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
-public class BookingPageController {
 
+public class BookingPageController {
+   
     private final IAvailabilityService availabilityService;
     private final UserService userService;
     private final IBookingService bookingService;
+    private final NotificationService notificationService;
 
     @GetMapping("/u/{emailPrefix}")
     public String showPublicBookingPage(@PathVariable String emailPrefix,
@@ -38,7 +50,6 @@ public class BookingPageController {
             User user = userService.getUserByEmailPrefix(emailPrefix);
             UserMeetingPreference preference = availabilityService.getUserMeetingPreference(user.getId());
 
-                
             model.addAttribute("Preferences", preference);
 
             model.addAttribute("user", user);
@@ -54,22 +65,88 @@ public class BookingPageController {
     }
 
     @PostMapping("/u/{emailPrefix}")
-    public String createBooking(
-            @PathVariable String emailPrefix,
-            RedirectAttributes redirectAttributes,
-            @ModelAttribute BookingRequestDTO request
-           ) {
+    public String createBooking(@PathVariable String emailPrefix, RedirectAttributes redirectAttributes,
+            @ModelAttribute BookingRequestDTO request) {
         try {
-            bookingService.createBookingRequest(emailPrefix, request);
-            
+            BookingResponseDTO booking = bookingService.createBookingRequest(emailPrefix, request);
+
+            User host = userService.getUserByEmailPrefix(emailPrefix);
+            if (host != null) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' hh:mm a");
+                String bookingTime = request.getStartTime().format(formatter);
+
+                notificationService.createNotification(host, "New Scheduling Request",
+                        request.getInviteeName() + " (" + request.getInviteeEmail() + ") has requested a meeting on "
+                                + bookingTime,
+                        Notification.NotificationType.BOOKING_PENDING, booking.getId(), "Booking", "/bookings");
+            }
+
             redirectAttributes.addFlashAttribute("success", true);
-            redirectAttributes.addFlashAttribute("message", "Scheduling request sent to Host! Check your email for confirmation.");
-            
+            redirectAttributes.addFlashAttribute("message",
+                    "Scheduling request sent to Host! Check your email for confirmation.");
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", true);
             redirectAttributes.addFlashAttribute("message", e.getMessage());
         }
-        
+
         return "redirect:/u/" + emailPrefix;
+    }
+
+    @PutMapping("/{bookingId}/confirm/{notificationId}")
+    public String confirmBooking(@PathVariable Long bookingId, @PathVariable Long notificationId, RedirectAttributes redirectAttributes) {
+        try {
+            BookingResponseDTO response = bookingService.confirmBooking(bookingId);
+            String prefix = response.getHostEmail().split("@")[0];
+            User host = userService.getUserByEmailPrefix(prefix);
+
+        //   delete pending notification
+           notificationService.deleteNotification(notificationId);
+ 
+
+
+
+
+
+
+
+
+
+            if (response != null) {
+                notificationService.createNotification(host, "Scheduled Confirmed",
+                        "You have confirmed the booking with " + response.getInviteeName() + " on "
+                                + response.getStartTime().toString() + " at " + response.getStartTime().toString(),
+                        Notification.NotificationType.BOOKING_CONFIRMED, response.getId(), "Booking", "/bookings");
+            }
+            redirectAttributes.addFlashAttribute("success", "Booking confirmed successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/notifications";
+    }
+
+    @PutMapping("/{bookingId}/cancel/{notificationId}")
+    public String cancelBooking(@PathVariable Long bookingId, @PathVariable Long notificationId, RedirectAttributes redirectAttributes) {
+        try {
+            BookingResponseDTO response = bookingService.cancelBooking(bookingId);
+
+            if (response != null) {
+                String prefix = response.getHostEmail().split("@")[0];
+                User host = userService.getUserByEmailPrefix(prefix);
+                //   delete pending notification
+                notificationService.deleteNotification(notificationId);
+
+                
+                notificationService.createNotification(host, "Booking Cancelled",
+                        "The booking with " + response.getInviteeName() + " has been cancelled",
+                        Notification.NotificationType.BOOKING_CANCELLED, response.getId(), "Booking", "/bookings");
+            }
+            redirectAttributes.addFlashAttribute("success", "Booking cancelled successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/notifications";
     }
 }

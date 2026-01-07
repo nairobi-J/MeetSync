@@ -52,10 +52,10 @@ public class HomeController {
         return "settings";
     }
     
-    @GetMapping("/notifications")
-    public String notifications(Model model) {
-        return "notifications";
-    }
+    // @GetMapping("/notifications")
+    // public String notifications(Model model) {
+    //     return "notifications";
+    // }
     
     // Demo data method
     private List<Map<String, Object>> getDemoEvents() {
