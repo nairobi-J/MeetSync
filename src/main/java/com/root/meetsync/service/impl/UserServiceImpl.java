@@ -44,10 +44,10 @@ public class UserServiceImpl implements UserService {
         user.setEmail(dto.getEmail());
         user.setTimezone("UTC");
 
-        // HASH the password before saving
+
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
 
-        // Note: google_id remains null for manual users
+        // google_id remains null for manual users
         return userRepository.save(user);
     }
 
@@ -113,5 +113,13 @@ public class UserServiceImpl implements UserService {
 
         // Saving the user will save the token because of CascadeType.ALL
         return userRepository.save(user);
+    }
+
+
+    @Override
+    public User getUserByEmailPrefix(String emailPrefix) {
+         User user = userRepository.findByExactEmailPrefix(emailPrefix)
+                .orElseThrow(() -> new RuntimeException("User not found with email prefix: " + emailPrefix));
+        return user;
     }
 }
