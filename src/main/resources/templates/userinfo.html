@@ -46,12 +46,11 @@
             <label>Email:</label>
             <p id="userEmail" th:text="${currentUser.email}">Loading...</p>
         </div>
-<!--        <div class="info-field">-->
-<!--            <label>Timezone:</label>-->
-<!--            <p id="userTimezone" th:text="${currentUser.timezone}">Loading...</p>-->
-<!--        </div>-->
+        <div class="info-field">
+            <label>Timezone:</label>
+            <p id="userTimezone" th:text="${currentUser.timezone}">Loading...</p>
+        </div>
 
-<!--        <a th:href="@{/user-info/{id}(id=${uid})}">id Link</a>-->
         <button onclick="window.history.back()">Back</button>
     </div>
 
