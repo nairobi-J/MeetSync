@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Information</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        h1 {
+            color: #333;
+        }
+        .info-field {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>User Information</h1>
+        <div>
+            <label>Profile Picture:</label><br>
+            <img th:src="${currentUser.profilePic}" alt="Profile Picture" width="100" height="100"/>
+        </div>
+        <div class="info-field">
+            <label>Name:</label>
+            <p id="userName" th:text="${currentUser.name}">Loading...</p>
+        </div>
+        <div class="info-field">
+            <label>Email:</label>
+            <p id="userEmail" th:text="${currentUser.email}">Loading...</p>
+        </div>
+        <div class="info-field">
+            <label>Timezone:</label>
+            <p id="userTimezone" th:text="${currentUser.timezone}">Loading...</p>
+        </div>
+
+        <button onclick="window.history.back()">Back</button>
+    </div>
+
+</body>
+</html>

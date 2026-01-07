@@ -14,8 +14,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ParticipantAvailabilityDto {
-  private UUID id;
-    private UUID eventSlotId; 
-    private UUID userId;
+  private Long id;
+    private Long eventSlotId; 
+    String participantName;
     private LocalDateTime createdAt;
 }

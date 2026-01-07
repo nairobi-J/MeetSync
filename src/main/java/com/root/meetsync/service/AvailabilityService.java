@@ -3,40 +3,29 @@ package com.root.meetsync.service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.root.meetsync.dto.SlotCountDto;
 import com.root.meetsync.entity.EventSlot;
 import com.root.meetsync.entity.ParticipantAvailability;
-import com.root.meetsync.entity.User;
+
 import com.root.meetsync.repository.ParticipantAvailabilityRepository;
-import com.root.meetsync.repository.UserRepository;
+
 
 @Service
 public class AvailabilityService {
     @Autowired
     private ParticipantAvailabilityRepository participantAvailabilityRepository;
+    public void saveAvailability(String participantName, List<Long> slotIds) {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    public void saveAvailability(UUID userId, List<UUID> slotIds) {
-
-         User user = userRepository.findById(userId).orElse(null);
-
-        if (user != null) {
-            for (UUID slotId : slotIds) {
-                ParticipantAvailability pa = new ParticipantAvailability();
-                EventSlot slot = new EventSlot();
-                slot.setId(slotId);
-                pa.setEventSlot(slot);
-
-                pa.setUser(user);
-                participantAvailabilityRepository.save(pa);
-            }
+        for (Long slotId : slotIds) {
+            ParticipantAvailability pa = new ParticipantAvailability();
+            EventSlot slot = new EventSlot();
+            slot.setId(slotId);
+            pa.setEventSlot(slot);
+            pa.setParticipantName(participantName);
+            participantAvailabilityRepository.save(pa);
         }
     }
 
@@ -64,11 +53,26 @@ public class AvailabilityService {
 //     participantAvailabilityRepository.saveAll(availabilities);
 // }
 
-     public Map<LocalDate, List<SlotCountDto>> getHeatmapStat(UUID eventId){
+     public Map<LocalDate, List<SlotCountDto>> getHeatmapStat(Long eventId){
         List<SlotCountDto> slotCounts = participantAvailabilityRepository.countParticipantsBySlot(eventId);
 
         return slotCounts.stream().collect(
             java.util.stream.Collectors.groupingBy(SlotCountDto::getSlotDate)
         );
+    }
+
+    public Map<String, List<String>> getHeatmapDataForGuestView(Long eventId) {
+       
+        List<ParticipantAvailability> availabilities = participantAvailabilityRepository.findByEventSlot_Event_Id(eventId);
+        
+      
+        return availabilities.stream()
+            .collect(java.util.stream.Collectors.groupingBy(
+                pa -> pa.getEventSlot().getId().toString(),
+                java.util.stream.Collectors.mapping(
+                    ParticipantAvailability::getParticipantName,
+                    java.util.stream.Collectors.toList()
+                )
+            ));
     }
 }

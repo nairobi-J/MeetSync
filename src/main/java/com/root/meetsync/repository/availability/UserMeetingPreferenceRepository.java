@@ -1,0 +1,12 @@
+package com.root.meetsync.repository.availability;
+
+import com.root.meetsync.entity.availability.UserMeetingPreference;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface UserMeetingPreferenceRepository extends JpaRepository<UserMeetingPreference, Long> {
+    Optional<UserMeetingPreference> findByUserId(Long userId);
+}

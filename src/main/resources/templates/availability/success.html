@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{availability/fragments/head :: head('Availability Success - MeetSync')}"></head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex items-center justify-center">
+    
+    <div class="max-w-2xl mx-auto px-4 py-12">
+        
+        <!-- Success Card -->
+        <div class="bg-white rounded-lg shadow-2xl p-8 text-center">
+            
+            <!-- Success Icon -->
+            <div class="mb-6">
+                <div class="inline-block p-6 bg-green-100 rounded-full">
+                    <i class="fas fa-check-circle text-6xl text-green-500"></i>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">
+                Availability Setup Complete!
+            </h1>
+            
+            <p class="text-gray-600 mb-8">
+                Your availability has been configured successfully. 
+                Share your booking link with others to start receiving meeting requests.
+            </p>
+
+            <!-- Booking Link (if available) -->
+            <div th:if="${bookingLink != null}" class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-8">
+                <h2 class="text-lg font-semibold text-gray-800 mb-3">Your Booking Link</h2>
+                
+                <div class="flex items-center space-x-2 mb-4">
+                    <input type="text" 
+                           th:value="${bookingLink}"
+                           id="bookingLinkInput"
+                           readonly
+                           class="flex-1 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-mono">
+                    <button onclick="copyToClipboard()" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-copy mr-1"></i> Copy
+                    </button>
+                </div>
+                
+                <div class="flex space-x-2 justify-center">
+                    <a th:href="${bookingLink}" 
+                       target="_blank"
+                       class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        <i class="fas fa-external-link-alt mr-1"></i>
+                        View Booking Page
+                    </a>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="/dashboard" 
+                   class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 shadow-lg hover:shadow-xl">
+                    <i class="fas fa-home mr-2"></i>
+                    Back to Dashboard
+                </a>
+                <a href="/availability/setup" 
+                   class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-8 rounded-lg transition duration-200">
+                    <i class="fas fa-edit mr-2"></i>
+                    Edit Availability
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const input = document.getElementById('bookingLinkInput');
+            input.select();
+            document.execCommand('copy');
+            
+            // Show feedback
+            const button = event.target.closest('button');
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check mr-1"></i> Copied!';
+            button.classList.add('bg-green-600');
+            button.classList.remove('bg-blue-600');
+            
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('bg-green-600');
+                button.classList.add('bg-blue-600');
+            }, 2000);
+        }
+    </script>
+
+</body>
+</html>

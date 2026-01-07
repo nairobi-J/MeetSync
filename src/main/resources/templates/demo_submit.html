@@ -1,19 +1,156 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<body>
-    <h2>Event Availability for <span th:text="${user.name}">User</span></h2>
+<head>
+    <title>MeetSync - Book Your Slots</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .grid-container {
+            display: grid;
+            grid-template-columns: 100px repeat(auto-fill, minmax(120px, 1fr));
+            gap: 2px;
+            background-color: #ddd;
+            border: 1px solid #ccc;
+        }
+        .grid-header, .time-label {
+            background-color: #f8f9fa;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .slot-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .slot {
+            height: 40px;
+            background-color: white;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            position: relative;
+        }
+        /* Style for User Selection */
+        .slot.selected {
+            background-color: #28a745 !important;
+            color: white;
+        }
+        .slot-content.selected {
+            background-color: #28a745 !important;
+            color: white;
+        }
+        /* Heatmap logic (Dynamic colors based on data-count attribute) */
+        .heatmap-cell[data-count="0"] { background-color: #fff; }
+        .heatmap-cell[data-count="1"] { background-color: #d4edda; }
+        .heatmap-cell[data-count="2"] { background-color: #c3e6cb; }
+        .heatmap-cell[data-count="3"] { background-color: #71d38d; }
+        .heatmap-cell:not([data-count="0"]) { color: #155724; font-weight: bold; }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container-fluid py-4">
+    <h2 class="text-center mb-4" th:text="${event.title}">Event Title</h2>
 
     <form th:action="@{/availability/submit}" method="post">
-        <input type="hidden" name="userId" th:value="${user.id}" />
-
-        <p>Select your available slots:</p>
-        <div th:each="slot : ${slots}">
-            <input type="checkbox" name="slotIds" th:value="${slot.id}" />
-            <label th:text="${slot.startTime}">Slot Time</label>
-            <label th:text="${slot.endTime}">Slot End Time</label>
+        <input type="hidden" name="eventId" th:value="${event.id}">
+        
+        <div class="row mb-3 align-items-center">
+            <div class="col-md-4">
+                <input type="text" name="participantName" class="form-control" placeholder="Enter your name" required>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Submit My Availability</button>
+            </div>
         </div>
 
-        <button type="submit">Submit</button>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-dark text-white">Select Your Availability</div>
+                    <div class="card-body p-0">
+                        <div class="grid-container" th:if="${dates != null and !dates.empty}">
+                            <div class="grid-header">Time</div>
+                            <div th:each="date : ${dates}" class="grid-header" th:text="${#temporals.format(date, 'MMM dd')}"></div>
+
+                            <th:block th:each="time : ${times}">
+                                <div class="time-label border-bottom" th:text="${#temporals.format(time, 'HH:mm')}"></div>
+                                <div th:each="date : ${dates}" 
+                                     class="slot border">
+                                    <!-- Find the matching slot for this date and time -->
+                                    <th:block th:each="slot : ${event.slots}" 
+                                              th:if="${slot.slotDate.equals(date) and slot.startTime.equals(time)}">
+                                        <input type="checkbox" 
+                                               name="slotIds" 
+                                               th:value="${slot.id}" 
+                                               class="slot-checkbox d-none"
+                                               th:attr="data-slot-id=${slot.id}">
+                                        <span class="slot-content" onclick="toggleSlot(this)"></span>
+                                    </th:block>
+                                </div>
+                            </th:block>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">Group Availability (Heatmap)</div>
+                    <div class="card-body p-0">
+                        <div class="grid-container" th:if="${dates != null and !dates.empty}">
+                            <div class="grid-header">Time</div>
+                            <div th:each="date : ${dates}" class="grid-header" th:text="${#temporals.format(date, 'MMM dd')}"></div>
+
+                            <th:block th:each="time : ${times}">
+                                <div class="time-label border-bottom" th:text="${#temporals.format(time, 'HH:mm')}"></div>
+                                <div th:each="date : ${dates}" 
+                                     class="slot heatmap-cell border">
+                                    <!-- Find the matching slot for this date and time -->
+                                    <th:block th:each="slot : ${event.slots}" 
+                                              th:if="${slot.slotDate.equals(date) and slot.startTime.equals(time)}">
+                                        <!-- Find count from heatmap data -->
+                                        <span th:with="dateSlots=${heatmapData.get(date)},
+                                                      slotData=${dateSlots?.?[slotId == __${slot.id}__]},
+                                                      count=${slotData != null and slotData.size() > 0 ? slotData[0].participantCount : 0}"
+                                              th:attr="data-count=${count}"
+                                              th:text="${count > 0 ? count : ''}">
+                                        </span>
+                                    </th:block>
+                                </div>
+                            </th:block>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </form>
+</div>
+
+<script>
+    function toggleSlot(element) {
+        // Find checkbox
+        const slotContainer = element.closest('.slot');
+        const checkbox = slotContainer.querySelector('input[type="checkbox"]');
+        
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+            
+            // Toggle
+            element.classList.toggle('selected');
+            slotContainer.classList.toggle('selected');
+        }
+    }
+</script>
+
 </body>
 </html>

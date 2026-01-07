@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{availability/fragments/head :: head('Booking Link - MeetSync')}"></head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    
+    <div class="min-h-screen py-12 px-4">
+        <div class="max-w-4xl mx-auto">
+            
+            <!-- Header -->
+            <div class="mb-8">
+                <a href="/dashboard" class="text-blue-600 hover:text-blue-800 font-medium mb-4 inline-block">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Dashboard
+                </a>
+                <h1 class="text-4xl font-bold text-gray-800">
+                    <i class="fas fa-link text-blue-600"></i>
+                    Your Booking Link
+                </h1>
+                <p class="text-gray-600 mt-2">Share this link with others to let them book time with you</p>
+            </div>
+
+            <!-- Booking Link Card -->
+            <div class="bg-white rounded-lg shadow-xl p-8">
+                
+                <!-- Link Display -->
+                <div class="mb-8">
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">Your Personal Booking Link</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" 
+                               th:value="${bookingLink}"
+                               id="bookingLinkInput"
+                               readonly
+                               class="flex-1 px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-lg text-lg font-mono">
+                        <button onclick="copyToClipboard()" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition shadow-lg hover:shadow-xl">
+                            <i class="fas fa-copy mr-2"></i> Copy Link
+                        </button>
+                    </div>
+                </div>
+
+                <!-- QR Code Section (Optional) -->
+                <div class="mb-8 pb-8 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Share via</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button onclick="shareViaEmail()" 
+                                class="flex flex-col items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
+                            <i class="fas fa-envelope text-2xl text-blue-600 mb-2"></i>
+                            <span class="text-sm font-medium">Email</span>
+                        </button>
+                        <button onclick="shareViaWhatsApp()" 
+                                class="flex flex-col items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
+                            <i class="fab fa-whatsapp text-2xl text-green-600 mb-2"></i>
+                            <span class="text-sm font-medium">WhatsApp</span>
+                        </button>
+                        <button onclick="shareViaLinkedIn()" 
+                                class="flex flex-col items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
+                            <i class="fab fa-linkedin text-2xl text-blue-700 mb-2"></i>
+                            <span class="text-sm font-medium">LinkedIn</span>
+                        </button>
+                        <button onclick="shareViaTwitter()" 
+                                class="flex flex-col items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
+                            <i class="fab fa-twitter text-2xl text-blue-400 mb-2"></i>
+                            <span class="text-sm font-medium">Twitter</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div class="text-center">
+                    <a th:href="${bookingLink}" 
+                       target="_blank"
+                       class="inline-block bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 shadow-lg hover:shadow-xl">
+                        <i class="fas fa-external-link-alt mr-2"></i>
+                        Preview Booking Page
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const bookingLink = /*[[${bookingLink}]]*/ '';
+
+        function copyToClipboard() {
+            const input = document.getElementById('bookingLinkInput');
+            input.select();
+            document.execCommand('copy');
+            
+            const button = event.target.closest('button');
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check mr-2"></i> Copied!';
+            button.classList.add('bg-green-600');
+            button.classList.remove('bg-blue-600');
+            
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('bg-green-600');
+                button.classList.add('bg-blue-600');
+            }, 2000);
+        }
+
+        function shareViaEmail() {
+            const subject = 'Book a meeting with me';
+            const body = `Hi,\n\nYou can book a meeting with me using this link:\n${bookingLink}\n\nLooking forward to connecting!`;
+            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
+
+        function shareViaWhatsApp() {
+            const text = `Book a meeting with me: ${bookingLink}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        function shareViaLinkedIn() {
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(bookingLink)}`, '_blank');
+        }
+
+        function shareViaTwitter() {
+            const text = 'Book a meeting with me!';
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(bookingLink)}`, '_blank');
+        }
+    </script>
+
+</body>
+</html>
