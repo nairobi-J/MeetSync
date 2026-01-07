@@ -76,8 +76,7 @@ public class BookingPageController {
                 String bookingTime = request.getStartTime().format(formatter);
 
                 notificationService.createNotification(host, "New Scheduling Request",
-                        request.getInviteeName() + " (" + request.getInviteeEmail() + ") has requested a meeting on "
-                                + bookingTime,
+                        request.getInviteeName() + " (" + request.getInviteeEmail() + ") has requested a meeting on " + bookingTime,
                         Notification.NotificationType.BOOKING_PENDING, booking.getId(), "Booking", "/bookings");
             }
 
@@ -102,23 +101,18 @@ public class BookingPageController {
 
         //   delete pending notification
            notificationService.deleteNotification(notificationId);
- 
-
-
-
-
-
-
 
 
 
             if (response != null) {
-                notificationService.createNotification(host, "Scheduled Confirmed",
-                        "You have confirmed the booking with " + response.getInviteeName() + " on "
-                                + response.getStartTime().toString() + " at " + response.getStartTime().toString(),
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' hh:mm a");
+                String bookingTime = response.getStartTime().format(formatter);
+                
+                notificationService.createNotification(host, "Schedule Confirmed",
+                        "You have confirmed the booking with " + response.getInviteeName() + " on " + bookingTime,
                         Notification.NotificationType.BOOKING_CONFIRMED, response.getId(), "Booking", "/bookings");
             }
-            redirectAttributes.addFlashAttribute("success", "Booking confirmed successfully!");
+            redirectAttributes.addFlashAttribute("success", "Schedule confirmed successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
@@ -138,11 +132,11 @@ public class BookingPageController {
                 notificationService.deleteNotification(notificationId);
 
                 
-                notificationService.createNotification(host, "Booking Cancelled",
+                notificationService.createNotification(host, "Schedule Cancelled",
                         "The booking with " + response.getInviteeName() + " has been cancelled",
                         Notification.NotificationType.BOOKING_CANCELLED, response.getId(), "Booking", "/bookings");
             }
-            redirectAttributes.addFlashAttribute("success", "Booking cancelled successfully!");
+            redirectAttributes.addFlashAttribute("success", "Schedule cancelled successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
