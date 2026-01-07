@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style>
+        .heatmap-cell {
+            padding: 15px;
+            border: 1px solid #ddd;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .level-0 { background-color: #ebedf0; color: #000; }
+        .level-1 { background-color: #9be9a8; color: #000; }
+        .level-2 { background-color: #40c463; }
+        .level-3 { background-color: #30a14e; }
+        .level-4 { background-color: #216e39; }
+    </style>
+</head>
+<body>
+    <h2>Meeting Availability Heatmap for <span th:text="${event.title}">Event Name</span></h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Time Slot</th>
+                <th>Available Participants</th>
+            </tr>
+        </thead>
+        
+        <tbody>
+            <tr th:each="stat : ${stats}">
+                <td th:text="${stat.startTime}">10:00 AM</td>
+                <td th:classappend="${stat.participantCount == 0 ? 'level-0' : 
+                                   (stat.participantCount == 1 ? 'level-1' : 
+                                   (stat.participantCount == 2 ? 'level-2' : 'level-3'))}"
+                    class="heatmap-cell">
+                    <span th:text="${stat.participantCount}">0</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html

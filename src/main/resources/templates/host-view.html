@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Host View | MeetSync</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .personal-cell.selected { background-color: #3b82f6 !important; border: 1px solid #1d4ed8; }
+        .heat-0 { background-color: #ffffff; }
+        .heat-1 { background-color: #dcfce7; border: 1px solid #bbf7d0; }
+        .heat-2 { background-color: #86efac; border: 1px solid #4ade80; }
+        .heat-3 { background-color: #22c55e; border: 1px solid #16a34a; }
+        .tooltip {
+            visibility: hidden; position: absolute; z-index: 50;
+            background: #1e293b; color: white; padding: 6px 10px;
+            border-radius: 6px; font-size: 11px; pointer-events: none;
+            white-space: pre-line;
+        }
+        .has-tooltip:hover .tooltip { visibility: visible; }
+        /* Prevent text selection during drag */
+        .no-select { user-select: none; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen no-select">
+
+<div class="max-w-[1600px] mx-auto p-6">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-black text-slate-800" th:text="${event.title}"></h1>
+        <input type="hidden" id="shareLinkValue" th:value="${fullUrl}">
+
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="bg-white p-6 rounded-2xl shadow-lg border">
+            <h3 class="font-bold mb-4 text-center text-blue-700 uppercase tracking-widest text-xs">1. Set Your Availability</h3>
+            <div class="flex border rounded-xl overflow-hidden">
+                <div class="w-20 bg-slate-50 border-r">
+                    <div class="h-12 border-b"></div>
+                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h a')}"></div>
+                </div>
+                <div class="flex-1 overflow-x-auto flex">
+                    <div th:each="date : ${#lists.sort(#lists.toList(#sets.toSet(event.slots.![slotDate])))}" class="flex-1 min-w-[100px] border-r">
+                        <div class="h-12 border-b bg-slate-50 flex flex-col items-center justify-center text-[10px] font-bold text-slate-600">
+                            <span th:text="${#temporals.format(date, 'EEE')}"></span>
+                            <span th:text="${#temporals.format(date, 'd')}"></span>
+                        </div>
+
+                        <div th:each="time : ${hours}">
+                            <div th:each="slot : ${event.slots}"
+                                 th:if="${slot.slotDate == date && slot.startTime == time}"
+                                 class="personal-cell h-12 border-b cursor-pointer hover:bg-blue-50"
+                                 th:classappend="${savedHostSlotIds != null && #lists.contains(savedHostSlotIds, slot.id)} ? 'selected' : ''"
+                                 th:attr="data-slot-id=${slot.id}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button onclick="submitAvailability()" class="w-full mt-6 bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">Save Changes</button>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-lg border">
+            <h3 class="font-bold mb-4 text-center text-green-700 uppercase tracking-widest text-xs">2. Group Heatmap</h3>
+            <div class="flex border rounded-xl overflow-hidden">
+                <div class="w-20 bg-slate-50 border-r">
+                    <div class="h-12 border-b"></div>
+                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h a')}"></div>
+                </div>
+                <div class="flex-1 overflow-x-auto flex">
+                    <div th:each="date : ${#lists.sort(#lists.toList(#sets.toSet(event.slots.![slotDate])))}" class="flex-1 min-w-[100px] border-r">
+                        <div class="h-12 border-b bg-slate-50 flex flex-col items-center justify-center text-[10px] font-bold text-slate-600">
+                            <span th:text="${#temporals.format(date, 'EEE')}"></span>
+                            <span th:text="${#temporals.format(date, 'd')}"></span>
+                        </div>
+
+                        <div th:each="time : ${hours}">
+                            <div th:each="slot : ${event.slots}"
+                                 th:if="${slot.slotDate == date && slot.startTime == time}"
+                                 class="heat-cell has-tooltip h-12 border-b relative"
+                                 th:attr="data-slot-id=${slot.id}">
+                                <div class="tooltip shadow-xl">No votes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    let isMouseDown = false;
+    let selectedSlotIds = new Set();
+
+    // 1. Load saved IDs as Strings (Crucial for JS matching)
+    /*[# th:each="id : ${savedHostSlotIds}"]*/
+    selectedSlotIds.add(String([[${id}]]));
+    /*[/]*/
+
+    let heatmapData = [(${heatmapDataJson})];
+
+    // 2. Drag Selection Logic
+    document.querySelectorAll('.personal-cell').forEach(cell => {
+        cell.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            toggleSlot(cell);
+            e.preventDefault(); // Prevents ugly text highlighting
+        });
+        cell.addEventListener('mouseenter', () => {
+            if (isMouseDown) toggleSlot(cell);
+        });
+    });
+    window.addEventListener('mouseup', () => isMouseDown = false);
+
+    function toggleSlot(cell) {
+        const id = cell.dataset.slotId;
+        if (selectedSlotIds.has(id)) {
+            selectedSlotIds.delete(id);
+            cell.classList.remove('selected');
+        } else {
+            selectedSlotIds.add(id);
+            cell.classList.add('selected');
+        }
+        updateHeatmapUI();
+    }
+
+    // 3. Update Heatmap UI
+    function updateHeatmapUI() {
+        document.querySelectorAll('.heat-cell').forEach(heatCell => {
+            const id = heatCell.dataset.slotId;
+            let voters = heatmapData[id] ? [...heatmapData[id]] : [];
+
+            if (selectedSlotIds.has(id)) {
+                if (!voters.includes("You (Host)")) voters.push("You (Host)");
+            } else {
+                voters = voters.filter(v => v !== "You (Host)");
+            }
+
+            const count = voters.length;
+            heatCell.className = 'heat-cell has-tooltip h-12 border-b relative heat-' + Math.min(count, 3);
+            heatCell.querySelector('.tooltip').innerText = count > 0 ? count + " available:\n" + voters.join('\n') : "No one available";
+        });
+    }
+
+    // 4. Persistence
+    function submitAvailability() {
+        document.getElementById('screen-loader').classList.remove('hidden');
+        const formData = new URLSearchParams();
+        selectedSlotIds.forEach(id => formData.append('slotIds', id));
+        const currentPath = window.location.pathname;
+
+        fetch(currentPath + '/host-availability', {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if (response.ok) {
+                // Redirect to the overview page
+                window.location.href = currentPath + '/overview';
+            } else {
+                console.error("Save failed");
+            }
+        });
+    }
+
+
+
+    // Run on load
+    updateHeatmapUI();
+</script>
+<div id="screen-loader" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p class="font-bold text-slate-700">Finalizing your schedule...</p>
+    </div>
+</div>
+</body>
+</html>

@@ -44,10 +44,10 @@ public class UserServiceImpl implements UserService {
         user.setEmail(dto.getEmail());
         user.setTimezone("UTC");
 
-        // HASH the password before saving
+
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
 
-        // Note: google_id remains null for manual users
+        // google_id remains null for manual users
         return userRepository.save(user);
     }
 

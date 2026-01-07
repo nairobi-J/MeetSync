@@ -6,7 +6,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.root.meetsync.entity.Event;
+import java.util.Optional;
 
 public interface EventRepository extends JpaRepository <Event, Long>{
 
