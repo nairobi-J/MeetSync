@@ -19,7 +19,7 @@ import java.time.DayOfWeek;
 @RequestMapping("/availability")
 @RequiredArgsConstructor
 @Slf4j
-public class AvailabilityWebController {
+public class AvailabilityPageController {
 
     private final IAvailabilityService availabilityService;
     private final UserService userService;
@@ -97,34 +97,6 @@ public class AvailabilityWebController {
         User user = getAuthenticatedUser(authentication);
 
         try {
-            log.info("====== Received SetupAvailabilityRequest ======");
-            log.info("User ID: {}", user.getId());
-            log.info("Meeting Duration: {} minutes", request.getMeetingDurationMinutes());
-            log.info("Min Notice: {} hours", request.getMinNoticeHours());
-            log.info("Future Days: {} days", request.getFutureDaysAllowed());
-            log.info("Buffer Time: {} minutes", request.getBufferTimeMinutes());
-            log.info("Timezone: {}", request.getTimezone());
-            
-            log.info("--- Weekly Availability ({} entries) ---", 
-                request.getWeeklyAvailability() != null ? request.getWeeklyAvailability().size() : 0);
-            if (request.getWeeklyAvailability() != null) {
-                request.getWeeklyAvailability().forEach(wa -> 
-                    log.info("  {}: {} - {}", wa.getDayOfWeek(), wa.getStartTime(), wa.getEndTime())
-                );
-            }
-            
-            log.info("--- Date Overrides ({} entries) ---", 
-                request.getDateOverrides() != null ? request.getDateOverrides().size() : 0);
-            if (request.getDateOverrides() != null) {
-                request.getDateOverrides().forEach(override -> 
-                    log.info("  {} {} (unavailable: {})", 
-                        override.getDate(), 
-                        override.getUnavailable() ? "[UNAVAILABLE]" : 
-                        "(" + override.getStartTime() + " - " + override.getEndTime() + ")",
-                        override.getUnavailable())
-                );
-            }
-            log.info("=============================================");
             
             availabilityService.setupAvailability(user.getId(), request);
             redirectAttributes.addFlashAttribute("success", "Availability saved successfully!");
