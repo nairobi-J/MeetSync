@@ -36,26 +36,23 @@
         <h1>User Information</h1>
         <div>
             <label>Profile Picture:</label><br>
-            <img th:src="${user.profilePic}" alt="Profile Picture" width="100" height="100"/>
+            <img th:src="${currentUser.profilePic}" alt="Profile Picture" width="100" height="100"/>
         </div>
         <div class="info-field">
             <label>Name:</label>
-            <p id="userName" th:text="${user.name}">Loading...</p>
+            <p id="userName" th:text="${currentUser.name}">Loading...</p>
         </div>
         <div class="info-field">
             <label>Email:</label>
-            <p id="userEmail" th:text="${user.email}">Loading...</p>
+            <p id="userEmail" th:text="${currentUser.email}">Loading...</p>
         </div>
         <div class="info-field">
             <label>Timezone:</label>
-            <p id="userTimezone" th:text="${user.timezone}">Loading...</p>
+            <p id="userTimezone" th:text="${currentUser.timezone}">Loading...</p>
         </div>
-        <div class="info-field">
-            <label>Has Refresh Token:</label>
-            <p id="hasRefreshToken" th:text="${user.hasRefreshToken}">Loading...</p>
-        </div>
-        <a th:href="@{/user-info/{id}(id=${uid})}">id Link</a>
-        <button onclick="goBack()">Back</button>
+
+        <button onclick="window.history.back()">Back</button>
     </div>
+
 </body>
 </html>

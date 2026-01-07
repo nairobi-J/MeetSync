@@ -80,6 +80,7 @@ public class BookingServiceImpl implements IBookingService {
         booking.setInviteeEmail(request.getInviteeEmail());
         booking.setStartTime(startTime);
         booking.setEndTime(endTime);
+        booking.setTimezone(request.getTimezone());
         booking.setStatus(BookingStatus.PENDING);
 
         Booking saved = bookingRepository.save(booking);
@@ -124,6 +125,7 @@ public class BookingServiceImpl implements IBookingService {
         dto.setInviteeEmail(booking.getInviteeEmail());
         dto.setStartTime(booking.getStartTime());
         dto.setEndTime(booking.getEndTime());
+        dto.setTimezone(booking.getTimezone());
         dto.setStatus(booking.getStatus());
         dto.setCreatedAt(booking.getCreatedAt());
         return dto;

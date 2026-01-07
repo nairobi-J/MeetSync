@@ -12,4 +12,5 @@ public interface UserService {
     // Add these two methods
     Optional<User> findByEmail(String email);
     void updatePassword(String email, String rawPassword);
+    User getUserByEmailPrefix(String prefix);
 }

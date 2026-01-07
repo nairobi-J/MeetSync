@@ -1,229 +1,330 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
+
 <head th:replace="~{availability/fragments/head :: head('Setup Availability - MeetSync')}"></head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-    
-    <!-- Main Container -->
-    <div class="min-h-screen py-8 px-4">
-        <div class="max-w-7xl mx-auto">
-            
-            <!-- Header -->
-            <div class="mb-8">
-                <a href="/dashboard" class="text-blue-600 hover:text-blue-800 font-medium mb-4 inline-block">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Back to Dashboard
-                </a>
-                <h1 class="text-4xl font-bold text-gray-800">
-                    <i class="fas fa-calendar-check text-blue-600"></i>
-                    Setup Your Availability
-                </h1>
-                <p class="text-gray-600 mt-2">Configure your meeting preferences and available time slots</p>
-            </div>
 
-            <!-- Alerts -->
-            <div th:if="${success}" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-md">
-                <div class="flex items-center">
-                    <i class="fas fa-check-circle mr-3 text-xl"></i>
-                    <p th:text="${success}">Success message</p>
-                </div>
-            </div>
+<body class="bg-gray-50">
 
-            <div th:if="${error}" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md shadow-md">
-                <div class="flex items-center">
-                    <i class="fas fa-exclamation-circle mr-3 text-xl"></i>
-                    <p th:text="${error}">Error message</p>
-                </div>
-            </div>
+    <!-- Navigation -->
+    <div th:replace="~{fragments/home_nav :: navbar}"></div>
 
-            <form th:action="@{/availability/setup}" th:object="${availabilityRequest}" method="post">
-                
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    
-                    <!-- Left Panel - Settings -->
-                    <div class="lg:col-span-2 space-y-6">
-                        
-                        <!-- Basic Settings Card -->
-                        <div class="bg-white rounded-lg shadow-lg p-6">
-                            <h2 class="text-xl font-bold text-gray-800 mb-6">
-                                <i class="fas fa-cog text-blue-600 mr-2"></i>
-                                Event Settings
-                            </h2>
-                            
-                            <div class="space-y-4">
-                                <!-- Event Name -->
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Event Name</label>
-                                    <input type="text" 
-                                           name="eventName"
-                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                           placeholder="30 Minute Meeting">
-                                </div>
+    <!-- Main Layout with Sidebar -->
+    <div class="flex">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/home_sidebar :: sidebar}"></div>
 
-                                <!-- Duration and Timezone -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Duration</label>
-                                        <select th:field="*{meetingDurationMinutes}"
-                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                                            <option th:each="duration : ${durations}" 
-                                                    th:value="${duration}" 
-                                                    th:text="${duration + ' mins'}"
-                                                    th:selected="${duration == 30}">30 mins</option>
-                                        </select>
-                                    </div>
+        <!-- Main Content Area -->
+        <div class="flex-1 ml-0 mb-32 lg:ml-64 min-h-screen">
+            <div class="py-8  mb-8 px-4 lg:px-8">
+                <div class="max-w-7xl mx-auto ">
 
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Time Zone</label>
-                                        <select th:field="*{timezone}"
-                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                                            <option th:each="tz : ${timezones}" 
-                                                    th:value="${tz}" 
-                                                    th:text="${tz}">GMT +6 BDT</option>
-                                        </select>
-                                    </div>
-                                </div>
+                    <!-- Header -->
+                    <div class="mt-20">
+                       
+                        <h1 class="text-4xl font-bold text-gray-800">
+                            <i class="fas fa-calendar-check text-blue-600"></i>
+                            Setup Your Availability
+                        </h1>
+                        <p class="text-gray-600 mt-2">Configure when you're available </p>
+                    </div>
 
-                                <!-- Location -->
-                                <div th:replace="~{availability/fragments/components :: locationOptions}"></div>
-
-                                <!-- Date Range and Reminder -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Date range</label>
-                                        <select th:field="*{futureDaysAllowed}"
-                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                                            <option value="30">30 Calendar days</option>
-                                            <option value="60" selected>60 Calendar days</option>
-                                            <option value="90">90 Calendar days</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Reminder</label>
-                                        <select name="reminderHours"
-                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                                            <option value="1">1 hour before</option>
-                                            <option value="2" selected>2 hours before</option>
-                                            <option value="24">24 hours before</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- Time Range -->
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-3">Time-range</label>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="text-xs text-gray-600 mb-1 block">Not Earlier Than</label>
-                                            <input type="time" 
-                                                   name="defaultStartTime"
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                                   value="10:00">
-                                        </div>
-                                        <div>
-                                            <label class="text-xs text-gray-600 mb-1 block">Not Later Than</label>
-                                            <input type="time" 
-                                                   name="defaultEndTime"
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                                   value="17:30">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Buffer Time -->
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                        Buffer Time Between Meetings
-                                    </label>
-                                    <select th:field="*{bufferTimeMinutes}"
-                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                                        <option value="0">No buffer</option>
-                                        <option value="15">15 minutes</option>
-                                        <option value="30">30 minutes</option>
-                                    </select>
-                                </div>
+                    <!-- Booking Link Section -->
+                    <div th:if="${bookingLink}" class="p-4 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1 mr-4">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-link text-blue-600 mr-2"></i>
+                                    Personal Link
+                                </label>
+                                <input type="text" 
+                                       th:value="${bookingLink}"
+                                       id="bookingLinkInput"
+                                       readonly
+                                       class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono">
                             </div>
-                        </div>
-
-                        <!-- Weekly Availability Card -->
-                        <div class="bg-white rounded-lg shadow-lg p-6">
-                            <div th:replace="~{availability/fragments/components :: weeklyAvailability}"></div>
-                        </div>
-
-                        <!-- Override Dates Settings -->
-                        <div id="overrideDatesSection" class="bg-white rounded-lg shadow-lg p-6">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4">
-                                <i class="fas fa-calendar-plus text-purple-600 mr-2"></i>
-                                Override Specific Dates
-                            </h3>
-                            <p class="text-sm text-gray-600 mb-4">
-                                Select dates from the calendar to set custom availability or mark as unavailable.
-                            </p>
-                            
-                            <!-- Override entries will be added here dynamically -->
-                            <div id="overrideEntriesContainer" class="space-y-3">
-                                <!-- Template for override entries -->
+                            <div class="flex justify-center space-x-4">
+                                <button type="button" onclick="copyBookingLink()" 
+                                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg">
+                                    <i class="fas fa-copy mr-2"></i>Copy Link
+                                </button>
+                                <a th:href="${bookingLink}" 
+                                   target="_blank"
+                                   class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg inline-flex items-center">
+                                    <i class="fas fa-external-link-alt mr-2"></i>Preview
+                                </a>
                             </div>
-
-                            <input type="hidden" id="dateOverridesData" name="dateOverridesJson" value="">
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="flex space-x-4">
-                            <button type="submit" 
-                                    class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-lg hover:shadow-xl">
-                                <i class="fas fa-save mr-2"></i>
-                                Create Event
-                            </button>
-                            <a href="/dashboard" 
-                               class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg transition duration-200">
-                                <i class="fas fa-times mr-2"></i>
-                                Cancel
-                            </a>
                         </div>
                     </div>
 
-                    <!-- Right Panel - Calendar -->
-                    <div class="lg:col-span-1">
-                        <div class="sticky top-8">
-                            <div th:replace="~{availability/fragments/components :: calendar}"></div>
+                    <!-- Alerts -->
+                    <div th:if="${success}"
+                        class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-md">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle mr-3 text-xl"></i>
+                            <p th:text="${success}">Success message</p>
                         </div>
                     </div>
 
-                </div>
-            </form>
+                    <div th:if="${error}"
+                        class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md shadow-md">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle mr-3 text-xl"></i>
+                            <p th:text="${error}">Error message</p>
+                        </div>
+                    </div>
 
+                    <form th:action="@{/availability/setup}" th:object="${availabilityRequest}" method="post">
+
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                            <!-- Left Panel - Settings -->
+                            <div class="lg:col-span-2 space-y-6">
+
+                                <!-- Basic Settings Card -->
+                                <div class="bg-white rounded-lg shadow-lg p-6">
+                                    <h2 class="text-xl font-bold text-gray-800 mb-6">
+                                        <i class="fas fa-cog text-blue-600 mr-2"></i>
+                                        Meeting Preferences
+                                    </h2>
+
+                                    <div class="space-y-4">
+
+
+                                        <!-- Duration and Timezone -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label
+                                                    class="block text-sm font-semibold text-gray-700 mb-2">Duration</label>
+                                                <select th:field="*{meetingDurationMinutes}"
+                                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                                    <option th:each="duration : ${durations}" th:value="${duration}"
+                                                        th:text="${duration + ' mins'}" th:selected="${duration == 30}">
+                                                        30 mins</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">Time
+                                                    Zone</label>
+                                                <select th:field="*{timezone}"
+                                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                                    <option th:each="tz : ${timezones}" th:value="${tz}"
+                                                        th:text="${tz}">GMT +6 BDT</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Date Range and Min Notice -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">Date
+                                                    range</label>
+                                                <select th:field="*{futureDaysAllowed}"
+                                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                                    <option value="30" selected>30 Calendar days</option>
+                                                    <option value="60" >60 Calendar days</option>
+                                                    <option value="90">90 Calendar days</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">Minimum
+                                                    Notice</label>
+                                                <select th:field="*{minNoticeHours}"
+                                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                                    <option value="1">1 hour before</option>
+                                                    <option value="2" selected>2 hours before</option>
+                                                    <option value="24">1 Day before</option>
+                                                    <option value="48">2 Days before</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Buffer Time -->
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                Buffer Time Between Meetings
+                                            </label>
+                                            <select th:field="*{bufferTimeMinutes}"
+                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                                <option value="0">No buffer</option>
+                                                <option value="10">10 minutes</option>
+                                                <option value="15">15 minutes</option>
+                                                <option value="30">30 minutes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <!-- Weekly Availability Card -->
+                                    <div class=" p-6">
+                                        <h3 class="text-lg font-bold text-gray-800 mb-4">
+                                            <i class="fas fa-calendar-week text-blue-600 mr-2"></i>
+                                            Weekly Availability
+                                        </h3>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-1">Not
+                                                    earlier than</label>
+                                                <input type="time" id="globalStartTime"
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                                    value="09:00" onchange="setAllWeeklyTimes()">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-1">Not later
+                                                    than</label>
+                                                <input type="time" id="globalEndTime"
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                                    value="17:00" onchange="setAllWeeklyTimes()">
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div th:each="day, iterStat : ${T(java.time.DayOfWeek).values()}"
+                                                class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+
+                                                <div class="flex items-center flex-1">
+                                                    <input type="checkbox" th:id="'day-' + ${day}" th:data-day="${day}"
+                                                        th:data-index="${iterStat.index}"
+                                                        class="day-checkbox w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                                        onchange="toggleDayFields(this)">
+                                                    <label th:for="'day-' + ${day}"
+                                                        class="ml-3 text-sm font-medium text-gray-700 w-24"
+                                                        th:text="${#strings.capitalize(#strings.toLowerCase(day))}">Monday</label>
+                                                </div>
+
+                                                <div class="flex items-center space-x-2 flex-1">
+                                                    <input type="time" th:id="'startTime-' + ${iterStat.index}"
+                                                        class="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                                                        value="09:00" onchange="updateWeeklyAvailability()" disabled>
+                                                    <span class="text-gray-500">-</span>
+                                                    <input type="time" th:id="'endTime-' + ${iterStat.index}"
+                                                        class="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                                                        value="17:00" onchange="updateWeeklyAvailability()" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Hidden container for weekly availability form inputs -->
+                                        <div id="weeklyAvailabilityInputsContainer"></div>
+                                    </div>
+                                </div>
+
+
+
+                                <!-- Submit Button -->
+                                <div class="flex space-x-4">
+                                    <button type="submit"
+                                        class="flex-1 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-lg hover:shadow-xl">
+                                        <i class="fas fa-save mr-2"></i>
+                                        Save Availability
+                                    </button>
+                                    <a href="/dashboard"
+                                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg transition duration-200">
+                                        <i class="fas fa-times mr-2"></i>
+                                        Cancel
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Right Panel - Calendar -->
+                            <div class="lg:col-span-1">
+                                <!-- Advanced Settings Toggle -->
+                                <button type="button" onclick="toggleAdvancedSettings()" class="w-full flex items-center justify-between
+               bg-gray-100 hover:bg-gray-200
+               px-4 py-3 rounded-lg font-semibold text-gray-700 transition">
+
+                                    <span>
+                                        <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
+                                        Advanced Settings (Specific Date & Time)
+                                    </span>
+
+                                    <svg id="advancedArrow" class="w-5 h-5 transition-transform duration-300"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                <!-- advance settings Collapsible -->
+
+                                <div id="advancedSettings"
+                                  
+                                class="hidden mt-4  mt-4 overflow-hidden transition-all duration-300">
+
+
+                                    <!-- calendar -->
+                                    <div class="sticky top-8">
+                                        <div th:replace="~{availability/fragments/components :: calendar}"></div>
+                                    </div>
+
+
+                                    <!-- Override Dates Settings -->
+                                    <div id="overrideDatesSection" class="bg-white rounded-lg shadow-lg p-6 mt-8">
+                                        <h3 class="text-lg font-bold text-gray-800 mb-4">
+                                            
+                                            Override Specific Dates
+                                        </h3>
+                                        <p class="text-sm text-gray-600 mb-4">
+                                            Select dates from the calendar to set custom availability or mark as
+                                            unavailable.
+                                        </p>
+
+                                        <!-- Override entries will be added here dynamically -->
+                                        <div id="overrideEntriesContainer" class="space-y-3">
+                                            <!-- Template for override entries -->
+                                        </div>
+
+                                        <!-- Hidden container for actual form inputs -->
+                                        <div id="dateOverridesInputsContainer"></div>
+                                    </div>
+
+
+
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </form>
+
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Calendar and Override Management Script -->
     <script th:inline="javascript">
+        /*<![CDATA[*/
+        const existingWeeklyAvailability = /*[[${availabilityRequest.weeklyAvailability}]]*/[];
+        const existingDateOverrides = /*[[${availabilityRequest.dateOverrides}]]*/[];
+        /*]]>*/
+
         let currentDate = new Date();
         let selectedDates = new Set();
         let dateOverrides = {};
+        let overrideCounter = 0;
 
         function renderCalendar() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
-            
+
             // Update month display
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'];
             document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
-            
+
             // Get first day of month and number of days
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
-            
+
             const grid = document.getElementById('calendarGrid');
             grid.innerHTML = '';
-            
+
             // Add empty cells for days before month starts
             for (let i = 0; i < firstDay; i++) {
                 const emptyCell = document.createElement('div');
                 grid.appendChild(emptyCell);
             }
-            
+
             // Add days of month
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -231,14 +332,23 @@
                 dayCell.className = 'calendar-day';
                 dayCell.textContent = day;
                 dayCell.dataset.date = dateStr;
-                
+
                 if (selectedDates.has(dateStr)) {
                     dayCell.classList.add('selected');
                 }
-                
+
                 dayCell.onclick = () => toggleDate(dateStr, dayCell);
                 grid.appendChild(dayCell);
             }
+        }
+
+        //  for specific date advanced settings
+        function toggleAdvancedSettings() {
+            const section = document.getElementById("advancedSettings");
+            const arrow = document.getElementById("advancedArrow");
+
+            section.classList.toggle("hidden");
+            arrow.classList.toggle("rotate-180");
         }
 
         function toggleDate(dateStr, element) {
@@ -256,15 +366,16 @@
 
         function addDateOverride(dateStr) {
             const container = document.getElementById('overrideEntriesContainer');
-            
+            const index = overrideCounter++;
+
             const overrideDiv = document.createElement('div');
             overrideDiv.id = `override-${dateStr}`;
-            overrideDiv.className = 'p-4 bg-purple-50 border border-purple-200 rounded-lg';
+            overrideDiv.className = 'p-4 bg-blue-50 border border-blue-200 rounded-lg';
             overrideDiv.innerHTML = `
                 <div class="flex items-center justify-between mb-3">
                     <span class="font-semibold text-gray-800">
-                        <i class="fas fa-calendar-day text-purple-600 mr-2"></i>
-                        ${new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                        <i class="fas fa-calendar-day text-blue-600 mr-2"></i>
+                        ${new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
                     <button type="button" onclick="removeDate('${dateStr}')" 
                             class="text-red-600 hover:text-red-800">
@@ -277,7 +388,7 @@
                         <input type="checkbox" 
                                id="unavailable-${dateStr}"
                                onchange="toggleUnavailable('${dateStr}')"
-                               class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 mr-2">
+                               class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mr-2">
                         <span class="text-sm text-gray-700">Mark as unavailable</span>
                     </label>
                     
@@ -288,7 +399,7 @@
                                    id="start-${dateStr}"
                                    value="09:00"
                                    onchange="updateOverrideData('${dateStr}')"
-                                   class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500">
+                                   class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="text-xs text-gray-600">End Time</label>
@@ -296,22 +407,23 @@
                                    id="end-${dateStr}"
                                    value="17:00"
                                    onchange="updateOverrideData('${dateStr}')"
-                                   class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500">
+                                   class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
                 </div>
             `;
-            
+
             container.appendChild(overrideDiv);
-            
+
             // Initialize override data
             dateOverrides[dateStr] = {
+                index: index,
                 date: dateStr,
                 startTime: '09:00',
                 endTime: '17:00',
                 unavailable: false
             };
-            updateHiddenField();
+            updateFormInputs();
         }
 
         function removeDateOverride(dateStr) {
@@ -320,7 +432,7 @@
                 overrideDiv.remove();
             }
             delete dateOverrides[dateStr];
-            updateHiddenField();
+            updateFormInputs();
         }
 
         function removeDate(dateStr) {
@@ -333,29 +445,62 @@
         function toggleUnavailable(dateStr) {
             const checkbox = document.getElementById(`unavailable-${dateStr}`);
             const timeFields = document.getElementById(`timeFields-${dateStr}`);
-            
+
             if (checkbox.checked) {
                 timeFields.style.display = 'none';
                 dateOverrides[dateStr].unavailable = true;
+                dateOverrides[dateStr].startTime = null;
+                dateOverrides[dateStr].endTime = null;
             } else {
                 timeFields.style.display = 'grid';
                 dateOverrides[dateStr].unavailable = false;
+                dateOverrides[dateStr].startTime = document.getElementById(`start-${dateStr}`).value;
+                dateOverrides[dateStr].endTime = document.getElementById(`end-${dateStr}`).value;
             }
-            updateHiddenField();
+            updateFormInputs();
         }
 
         function updateOverrideData(dateStr) {
             const startTime = document.getElementById(`start-${dateStr}`).value;
             const endTime = document.getElementById(`end-${dateStr}`).value;
-            
+
             dateOverrides[dateStr].startTime = startTime;
             dateOverrides[dateStr].endTime = endTime;
-            updateHiddenField();
+            updateFormInputs();
         }
 
-        function updateHiddenField() {
-            const overridesArray = Object.values(dateOverrides);
-            document.getElementById('dateOverridesData').value = JSON.stringify(overridesArray);
+        function updateFormInputs() {
+            const container = document.getElementById('dateOverridesInputsContainer');
+            container.innerHTML = '';
+
+            Object.values(dateOverrides).forEach((override, idx) => {
+                // Create hidden inputs for each override
+                const dateInput = document.createElement('input');
+                dateInput.type = 'hidden';
+                dateInput.name = `dateOverrides[${idx}].date`;
+                dateInput.value = override.date;
+                container.appendChild(dateInput);
+
+                const unavailableInput = document.createElement('input');
+                unavailableInput.type = 'hidden';
+                unavailableInput.name = `dateOverrides[${idx}].unavailable`;
+                unavailableInput.value = override.unavailable;
+                container.appendChild(unavailableInput);
+
+                if (!override.unavailable && override.startTime && override.endTime) {
+                    const startTimeInput = document.createElement('input');
+                    startTimeInput.type = 'hidden';
+                    startTimeInput.name = `dateOverrides[${idx}].startTime`;
+                    startTimeInput.value = override.startTime + ':00';
+                    container.appendChild(startTimeInput);
+
+                    const endTimeInput = document.createElement('input');
+                    endTimeInput.type = 'hidden';
+                    endTimeInput.name = `dateOverrides[${idx}].endTime`;
+                    endTimeInput.value = override.endTime + ':00';
+                    container.appendChild(endTimeInput);
+                }
+            });
         }
 
         function updateSelectedDatesDisplay() {
@@ -378,18 +523,269 @@
         }
 
         function toggleDayFields(checkbox) {
-            const container = checkbox.closest('.flex');
-            const timeInputs = container.querySelectorAll('input[type="time"]');
-            timeInputs.forEach(input => {
-                input.disabled = !checkbox.checked;
+            const index = checkbox.getAttribute('data-index');
+            const startTimeInput = document.getElementById(`startTime-${index}`);
+            const endTimeInput = document.getElementById(`endTime-${index}`);
+
+            if (checkbox.checked) {
+                startTimeInput.disabled = false;
+                endTimeInput.disabled = false;
+            } else {
+                startTimeInput.disabled = true;
+                endTimeInput.disabled = true;
+                // Reset to default values when disabled
+                startTimeInput.value = '09:00';
+                endTimeInput.value = '17:00';
+            }
+            updateWeeklyAvailability();
+        }
+
+        function updateWeeklyAvailability() {
+            const container = document.getElementById('weeklyAvailabilityInputsContainer');
+            container.innerHTML = '';
+
+            const checkboxes = document.querySelectorAll('.day-checkbox');
+            let idx = 0;
+
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const index = checkbox.getAttribute('data-index');
+                    const day = checkbox.getAttribute('data-day');
+                    const startTime = document.getElementById(`startTime-${index}`).value;
+                    const endTime = document.getElementById(`endTime-${index}`).value;
+
+                    // Create hidden inputs for this day
+                    const dayInput = document.createElement('input');
+                    dayInput.type = 'hidden';
+                    dayInput.name = `weeklyAvailability[${idx}].dayOfWeek`;
+                    dayInput.value = day;
+                    container.appendChild(dayInput);
+
+                    const startInput = document.createElement('input');
+                    startInput.type = 'hidden';
+                    startInput.name = `weeklyAvailability[${idx}].startTime`;
+                    startInput.value = startTime + ':00';
+                    container.appendChild(startInput);
+
+                    const endInput = document.createElement('input');
+                    endInput.type = 'hidden';
+                    endInput.name = `weeklyAvailability[${idx}].endTime`;
+                    endInput.value = endTime + ':00';
+                    container.appendChild(endInput);
+
+                    idx++;
+                }
             });
         }
 
+        // Apply the global time picks to every day's start/end field
+        function setAllWeeklyTimes() {
+            const startValue = document.getElementById('globalStartTime')?.value || '09:00';
+            const endValue = document.getElementById('globalEndTime')?.value || '17:00';
+
+            document.querySelectorAll('.day-checkbox').forEach(checkbox => {
+                const index = checkbox.getAttribute('data-index');
+                const startTimeInput = document.getElementById(`startTime-${index}`);
+                const endTimeInput = document.getElementById(`endTime-${index}`);
+
+                if (startTimeInput) {
+                    startTimeInput.value = startValue;
+                }
+                if (endTimeInput) {
+                    endTimeInput.value = endValue;
+                }
+            });
+
+            updateWeeklyAvailability();
+        }
+
         // Initialize calendar on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             renderCalendar();
+            setAllWeeklyTimes();
+            loadExistingAvailability();
         });
+
+        function loadExistingAvailability() {
+            // Load existing weekly availability
+            if (existingWeeklyAvailability && existingWeeklyAvailability.length > 0) {
+                existingWeeklyAvailability.forEach(availability => {
+                    const dayOfWeek = availability.dayOfWeek;
+                    const startTime = availability.startTime ? availability.startTime.slice(0, 5) : '09:00';
+                    const endTime = availability.endTime ? availability.endTime.slice(0, 5) : '17:00';
+
+                    // Find the checkbox for this day
+                    const dayCheckbox = document.querySelector(`[data-day="${dayOfWeek}"]`);
+                    if (dayCheckbox) {
+                        const index = dayCheckbox.getAttribute('data-index');
+
+                        // Check the checkbox
+                        dayCheckbox.checked = true;
+
+                        // Enable and set time fields
+                        const startTimeInput = document.getElementById(`startTime-${index}`);
+                        const endTimeInput = document.getElementById(`endTime-${index}`);
+
+                        if (startTimeInput && endTimeInput) {
+                            startTimeInput.disabled = false;
+                            endTimeInput.disabled = false;
+                            startTimeInput.value = startTime;
+                            endTimeInput.value = endTime;
+                        }
+                    }
+                });
+                updateWeeklyAvailability();
+            }
+
+            // Load existing date overrides
+            if (existingDateOverrides && existingDateOverrides.length > 0) {
+                existingDateOverrides.forEach(override => {
+                    const dateStr = override.date;
+                    selectedDates.add(dateStr);
+
+                    const container = document.getElementById('overrideEntriesContainer');
+                    const index = overrideCounter++;
+
+                    const overrideDiv = document.createElement('div');
+                    overrideDiv.id = `override-${dateStr}`;
+                    overrideDiv.className = 'p-4 bg-blue-50 border border-blue-200 rounded-lg';
+
+                    const startTime = override.startTime ? override.startTime.slice(0, 5) : '09:00';
+                    const endTime = override.endTime ? override.endTime.slice(0, 5) : '17:00';
+                    const isUnavailable = override.unavailable || false;
+
+                    overrideDiv.innerHTML = `
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="font-semibold text-gray-800">
+                                <i class="fas fa-calendar-day text-blue-600 mr-2"></i>
+                                ${new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                            <button type="button" onclick="removeDate('${dateStr}')" 
+                                    class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" 
+                                       id="unavailable-${dateStr}"
+                                       ${isUnavailable ? 'checked' : ''}
+                                       onchange="toggleUnavailable('${dateStr}')"
+                                       class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mr-2">
+                                <span class="text-sm text-gray-700">Mark as unavailable</span>
+                            </label>
+                            
+                            <div id="timeFields-${dateStr}" class="grid grid-cols-2 gap-2" style="${isUnavailable ? 'display:none' : ''}">
+                                <div>
+                                    <label class="text-xs text-gray-600">Start Time</label>
+                                    <input type="time" 
+                                           id="start-${dateStr}"
+                                           value="${startTime}"
+                                           onchange="updateOverrideData('${dateStr}')"
+                                           class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-600">End Time</label>
+                                    <input type="time" 
+                                           id="end-${dateStr}"
+                                           value="${endTime}"
+                                           onchange="updateOverrideData('${dateStr}')"
+                                           class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    container.appendChild(overrideDiv);
+
+                    // Initialize override data
+                    dateOverrides[dateStr] = {
+                        index: index,
+                        date: dateStr,
+                        startTime: isUnavailable ? null : startTime,
+                        endTime: isUnavailable ? null : endTime,
+                        unavailable: isUnavailable
+                    };
+                });
+
+                updateFormInputs();
+                renderCalendar();
+            }
+        }
+    </script>
+
+    <style>
+        .calendar-day {
+            @apply text-center py-2 cursor-pointer transition;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 2.5rem;
+            
+            
+        }
+
+        .calendar-day:hover {
+            @apply bg-blue-50;
+        }
+
+        .calendar-day.selected {
+            @apply font-bold;
+            background: transparent;
+            color: white !important;
+            position: relative;
+            z-index: 1;
+        }
+
+        .calendar-day.selected::before {
+            content: '';
+            position: absolute;
+            width: 2.25rem;
+            height: 2.25rem;
+            background-color: #3b82f6;
+            border-radius: 50%;
+            z-index: -1;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day.selected:hover::before {
+            background-color: #2563eb;
+            transform: scale(1.05);
+        }
+    </style>
+
+    <script>
+        function copyBookingLink() {
+            const input = document.getElementById('bookingLinkInput');
+            if (input) {
+                input.select();
+                input.setSelectionRange(0, 99999); // For mobile devices
+                
+                // Modern clipboard API
+                navigator.clipboard.writeText(input.value).then(() => {
+                    const button = event.target.closest('button');
+                    const originalHTML = button.innerHTML;
+                    button.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
+                    button.classList.add('bg-green-600');
+                    button.classList.remove('bg-blue-600');
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('bg-green-600');
+                        button.classList.add('bg-blue-600');
+                    }, 2000);
+                }).catch(() => {
+                    // Fallback for older browsers
+                    document.execCommand('copy');
+                    alert('Link copied to clipboard!');
+                });
+            }
+        }
     </script>
 
 </body>
+
 </html>
