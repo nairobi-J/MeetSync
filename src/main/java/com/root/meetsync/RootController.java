@@ -1,5 +1,6 @@
 package com.root.meetsync;
 
+
 import com.root.meetsync.entity.*;
 import com.root.meetsync.repository.*;
 import jakarta.transaction.Transactional;
@@ -7,7 +8,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalTime;
 import java.util.*;
@@ -89,7 +93,8 @@ public class RootController {
     @Transactional
     @PostMapping("/event/{shareLink}/host-availability")
     public String saveHostAvailability(@PathVariable String shareLink, @RequestParam(required = false) List<Long> slotIds, Authentication auth) {
-        Event event = eventRepository.findByShareLink(shareLink).orElseThrow();
+Event event = eventRepository.findByShareLink(shareLink)
+              .orElseThrow(() -> new RuntimeException("Event not found"));
         String email = getEmailFromAuth(auth);
         User host = userRepository.findByEmail(email).orElseThrow();
 
@@ -122,7 +127,7 @@ public class RootController {
     @GetMapping("/event/{shareLink}/overview")
     public String showEventOverview(@PathVariable String shareLink, Model model, Authentication auth) {
         Event event = eventRepository.findByShareLink(shareLink)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow();
 
         // 1. Setup Time Headers for the grid
         List<LocalTime> hours = new ArrayList<>();
@@ -132,7 +137,7 @@ public class RootController {
             current = current.plusHours(1);
         }
 
-        // 2. Prepare Combined Heatmap Data (Host + Participants)
+        // 2. Prepare Combined Heatmap Data (Host + Participants);
         Map<Long, List<String>> combinedHeatmap = new HashMap<>();
         // Initialize every slot with an empty list
         event.getSlots().forEach(slot -> combinedHeatmap.put(slot.getId(), new ArrayList<>()));
