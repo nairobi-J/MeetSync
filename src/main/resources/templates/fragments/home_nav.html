@@ -22,59 +22,54 @@
             </div>
         </div>
 
-        <div class="relative flex items-center space-x-6">
-            <div class="relative">
-                <button id="userProfileBtn"
-                        onclick="event.stopPropagation(); document.getElementById('userProfileDropdown').classList.toggle('hidden')"
-                        class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition">
-                    <i class="far fa-user-circle text-2xl text-blue-600"></i>
-                    <span class="hidden md:block font-medium" th:text="${currentUser.name}">User Name</span>
-                    <i class="fas fa-chevron-down text-sm"></i>
-                </button>
 
-                <div id="userProfileDropdown"
-                     onclick="event.stopPropagation()"
-                     class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+    <div class="relative flex items-center space-x-6">
+        <div class="relative">
+            <button id="userProfileBtn"
+                    onclick="event.stopPropagation(); document.getElementById('userProfileDropdown').classList.toggle('hidden')"
+                    class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition">
+                <!-- GOOGLE PHOTO: Show if exists -->
+                <img th:if="${currentUser.profilePic}"
+                     th:src="${currentUser.profilePic}"
+                     class="w-12 h-12 rounded-full border border-blue-500 object-cover"
+                     referrerpolicy="no-referrer"
+                     alt="">
 
-                    <div class="p-6 border-b border-gray-200">
-                        <h3 class="text-xl font-bold text-gray-900" th:text="${currentUser.name}">User Name</h3>
-                        <p class="text-sm text-gray-600 mt-1" th:text="${currentUser.email}">user@email.com</p>
-                    </div>
+                <!-- FALLBACK ICON: Show if no photo (manual login) -->
+                <i th:unless="${currentUser.profilePic}"
+                   class="far fa-user-circle text-2xl text-blue-600"></i>
 
-                    <div class="p-4 border-b border-gray-200">
-                        <h4 class="text-sm font-semibold text-gray-900 mb-3">Account Settings</h4>
-                        <a th:href="@{/profile}" class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">
-                            <i class="far fa-user w-5"></i>
-                            <span>Profile</span>
-                        </a>
-                        <a th:href="@{/settings}" class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">
-                            <i class="fas fa-cog w-5"></i>
-                            <span>Settings</span>
-                        </a>
-                    </div>
+                <span class="hidden md:block font-medium" th:text="${currentUser.name}">User Name</span>
+                <i class="fas fa-chevron-down text-xs opacity-50"></i>
+            </button>
 
-                    <div class="p-4 border-b border-gray-200">
-                        <h4 class="text-sm font-semibold text-gray-900 mb-3">Resources</h4>
-                        <a href="#" class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">
-                            <i class="fas fa-file-alt w-5"></i>
-                            <span>Documents</span>
-                        </a>
-                        <a href="#" class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">
-                            <i class="fas fa-question-circle w-5"></i>
-                            <span>HelpDesk</span>
-                        </a>
-                    </div>
+            <div id="userProfileDropdown"
+                 onclick="event.stopPropagation()"
+                 class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
 
-                    <div class="p-4">
-                        <form th:action="@{/logout}" method="post">
-                            <button type="submit" class="w-full bg-red-50 text-red-600 hover:bg-red-100 font-medium py-3 px-4 rounded-lg transition">
-                                LOG OUT
-                            </button>
-                        </form>
-                    </div>
+                <div class="p-6 border-b border-gray-200">
+                    <h3 class="text-xl font-bold text-gray-900" th:text="${currentUser.name}">User Name</h3>
+                    <p class="text-sm text-gray-600 mt-1" th:text="${currentUser.email}">user@email.com</p>
+                </div>
+
+                <div class="p-4 border-b border-gray-200">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-3">Account Settings</h4>
+                    <a th:href="@{/profile}" class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">
+                        <i class="far fa-user w-5"></i>
+                        <span>Profile</span>
+                    </a>
+                </div>
+
+                <div class="p-4">
+                    <form th:action="@{/logout}" method="post">
+                        <button type="submit" class="w-full bg-red-50 text-red-600 hover:bg-red-100 font-medium py-3 px-4 rounded-lg transition">
+                            LOG OUT
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
+    </div>
 
     </div>
 </nav>
