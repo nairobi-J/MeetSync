@@ -5,6 +5,7 @@ import com.root.meetsync.entity.User;
 import com.root.meetsync.service.availability.IAvailabilityService;
 import com.root.meetsync.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
@@ -17,6 +18,7 @@ import java.time.DayOfWeek;
 @Controller
 @RequestMapping("/availability")
 @RequiredArgsConstructor
+@Slf4j
 public class AvailabilityWebController {
 
     private final IAvailabilityService availabilityService;
@@ -31,19 +33,50 @@ public class AvailabilityWebController {
 
         User user = getAuthenticatedUser(authentication);
 
-
-        SetupAvailabilityRequest request = new SetupAvailabilityRequest();
+        SetupAvailabilityRequest request;
+        
+        // Try to fetch existing availability data
+        try {
+            request = availabilityService.getUserAvailability(user.getId());
+            
+            if (request.getWeeklyAvailability() != null && !request.getWeeklyAvailability().isEmpty()) {
+                log.info("Loaded existing availability for user {} with {} weekly slots", 
+                    user.getId(), request.getWeeklyAvailability().size());
+                model.addAttribute("hasExistingAvailability", true);
+            } else {
+                model.addAttribute("hasExistingAvailability", false);
+            }
+        } catch (Exception e) {
+            log.debug("No existing availability found for user {}, using defaults", user.getId());
+            request = new SetupAvailabilityRequest();
+            model.addAttribute("hasExistingAvailability", false);
+        }
+        
         model.addAttribute("availabilityRequest", request);
         model.addAttribute("user", user);
+        
+        // Add booking link to the model
+        try {
+            String bookingLink = availabilityService.getUserBookingLink(user.getId());
+            model.addAttribute("bookingLink", bookingLink);
+        } catch (Exception e) {
+            log.debug("Could not retrieve booking link for user {}", user.getId());
+        }
         
         // days of week for form
         model.addAttribute("daysOfWeek", DayOfWeek.values());
         
-        // Tmezone options
+        // Timezone options
         model.addAttribute("timezones", new String[]{
-            "GMT+6 BDT", "GMT+5:30 IST", "GMT+0 UTC", 
-            "GMT-5 EST", "GMT-8 PST", "GMT+1 CET"
-        });
+        "Asia/Dhaka",
+        "Asia/Kolkata", 
+        "UTC",
+        "America/New_York",
+        "America/Los_Angeles",
+        "Europe/Paris",
+        "Asia/Tokyo",
+        "Australia/Sydney"
+    });
         
         // Duration options (in minutes)
         model.addAttribute("durations", new Integer[]{15, 30, 45, 60, 90, 120});
@@ -64,15 +97,44 @@ public class AvailabilityWebController {
         User user = getAuthenticatedUser(authentication);
 
         try {
-            availabilityService.setupAvailability(user.getId(), request);
-            redirectAttributes.addFlashAttribute("success", "Availability setup successfully!");
+            log.info("====== Received SetupAvailabilityRequest ======");
+            log.info("User ID: {}", user.getId());
+            log.info("Meeting Duration: {} minutes", request.getMeetingDurationMinutes());
+            log.info("Min Notice: {} hours", request.getMinNoticeHours());
+            log.info("Future Days: {} days", request.getFutureDaysAllowed());
+            log.info("Buffer Time: {} minutes", request.getBufferTimeMinutes());
+            log.info("Timezone: {}", request.getTimezone());
             
+            log.info("--- Weekly Availability ({} entries) ---", 
+                request.getWeeklyAvailability() != null ? request.getWeeklyAvailability().size() : 0);
+            if (request.getWeeklyAvailability() != null) {
+                request.getWeeklyAvailability().forEach(wa -> 
+                    log.info("  {}: {} - {}", wa.getDayOfWeek(), wa.getStartTime(), wa.getEndTime())
+                );
+            }
+            
+            log.info("--- Date Overrides ({} entries) ---", 
+                request.getDateOverrides() != null ? request.getDateOverrides().size() : 0);
+            if (request.getDateOverrides() != null) {
+                request.getDateOverrides().forEach(override -> 
+                    log.info("  {} {} (unavailable: {})", 
+                        override.getDate(), 
+                        override.getUnavailable() ? "[UNAVAILABLE]" : 
+                        "(" + override.getStartTime() + " - " + override.getEndTime() + ")",
+                        override.getUnavailable())
+                );
+            }
+            log.info("=============================================");
+            
+            availabilityService.setupAvailability(user.getId(), request);
+            redirectAttributes.addFlashAttribute("success", "Availability saved successfully!");
          
             String bookingLink = availabilityService.getUserBookingLink(user.getId());
             redirectAttributes.addFlashAttribute("bookingLink", bookingLink);
             
-            return "redirect:/availability/success";
+            return "redirect:/availability/setup";
         } catch (Exception e) {
+            log.error("Failed to setup availability for user {}", user.getId(), e);
             redirectAttributes.addFlashAttribute("error", "Failed to setup availability: " + e.getMessage());
             return "redirect:/availability/setup";
         }
