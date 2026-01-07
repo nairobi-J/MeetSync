@@ -4,84 +4,119 @@
     <meta charset="UTF-8">
     <title>Event Overview | MeetSync</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        .heat-0 { background-color: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; }
+        .heat-0 { background-color: #f1f5f9; }
         .heat-1 { background-color: #dcfce7; }
         .heat-2 { background-color: #86efac; }
         .heat-3 { background-color: #22c55e; }
-        .tooltip { visibility: hidden; position: absolute; z-index: 50; background: #1e293b; color: white; padding: 8px; border-radius: 4px; font-size: 12px; pointer-events: none; white-space: pre-line; }
-        .has-tooltip:hover .tooltip { visibility: visible; }
+
+        .tooltip { visibility: hidden; position: absolute; z-index: 50; background: #0f172a; color: white; padding: 10px 14px; border-radius: 8px; font-size: 12px; pointer-events: none; white-space: pre-line; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .has-tooltip:hover .tooltip { visibility: visible; bottom: 110%; left: 50%; transform: translateX(-50%); }
+
+        /* Hide scrollbar but keep functionality */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; scroll-behavior: smooth; }
     </style>
 </head>
-<body class="bg-slate-50 p-8">
+<body class="bg-[#f8fafc] text-slate-900 min-h-screen">
 
-<div class="max-w-7xl mx-auto">
-    <div class="flex justify-between items-start mb-10">
-        <div>
-            <h1 class="text-4xl font-black text-slate-800" th:text="${event.title}">Event Name</h1>
-            <p class="text-slate-500 mt-2">Schedule Pending • <span th:text="${event.timezone}"></span></p>
+<nav class="bg-white border-b border-slate-200 px-8 py-3 mb-8">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">M</div>
+            <span class="text-xl font-bold tracking-tight">MeetSync</span>
         </div>
-        <div class="flex gap-4">
-            <a th:href="@{'/event/' + ${event.shareLink}}" class="bg-white border px-6 py-2 rounded-lg font-bold hover:bg-slate-50 transition">Manage Availability</a>
-            <button class="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold shadow-lg hover:bg-blue-700">Confirm Schedule</button>
-            <button onclick="copyParticipantLink()" class="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 font-bold transition flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                </svg>
-                Copy Guest Link
+        <div class="flex items-center gap-4">
+            <button onclick="copyParticipantLink()" id="copyBtn" class="text-slate-600 hover:text-blue-600 font-semibold text-sm transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                Copy Link
+            </button>
+            <a th:href="@{'/event/' + ${event.shareLink}}" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-200 transition">Edit Availability</a>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-8 pb-12">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight" th:text="${event.title}">Event Name</h1>
+            <p class="text-slate-500 font-medium" th:text="${event.timezone}">GMT+6</p>
+        </div>
+        <div class="flex items-center gap-2 bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
+            <button onclick="scrollHeatmap(-300)" class="p-2 hover:bg-slate-50 rounded-xl transition text-slate-400 hover:text-slate-900">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <div class="h-4 w-[1px] bg-slate-200 mx-1"></div>
+            <button onclick="scrollHeatmap(300)" class="p-2 hover:bg-slate-50 rounded-xl transition text-slate-400 hover:text-slate-900">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </button>
         </div>
-        <input type="hidden" id="eventShareLink" th:value="${event.shareLink}">
-
     </div>
 
     <div class="grid grid-cols-12 gap-8">
-        <div class="col-span-3">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <h3 class="font-bold text-lg mb-4">Participants <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-sm ml-2" th:text="${totalParticipants}">0</span></h3>
-
-                <div th:if="${bestSlot != null}" class="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
-                    <p class="text-xs font-bold text-green-700 uppercase tracking-wider">Best Time Found</p>
-                    <p class="font-bold text-green-900 mt-1" th:text="${#temporals.format(bestSlot.slotDate, 'EEE, MMM d')}"></p>
-                    <p class="text-sm text-green-800" th:text="${#temporals.format(bestSlot.startTime, 'h:mm a')}"></p>
+        <aside class="col-span-12 lg:col-span-3 space-y-6">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <div th:if="${bestSlot != null}" class="mb-8 p-5 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-100">
+                    <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest mb-2">Recommended Time</p>
+                    <p class="font-bold text-lg" th:text="${#temporals.format(bestSlot.slotDate, 'EEE, MMM d')}"></p>
+                    <p class="text-white/90 font-medium" th:text="${#temporals.format(bestSlot.startTime, 'h:mm a')}"></p>
                 </div>
 
-                <p class="text-xs font-bold text-slate-400 uppercase mb-3">Available for Best Time</p>
-                <div id="availability-list" class="space-y-2 text-slate-700">
-                    <p class="text-sm italic text-slate-400">Hover over a time to see who is available</p>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-800">Participants</h3>
+                    <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-xs font-bold" th:text="${totalParticipants}">0</span>
                 </div>
+
+                <div id="availability-list" class="space-y-3 min-h-[200px]">
+                    <p class="text-sm text-slate-400 italic">Select a slot on the right to see availability</p>
+                </div>
+
+                <button class="w-full mt-8 bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition shadow-xl shadow-slate-200">
+                    Confirm Final Schedule
+                </button>
             </div>
-        </div>
+        </aside>
 
-        <div class="col-span-9 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <div class="flex border rounded-xl overflow-hidden shadow-inner">
-                <div class="w-20 bg-slate-50 border-r border-slate-200">
-                    <div class="h-12 border-b"></div>
-                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h a')}"></div>
-                </div>
-                <div class="flex-1 flex overflow-x-auto">
-                    <div th:each="date : ${#lists.sort(#lists.toList(#sets.toSet(event.slots.![slotDate])))}" class="flex-1 min-w-[120px] border-r last:border-0">
-                        <div class="h-12 border-b bg-slate-50 flex flex-col items-center justify-center text-[10px] font-bold text-slate-600">
-                            <span th:text="${#temporals.format(date, 'MMM d')}"></span>
-                            <span th:text="${#temporals.format(date, 'EEE')}"></span>
-                        </div>
-                        <div th:each="time : ${hours}">
-                            <div th:each="slot : ${event.slots}"
-                                 th:if="${slot.slotDate == date && slot.startTime == time}"
-                                 class="heat-cell has-tooltip h-12 border-b border-slate-50 relative cursor-default"
-                                 th:attr="data-slot-id=${slot.id}">
-                                <div class="tooltip shadow-xl">No one available</div>
+        <section class="col-span-12 lg:col-span-9">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
+                <div id="heatmap-container" class="flex overflow-x-auto no-scrollbar">
+                    <div class="sticky left-0 z-20 bg-white border-r border-slate-100 w-20 flex-shrink-0">
+                        <div class="h-16 border-b border-slate-100"></div>
+                        <div th:each="time : ${hours}" class="h-14 border-b border-slate-50 flex items-center justify-center text-[11px] font-bold text-slate-400 uppercase" th:text="${#temporals.format(time, 'h a')}"></div>
+                    </div>
+
+                    <div class="flex flex-1">
+                        <div th:each="date : ${#lists.sort(#lists.toList(#sets.toSet(event.slots.![slotDate])))}" class="flex-1 min-w-[150px] border-r border-slate-50 last:border-0">
+                            <div class="h-16 border-b border-slate-100 bg-slate-50/30 flex flex-col items-center justify-center">
+                                <span class="text-[11px] font-black text-slate-900 uppercase tracking-tighter" th:text="${#temporals.format(date, 'EEEE')}"></span>
+                                <span class="text-xs text-slate-400 font-bold" th:text="${#temporals.format(date, 'MMM d')}"></span>
+                            </div>
+                            <div th:each="time : ${hours}">
+                                <div th:each="slot : ${event.slots}"
+                                     th:if="${slot.slotDate == date && slot.startTime == time}"
+                                     class="heat-cell has-tooltip h-14 border-b border-slate-50 relative cursor-pointer hover:ring-2 ring-blue-400 ring-inset transition-all"
+                                     th:attr="data-slot-id=${slot.id}">
+                                    <div class="tooltip shadow-2xl">No one available</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
-</div>
+</main>
+
+<input type="hidden" id="eventShareLink" th:value="${event.shareLink}">
 
 <script th:inline="javascript">
     const heatmapData = [(${heatmapDataJson})];
+
+    function scrollHeatmap(distance) {
+        document.getElementById('heatmap-container').scrollBy({ left: distance, behavior: 'smooth' });
+    }
 
     function initHeatmap() {
         document.querySelectorAll('.heat-cell').forEach(cell => {
@@ -89,7 +124,6 @@
             const voters = heatmapData[id] || [];
             const count = voters.length;
 
-            // Color based on popularity
             cell.classList.remove('heat-0', 'heat-1', 'heat-2', 'heat-3');
             if (count >= 3) cell.classList.add('heat-3');
             else if (count === 2) cell.classList.add('heat-2');
@@ -97,59 +131,37 @@
             else cell.classList.add('heat-0');
 
             const tooltip = cell.querySelector('.tooltip');
-            tooltip.innerText = count > 0 ? `${count} available:\n${voters.join('\n')}` : "No one available";
+            tooltip.innerText = count > 0 ? `${count} Available:\n${voters.join('\n')}` : "Empty slot";
 
-            // Update sidebar on hover
             cell.addEventListener('mouseenter', () => {
                 const list = document.getElementById('availability-list');
                 if(voters.length > 0) {
-                    list.innerHTML = voters.map(v => `<div class="flex items-center text-sm font-medium"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>${v}</div>`).join('');
+                    list.innerHTML = voters.map(v => `
+                        <div class="flex items-center bg-slate-50 p-3 rounded-2xl border border-slate-100 transition hover:border-blue-200">
+                            <div class="w-8 h-8 bg-white shadow-sm border border-slate-200 text-blue-600 rounded-xl flex items-center justify-center text-xs font-bold mr-3">${v.charAt(0).toUpperCase()}</div>
+                            <span class="text-sm font-bold text-slate-700">${v}</span>
+                        </div>
+                    `).join('');
                 } else {
-                    list.innerHTML = '<p class="text-sm italic text-slate-400">No one available</p>';
+                    list.innerHTML = '<p class="text-sm italic text-slate-400">No one available for this slot</p>';
                 }
             });
         });
     }
-    function copyLink() {
-        const link = document.getElementById('shareLinkValue').value;
-        navigator.clipboard.writeText(link).then(() => alert("Link copied to clipboard!"));
-    }
+
     function copyParticipantLink() {
         const shareLink = document.getElementById('eventShareLink').value;
         const participantUrl = window.location.protocol + "//" + window.location.host + "/event/participant/" + shareLink;
-
-        // Attempt to get the button element safely
-        const btn = event.currentTarget || document.querySelector('button[onclick="copyParticipantLink()"]');
-        const originalContent = btn.innerHTML;
+        const btn = document.getElementById('copyBtn');
 
         navigator.clipboard.writeText(participantUrl).then(() => {
-            // Visual Feedback: Change button state
-            btn.innerHTML = `
-            <span class="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
-                Link Copied
-            </span>
-        `;
-
-            // Swap colors to show success (Green)
-            const originalClasses = btn.className;
-            btn.className = "bg-green-600 text-white px-6 py-2 rounded-lg font-bold transition flex items-center gap-2";
-
-            // Revert back after 2 seconds
-            setTimeout(() => {
-                btn.innerHTML = originalContent;
-                btn.className = originalClasses;
-            }, 2000);
-
-        }).catch(err => {
-            console.error('Copy failed', err);
+            const original = btn.innerHTML;
+            btn.innerHTML = `<span class="text-emerald-600 font-bold">Link Copied!</span>`;
+            setTimeout(() => { btn.innerHTML = original; }, 2000);
         });
     }
 
     initHeatmap();
 </script>
-
 </body>
 </html>
