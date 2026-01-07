@@ -1,7 +1,9 @@
+
 package com.root.meetsync.repository;
 
 
-import com.root.meetsync.entity.Event;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

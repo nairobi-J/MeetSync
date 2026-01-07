@@ -32,6 +32,8 @@ public class AvailabilityController {
         return ResponseEntity.ok(link);
     }
 
+    
+
     @GetMapping("/u/{emailPrefix}")
     public ResponseEntity<List<AvailableSlotDTO>> getAvailableSlots(
             @PathVariable String emailPrefix,

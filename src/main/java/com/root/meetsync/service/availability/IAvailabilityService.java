@@ -10,4 +10,5 @@ public interface IAvailabilityService {
     void setupAvailability(Long userId, SetupAvailabilityRequest request);
     List<AvailableSlotDTO> getAvailableSlots(String emailPrefix, String timezone);
     String getUserBookingLink(Long userId);
+    SetupAvailabilityRequest getUserAvailability(Long userId);
 }

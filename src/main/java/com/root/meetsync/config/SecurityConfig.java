@@ -45,7 +45,15 @@ public class SecurityConfig {
                                 .authorizationRequestResolver(authorizationRequestResolver(this.clientRegistrationRepository))
                         )
                         .defaultSuccessUrl("/dashboard", true)
+                )
+
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
                 );
+
 
         return http.build();
     }
