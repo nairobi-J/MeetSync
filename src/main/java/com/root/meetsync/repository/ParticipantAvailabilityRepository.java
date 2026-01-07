@@ -23,4 +23,5 @@ public interface ParticipantAvailabilityRepository extends JpaRepository<Partici
     // all participant availabilities for a specific event
     @Query("SELECT pa FROM ParticipantAvailability pa WHERE pa.eventSlot.event.id = :eventId")
     List<ParticipantAvailability> findByEventSlot_Event_Id(@Param("eventId") Long eventId);
+
 }
