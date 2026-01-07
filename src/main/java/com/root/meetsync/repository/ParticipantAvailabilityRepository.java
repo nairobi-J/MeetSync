@@ -28,4 +28,6 @@ public interface ParticipantAvailabilityRepository extends JpaRepository<Partici
     List<ParticipantAvailability> findByEventSlot_Event_Id(@Param("eventId") Long eventId);
 
     boolean existsByParticipantNameAndEventSlot_Event_Id(String name, Long eventId);
+    
+    void deleteByParticipantNameAndEventSlot_Event_Id(String participantName, Long eventId);
 }

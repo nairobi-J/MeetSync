@@ -84,6 +84,10 @@ public class UserServiceImpl implements UserService {
                 authentication.getName()
         );
 
+        if (client == null) {
+            throw new RuntimeException("OAuth2AuthorizedClient is null. User may need to re-authenticate.");
+        }
+
         String accessToken = client.getAccessToken().getTokenValue();
         String refreshToken = (client.getRefreshToken() != null) ? client.getRefreshToken().getTokenValue() : null;
         LocalDateTime expiresAt = LocalDateTime.ofInstant(client.getAccessToken().getExpiresAt(), ZoneId.systemDefault());

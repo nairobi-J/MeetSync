@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.root.meetsync.dto.SlotCountDto;
 import com.root.meetsync.entity.EventSlot;
 import com.root.meetsync.entity.HostAvailability;
@@ -22,12 +23,15 @@ public class AvailabilityService {
     @Autowired
     private HostAvailabilityRepository hostAvailabilityRepository;
 
+    @Transactional
     public void saveAvailability(String participantName, List<Long> slotIds, Long eventId) {
-
+        // Check if participant has already submitted - if so, update their availability
         if (participantAvailabilityRepository.existsByParticipantNameAndEventSlot_Event_Id(participantName, eventId)) {
-            throw new IllegalArgumentException("Participant name '" + participantName + "' has already submitted availability for this event.");
+            // Delete existing availability for this participant and event
+            participantAvailabilityRepository.deleteByParticipantNameAndEventSlot_Event_Id(participantName, eventId);
         }
 
+        // Save new availability selections
         for (Long slotId : slotIds) {
             ParticipantAvailability pa = new ParticipantAvailability();
             EventSlot slot = new EventSlot();

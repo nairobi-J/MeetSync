@@ -22,6 +22,7 @@ import com.root.meetsync.entity.Event;
 import com.root.meetsync.entity.EventSlot;
 import com.root.meetsync.repository.EventRepository;
 import com.root.meetsync.repository.EventSlotRepository;
+import com.root.meetsync.repository.ParticipantAvailabilityRepository;
 import com.root.meetsync.repository.UserRepository;
 import com.root.meetsync.service.AvailabilityService;
 
@@ -39,6 +40,9 @@ public class EventAvailabilityController {
 
     @Autowired
     EventRepository eventRepository;
+
+    @Autowired
+    ParticipantAvailabilityRepository participantAvailabilityRepository;
 
 public List<LocalTime> generateTimeSlots(LocalTime earliest, LocalTime latest) {
     List<LocalTime> slots = new ArrayList<>();
@@ -71,13 +75,37 @@ public String submitAvailability(
             .collect(Collectors.toList());
 
     try {
+        // Check if this is an update
+        boolean isUpdate = participantAvailabilityRepository.existsByParticipantNameAndEventSlot_Event_Id(participantName, eventId);
+        
         availabilityService.saveAvailability(participantName, slotIdList, eventId);
-    } catch (IllegalArgumentException e) {
-        redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        return "redirect:/";
+        
+    
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        
+       
+        String successMessage = isUpdate ? 
+            "Your availability has been updated successfully!" : 
+            "Your availability has been saved successfully!";
+        redirectAttributes.addFlashAttribute("successMessage", successMessage);
+        redirectAttributes.addFlashAttribute("participantName", participantName);
+        redirectAttributes.addFlashAttribute("submittedSlots", slotIds);
+        
+        return "redirect:/event/participant/" + event.getShareLink() + "?submitted=true";
+    } catch (Exception e) {
+        
+        Event event = eventRepository.findById(eventId)
+                .orElse(null);
+        
+        redirectAttributes.addFlashAttribute("errorMessage", "Failed to save availability: " + e.getMessage());
+        
+        if (event != null) {
+            return "redirect:/event/participant/" + event.getShareLink();
+        } else {
+            return "redirect:/";
+        }
     }
-
-    return "redirect:/";
 }
 
 
@@ -112,18 +140,24 @@ private void populateGuestModel(Model model, Event event) {
         Event event = eventRepository.findByShareLink(shareLink)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
-        
         boolean isHost = false;
+        
+     
         if (auth != null && auth.isAuthenticated()) {
-            String currentUserEmail;
-            if (auth instanceof OAuth2AuthenticationToken oauth) {
-                currentUserEmail = (String) oauth.getPrincipal().getAttributes().get("email");
-            } else {
-                currentUserEmail = auth.getName();
-            }
-
-            if (event.getHost().getEmail().equals(currentUserEmail)) {
-                isHost = true;
+            try {
+                String currentUserEmail = null;
+                if (auth instanceof OAuth2AuthenticationToken oauth) {
+                    currentUserEmail = (String) oauth.getPrincipal().getAttributes().get("email");
+                } else {
+                    currentUserEmail = auth.getName();
+                }
+                
+                if (currentUserEmail != null && event.getHost().getEmail().equals(currentUserEmail)) {
+                    isHost = true;
+                }
+            } catch (Exception e) {
+    
+                System.err.println("Error checking host status: " + e.getMessage());
             }
         }
     
@@ -131,9 +165,7 @@ private void populateGuestModel(Model model, Event event) {
 
         if (isHost) {
             
-            String fullUrl = "http://localhost:8080/event/participant/" + shareLink;
-            model.addAttribute("fullUrl", fullUrl);
-            return "host-view";
+            return "redirect:/event/" + shareLink;
         } else {
             return "guest-view"; 
         }

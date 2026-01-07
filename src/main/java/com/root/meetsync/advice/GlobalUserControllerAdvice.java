@@ -23,7 +23,7 @@ public class GlobalUserControllerAdvice {
             return null;
         }
 
-        //checking the user is already cached session or not
+       
         CurrentUserDTO cachedUser = (CurrentUserDTO) session.getAttribute("currentUserDTO");
         if (cachedUser != null) {
             return cachedUser;
@@ -31,8 +31,14 @@ public class GlobalUserControllerAdvice {
 
         String email;
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            userService.processOAuthUser(oauthToken);
-            email = oauthToken.getPrincipal().getAttribute("email");
+            try {
+                userService.processOAuthUser(oauthToken);
+                email = oauthToken.getPrincipal().getAttribute("email");
+            } catch (Exception e) {
+                // Log error but don't fail the request
+                System.err.println("Error processing OAuth user: " + e.getMessage());
+                return null;
+            }
         } else {
             email = authentication.getName();
         }
