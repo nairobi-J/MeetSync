@@ -5,11 +5,11 @@
     <aside th:fragment="sidebar" class="w-64 bg-white border-r border-gray-200 fixed left-0 top-16 bottom-0 overflow-y-auto">
         <div class="p-4">
             <!-- Schedule New Button -->
-            <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center space-x-2 mb-6">
+            <a th:href="@{/event-create}" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center space-x-2 mb-6">
                 <i class="fas fa-plus"></i>
                 <span>Schedule New</span>
-            </button>
-
+            </a>
+            
             <!-- Mini Calendar -->
             <div class="mb-6">
                 <div class="flex items-center justify-between mb-4">
