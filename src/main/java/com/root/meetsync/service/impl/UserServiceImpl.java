@@ -114,4 +114,12 @@ public class UserServiceImpl implements UserService {
         // Saving the user will save the token because of CascadeType.ALL
         return userRepository.save(user);
     }
+
+
+    @Override
+    public User getUserByEmailPrefix(String emailPrefix) {
+         User user = userRepository.findByExactEmailPrefix(emailPrefix)
+                .orElseThrow(() -> new RuntimeException("User not found with email prefix: " + emailPrefix));
+        return user;
+    }
 }

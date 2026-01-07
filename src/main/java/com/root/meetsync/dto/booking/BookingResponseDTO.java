@@ -14,6 +14,7 @@ public class BookingResponseDTO {
     private String inviteeEmail;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private String timezone;
     private BookingStatus status;
     private LocalDateTime createdAt;
 }

@@ -67,7 +67,7 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
 
         // Clear existing date overrides
         overrideRepository.deleteAll(overrideRepository.findByUserId(userId));
-        
+
         // Setup date overrides if provided
         if (request.getDateOverrides() != null) {
             for (DateOverrideDTO dto : request.getDateOverrides()) {
@@ -130,6 +130,7 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
         
         return request;
     }
+  
 
     public List<AvailableSlotDTO> getAvailableSlots(String emailPrefix, String timezone) {
         User user = userRepository.findByEmail(emailPrefix)
@@ -261,4 +262,12 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
         }
         return base + "/u/" + emailPrefix;
     }
+
+   public UserMeetingPreference getUserMeetingPreference(Long userId) {
+        UserMeetingPreference preference = preferenceRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User has not set up availability"));
+        return preference;
+    }
+
+
 }
