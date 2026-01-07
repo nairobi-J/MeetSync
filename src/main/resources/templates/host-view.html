@@ -8,7 +8,7 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
 
-        /* Selection & Heatmap Styles */
+
         .personal-cell.selected {
             background-color: #3b82f6 !important;
             box-shadow: inset 0 0 0 2px #2563eb;
@@ -131,11 +131,9 @@
     let selectedSlotIds = new Set();
     const heatmapData = [(${heatmapDataJson})];
 
-    /*[# th:each="id : ${savedHostSlotIds}"]*/
-    selectedSlotIds.add(String([[${id}]]));
-    /*[/]*/
 
-    // --- Vibration-Free Synchronized Scrolling ---
+    selectedSlotIds.add(String([[${id}]]));
+
     const personal = document.getElementById('scroll-personal');
     const heatmap = document.getElementById('scroll-heatmap');
     let isSyncingPersonal = false;
@@ -161,7 +159,7 @@
         personal.scrollBy({ left: dist, behavior: 'smooth' });
     }
 
-    // --- Drag Selection Logic ---
+
     document.querySelectorAll('.personal-cell').forEach(cell => {
         cell.addEventListener('mousedown', (e) => {
             isMouseDown = true;
