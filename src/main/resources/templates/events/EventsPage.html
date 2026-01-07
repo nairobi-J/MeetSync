@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeetSync - Events</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/home_style.css}">
+    <link rel="stylesheet" th:href="@{/css/events_style.css}">
+</head>
+<body class="bg-gray-50">
+
+<!-- Include Navbar -->
+<div th:replace="~{fragments/home_nav :: navbar}"></div>
+
+<div class="flex">
+    <!-- Include Sidebar -->
+    <div th:replace="~{fragments/home_sidebar :: sidebar}"></div>
+
+    <!-- Main Events Content -->
+    <main class="flex-1 ml-64 mt-16 p-8">
+        <!-- Page Header -->
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Events</h1>
+            <div class="flex items-center space-x-4">
+                <button class="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                    <i class="far fa-calendar"></i>
+                    <span>Calendar View</span>
+                </button>
+                <button class="px-4 py-2 bg-white border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition">
+                    <i class="fas fa-list"></i>
+                    <span class="ml-2">List View</span>
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Filters Section -->
+<!--        <div th:replace="~{fragments/events/events_filters :: filters}"></div>-->
+
+        <!-- Events Grid -->
+        <div th:replace="~{fragments/events/events_main :: events_grid}"></div>
+
+<!--        list all-->
+<!--        <div>-->
+<!--            <ul>-->
+<!--                <li th:each="event : ${events}">-->
+<!--                    <a th:href="@{/events/{id}(id=${event.id})}"-->
+<!--                       th:text="${event.title}"></a>-->
+<!--                    <span th:text="' (' + ${event.timezone} + ')'"></span>-->
+<!--                </li>-->
+<!--            </ul>-->
+<!--        </div>-->
+
+    </main>
+</div>
+
+<!-- JavaScript -->
+<script th:src="@{/js/home_calendar.js}"></script>
+<script th:src="@{/js/events_script.js}"></script>
+
+</body>
+</html>

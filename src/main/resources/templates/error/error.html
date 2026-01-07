@@ -1,20 +1,18 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <title>Error</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - MeetSync</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body>
-    <div th:replace="~{fragments/header :: header}"></div>
-    
-    <main class="container">
-        <h1>Oops! Something went wrong</h1>
-        <p th:text="${error}">An unexpected error occurred.</p>
-        <a th:href="@{/}">Return to Home</a>
-    </main>
-    
-    <div th:replace="~{fragments/footer :: footer}"></div>
+<body style="font-family: Arial, sans-serif; padding: 40px">
+
+<h1>Something went wrong</h1>
+
+<p>
+    An unexpected error occurred.
+</p>
+
+<a th:href="@{/events}">← Back to Events</a>
+
 </body>
 </html>
