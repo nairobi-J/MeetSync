@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Meeting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day.available {
+            cursor: pointer;
+            font-weight: 500;
+            background: rgba(37, 99, 235, 0.2);
+            color: #2563eb;
+            border-radius: 50%;
+
+        }
+
+        .calendar-day.available:hover {
+            transform: scale(1.05);
+            background-color: #f3f4f6;
+            border-radius: 50%;
+        }
+
+        .calendar-day.selected {
+            background: #2563eb !important;
+            color: white !important;
+            border-radius: 50% !important;
+        }
+
+        .calendar-day.disabled {
+            cursor: not-allowed;
+            font-weight: 500;
+        }
+
+        .time-slot {
+            transition: all 0.15s ease;
+        }
+
+        .time-slot:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gray-50 text-gray-900">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-blue-600">MeetSync</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/login" class="text-sm font-medium text-gray-700 hover:text-blue-600 transition">Login</a>
+                    <a href="/signup"
+                        class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">Sign
+                        Up</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Success/Error Messages -->
+        <div th:if="${success}" class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start">
+            <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <div>
+                <p class="font-semibold text-green-900">Success!</p>
+                <p class="text-sm text-green-800" th:text="${message}">Booking confirmed!</p>
+            </div>
+        </div>
+        
+        <div th:if="${error}" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start">
+            <svg class="w-5 h-5 text-red-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            <div>
+                <p class="font-semibold text-red-900">Error!</p>
+                <p class="text-sm text-red-800" th:text="${message}">Booking failed!</p>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Schedule a Meeting</h2>
+            <p class="text-sm text-gray-500" id="timezoneDisplay"></p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Host Info -->
+            <div th:object="${user}" class="lg:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center overflow-hidden"
+                        th:classappend="*{profilePic == null} ? ' bg-blue-100' : ''">
+                        <img th:if="*{profilePic}" th:src="*{profilePic}"
+                            class="w-full h-full object-cover"
+                            referrerpolicy="no-referrer" 
+                            alt="Profile Picture"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <span th:if="*{profilePic == null}"
+                            class="text-2xl font-bold text-blue-600"
+                            th:text="${name != null ? name.substring(0,1).toUpperCase() : 'U'}">
+                            U
+                        </span>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1" th:text="*{name}">Host Name</h3>
+                    <p class="text-sm text-gray-500 mb-4" th:text="*{email}">host@example.com</p>
+                    <div class="border-t border-gray-100 pt-4">
+                        <div class="text-left space-y-3">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-400 mt-0.5 mr-2" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-700">Duration</p>
+                                    <p th:text="${Preferences.meetingDurationMinutes} + ' minutes'" class="text-sm text-gray-900">30 minutes</p>
+                                </div>
+                            </div>
+            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar -->
+            <div class="lg:col-span-5 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <button type="button" id="prevMonth" class="px-3 py-2 rounded-lg text-sm font-medium transition">
+                        ← Prev
+                    </button>
+                    <h2 class="text-lg font-semibold text-gray-900" id="monthLabel"></h2>
+                    <button type="button" id="nextMonth" class="px-3 py-2 rounded-lg text-sm font-medium transition">
+                        Next →
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-7 gap-2 mb-3">
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Sun</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Mon</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Tue</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Wed</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Thu</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Fri</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Sat</div>
+                </div>
+
+                <div id="calendarGrid" class="grid grid-cols-7 gap-2"></div>
+            </div>
+
+            <!-- Times + booking form -->
+            <div class="lg:col-span-4 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="mb-4">
+                    <p class="text-xs text-gray-500 mb-1">Selected date</p>
+                    <p class="text-base font-semibold text-gray-900" id="selectedDateLabel">Choose a date</p>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-xs font-medium text-gray-700 mb-3">Available times</p>
+                    <div id="timesContainer" class="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto"></div>
+                    <p id="noTimes" class="text-sm text-gray-400 text-center py-4 hidden">No times available</p>
+                </div>
+
+                <form th:action="@{/u/{emailPrefix}(emailPrefix=${emailPrefix})}" method="post" id="bookingForm">
+                    <div class="border-t border-gray-100 pt-4 space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Your Name</label>
+                            <input name="inviteeName" id="inviteeName" type="text" required
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="John Doe">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Your Email</label>
+                            <input name="inviteeEmail" id="inviteeEmail" type="email" required
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="john@example.com">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Timezone</label>
+                            <input name="timezone" id="timezoneInput" type="text" readonly
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                                placeholder="Timezone">
+                        </div>
+                        <input type="hidden" name="bookingDate" id="bookingDateInput">
+                        <input type="hidden" name="bookingTime" id="bookingTimeInput">
+                        <input type="hidden" name="timezone" id="timezoneInput">
+                        <button type="submit" id="bookBtn"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+                            Confirm Booking
+                        </button>
+                        <p id="status" class="text-xs text-center"></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const emailPrefix = /*[[${emailPrefix}]]*/ '';
+        const availableSlotsData = /*[[${availableSlots}]]*/[];
+        const localeTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+        let currentMonth = new Date();
+        currentMonth.setDate(1);
+        let slotsByDate = {};
+        let availableDates = [];
+        let selectedDate = null;
+        let selectedTime = null;
+
+        document.getElementById('timezoneDisplay').textContent = `Times shown in ${localeTz}`;
+
+        document.getElementById('prevMonth').onclick = goToPrevMonthWithSlots;
+        document.getElementById('nextMonth').onclick = goToNextMonthWithSlots;
+        
+        // Set timezone value
+        document.getElementById('timezoneInput').value = localeTz;
+        
+        // Form submission handler
+        document.getElementById('bookingForm').onsubmit = function(e) {
+            if (!selectedDate || !selectedTime) {
+                e.preventDefault();
+                setStatus('Please pick a date and time.', true);
+                return false;
+            }
+            document.getElementById('bookingDateInput').value = selectedDate;
+            document.getElementById('bookingTimeInput').value = selectedTime;
+            return true;
+        };
+
+        // Load from server-side data
+        hydrateSlots(availableSlotsData);
+        setToFirstAvailableMonth();
+        renderCalendar();
+        autoSelectFirstAvailable();
+        renderSlotList(availableSlotsData);
+
+        function hydrateSlots(data) {
+            slotsByDate = {};
+            data.forEach(slot => {
+                if (!slot.startTime) return;
+                const [datePart, timePart] = slot.startTime.split('T');
+                if (!datePart || !timePart) return;
+                const time = timePart.substring(0, 5);
+                if (!slotsByDate[datePart]) slotsByDate[datePart] = [];
+                slotsByDate[datePart].push({ time, label: formatTime(time) });
+            });
+            availableDates = Object.keys(slotsByDate).sort();
+            availableDates.forEach(d => slotsByDate[d].sort((a, b) => a.time.localeCompare(b.time)));
+        }
+
+        function setToFirstAvailableMonth() {
+            if (availableDates.length === 0) return;
+            const firstDate = availableDates[0];
+            const [y, m, d] = firstDate.split('-').map(Number);
+            currentMonth = new Date(y, m - 1, 1);
+        }
+
+        function monthHasSlots(year, month) {
+            const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+            return availableDates.some(date => date.startsWith(monthStr));
+        }
+
+        function hasPrevMonthWithSlots() {
+            let testMonth = new Date(currentMonth);
+            testMonth.setMonth(testMonth.getMonth() - 1);
+            let attempts = 0;
+            while (attempts < 24) {
+                if (monthHasSlots(testMonth.getFullYear(), testMonth.getMonth())) {
+                    return true;
+                }
+                testMonth.setMonth(testMonth.getMonth() - 1);
+                attempts++;
+            }
+            return false;
+        }
+
+        function hasNextMonthWithSlots() {
+            let testMonth = new Date(currentMonth);
+            testMonth.setMonth(testMonth.getMonth() + 1);
+            let attempts = 0;
+            while (attempts < 24) {
+                if (monthHasSlots(testMonth.getFullYear(), testMonth.getMonth())) {
+                    return true;
+                }
+                testMonth.setMonth(testMonth.getMonth() + 1);
+                attempts++;
+            }
+            return false;
+        }
+
+        function goToPrevMonthWithSlots() {
+            let testMonth = new Date(currentMonth);
+            testMonth.setMonth(testMonth.getMonth() - 1);
+            let attempts = 0;
+            while (attempts < 24) { // search up to 2 years back
+                if (monthHasSlots(testMonth.getFullYear(), testMonth.getMonth())) {
+                    currentMonth = new Date(testMonth);
+                    renderCalendar();
+                    return;
+                }
+                testMonth.setMonth(testMonth.getMonth() - 1);
+                attempts++;
+            }
+        }
+
+        function goToNextMonthWithSlots() {
+            let testMonth = new Date(currentMonth);
+            testMonth.setMonth(testMonth.getMonth() + 1);
+            let attempts = 0;
+            while (attempts < 24) { // search up to 2 years forward
+                if (monthHasSlots(testMonth.getFullYear(), testMonth.getMonth())) {
+                    currentMonth = new Date(testMonth);
+                    renderCalendar();
+                    return;
+                }
+                testMonth.setMonth(testMonth.getMonth() + 1);
+                attempts++;
+            }
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevMonth');
+            const nextBtn = document.getElementById('nextMonth');
+
+            const hasPrev = hasPrevMonthWithSlots();
+            const hasNext = hasNextMonthWithSlots();
+
+            if (hasPrev) {
+                prevBtn.className = 'px-3 py-2 rounded-lg text-sm font-medium transition text-blue-600 hover:bg-blue-50';
+                prevBtn.disabled = false;
+            } else {
+                prevBtn.className = 'px-3 py-2 rounded-lg text-sm font-medium transition text-gray-300 cursor-not-allowed';
+                prevBtn.disabled = true;
+            }
+
+            if (hasNext) {
+                nextBtn.className = 'px-3 py-2 rounded-lg text-sm font-medium transition text-blue-600 hover:bg-blue-50';
+                nextBtn.disabled = false;
+            } else {
+                nextBtn.className = 'px-3 py-2 rounded-lg text-sm font-medium transition text-gray-300 cursor-not-allowed';
+                nextBtn.disabled = true;
+            }
+        }
+
+        function renderSlotList(data) {
+            const container = document.getElementById('slotsList');
+            if (!container) return;
+            container.innerHTML = '';
+            if (!data || !data.length) {
+                container.textContent = 'No available slots found.';
+                return;
+            }
+            const formatter = new Intl.DateTimeFormat([], {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+            data.forEach((slot, idx) => {
+                if (idx >= 100) return; // prevent overly long lists
+                const row = document.createElement('div');
+                const start = slot.startTime ? new Date(slot.startTime) : null;
+                const end = slot.endTime ? new Date(slot.endTime) : null;
+                const startLabel = start ? formatter.format(start) : 'Unknown start';
+                const endLabel = end ? formatter.format(end) : 'Unknown end';
+                const tz = slot.timezone || 'unspecified tz';
+                row.textContent = `${startLabel} → ${endLabel} (${tz})`;
+                container.appendChild(row);
+            });
+            if (data.length > 100) {
+                const note = document.createElement('div');
+                note.className = 'text-xs text-gray-500';
+                note.textContent = `Showing first 100 of ${data.length} slots.`;
+                container.appendChild(note);
+            }
+        }
+
+        function renderCalendar() {
+            document.getElementById('monthLabel').textContent = `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+            const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                const pad = document.createElement('div');
+                grid.appendChild(pad);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = formatDate(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+                const btn = document.createElement('button');
+                btn.textContent = day;
+                btn.className = 'calendar-day text-sm font-medium';
+
+                if (availableDates.includes(dateStr)) {
+                    btn.classList.add('available', 'text-gray-700', 'hover:bg-gray-100');
+                    btn.onclick = () => selectDate(dateStr);
+                    if (dateStr === selectedDate) {
+                        btn.classList.add('selected');
+                    }
+                } else {
+                    btn.classList.add('disabled', 'text-gray-300');
+                    btn.disabled = true;
+                }
+
+                grid.appendChild(btn);
+            }
+
+            updateNavigationButtons();
+        }
+
+        function selectDate(dateStr) {
+            selectedDate = dateStr;
+            selectedTime = null;
+            renderCalendar();
+            renderTimes();
+            document.getElementById('selectedDateLabel').textContent = formatDateHuman(dateStr);
+        }
+
+        function renderTimes() {
+            const container = document.getElementById('timesContainer');
+            const noTimes = document.getElementById('noTimes');
+            container.innerHTML = '';
+            const times = slotsByDate[selectedDate] || [];
+            if (!times.length) {
+                noTimes.classList.remove('hidden');
+                return;
+            }
+            noTimes.classList.add('hidden');
+            times.forEach(t => {
+                const btn = document.createElement('button');
+                btn.textContent = t.label;
+                btn.className = 'time-slot w-full text-center text-sm px-4 py-2.5 rounded-lg border border-gray-300 bg-white hover:border-blue-500 hover:bg-blue-50 text-gray-700 font-medium transition';
+                if (selectedTime === t.time) {
+                    btn.className = 'time-slot w-full text-center text-sm px-4 py-2.5 rounded-lg border-2 border-blue-600 bg-blue-50 text-blue-700 font-semibold';
+                }
+                btn.onclick = () => { selectedTime = t.time; renderTimes(); };
+                container.appendChild(btn);
+            });
+        }
+
+        function autoSelectFirstAvailable() {
+            if (availableDates.length === 0) return;
+            selectDate(availableDates[0]);
+        }
+
+        function formatDate(y, mIndex, d) {
+            return `${y}-${String(mIndex + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        }
+
+        function formatDateHuman(dateStr) {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            const dt = new Date(y, m - 1, d);
+            return dt.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+        }
+
+        function formatTime(timeStr) {
+            const [h, m] = timeStr.split(':').map(Number);
+            const dt = new Date();
+            dt.setHours(h, m, 0, 0);
+            return dt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function setStatus(msg, isError = false, isSuccess = false) {
+            const el = document.getElementById('status');
+            el.textContent = msg || '';
+            el.className = 'text-xs text-center';
+            if (isError) el.classList.add('text-red-600');
+            else if (isSuccess) el.classList.add('text-green-600');
+            else el.classList.add('text-gray-500');
+        }
+    </script>
+</body>
+
+</html>

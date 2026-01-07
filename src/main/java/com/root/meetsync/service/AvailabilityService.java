@@ -38,30 +38,6 @@ public class AvailabilityService {
         }
     }
 
-//     public void saveAvailability(UUID userId, List<UUID> slotIds) {
-//     // 1. Fetch user once
-//     User user = userRepository.findById(userId)
-//         .orElseThrow(() -> new RuntimeException("User not found"));
-
-//     // 2. Map slot IDs to Availability entities
-//     List<ParticipantAvailability> availabilities = slotIds.stream()
-//         .map(slotId -> {
-//             ParticipantAvailability pa = new ParticipantAvailability();
-            
-//             // Using a reference to avoid a DB hit for every EventSlot
-//             EventSlot slot = new EventSlot();
-//             slot.setId(slotId);
-            
-//             pa.setEventSlot(slot);
-//             pa.setUser(user);
-//             return pa;
-//         })
-//         .collect(Collectors.toList());
-
-//     // 3. Perform a single batch save
-//     participantAvailabilityRepository.saveAll(availabilities);
-// }
-
      public Map<LocalDate, List<SlotCountDto>> getHeatmapStat(Long eventId){
         List<SlotCountDto> slotCounts = participantAvailabilityRepository.countTotalAttendeesBySlot(eventId);
 
@@ -71,12 +47,9 @@ public class AvailabilityService {
     }
 
    public Map<String, List<String>> getHeatmapDataForGuestView(Long eventId) {
-    // 1. Fetch both participants and hosts
+   
     List<ParticipantAvailability> participants = participantAvailabilityRepository.findByEventSlot_Event_Id(eventId);
     List<HostAvailability> hosts = hostAvailabilityRepository.findByEventSlot_Event_Id(eventId);
-
-    // 2. Create a unified stream of "Name + Slot ID" pairs
-    // We map both to a common structure or simply process them into the same map
     
     Map<String, List<String>> heatmap = participants.stream()
         .collect(java.util.stream.Collectors.groupingBy(
@@ -87,13 +60,12 @@ public class AvailabilityService {
             )
         ));
 
-    // 3. Merge host data into the existing map
     hosts.forEach(ha -> {
         String slotId = ha.getEventSlot().getId().toString();
-        String hostName = ha.getHost().getName(); // Assuming User entity has a getName() method
+        String hostName = ha.getHost().getName(); 
         
         heatmap.computeIfAbsent(slotId, k -> new java.util.ArrayList<>())
-               .add(hostName + " (Host)"); // Optional: Add a tag to distinguish hosts
+               .add(hostName + " (Host)"); 
     });
 
     return heatmap;

@@ -32,9 +32,7 @@ public class User {
     private String timezone;
     private String password;
     
-    @Column(unique = true)
-    private String username; // For booking link: /u/{username}
-
+   
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 

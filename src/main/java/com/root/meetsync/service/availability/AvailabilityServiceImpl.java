@@ -13,6 +13,7 @@ import com.root.meetsync.repository.availability.UserDateOverrideAvailabilityRep
 import com.root.meetsync.repository.availability.UserMeetingPreferenceRepository;
 import com.root.meetsync.repository.booking.BookingRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,9 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
     private final UserAvailabilityRepository availabilityRepository;
     private final UserDateOverrideAvailabilityRepository overrideRepository;
     private final BookingRepository bookingRepository;
+
+    @Value("${meetsync.base-url:https://base_url_missing}")
+    private String bookingBaseUrl;
 
     @Transactional
     public void setupAvailability(Long userId, SetupAvailabilityRequest request) {
@@ -61,6 +65,9 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
             }
         }
 
+        // Clear existing date overrides
+        overrideRepository.deleteAll(overrideRepository.findByUserId(userId));
+
         // Setup date overrides if provided
         if (request.getDateOverrides() != null) {
             for (DateOverrideDTO dto : request.getDateOverrides()) {
@@ -73,7 +80,57 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
                 overrideRepository.save(override);
             }
         }
+
+
+
+        
     }
+
+    public SetupAvailabilityRequest getUserAvailability(Long userId) {
+        SetupAvailabilityRequest request = new SetupAvailabilityRequest();
+        
+        // Fetch user's meeting preferences
+        UserMeetingPreference preference = preferenceRepository.findByUserId(userId).orElse(null);
+        if (preference != null) {
+            request.setMeetingDurationMinutes(preference.getMeetingDurationMinutes());
+            request.setMinNoticeHours(preference.getMinNoticeHours());
+            request.setFutureDaysAllowed(preference.getFutureDaysAllowed());
+            request.setBufferTimeMinutes(preference.getBufferTimeMinutes());
+            request.setTimezone(preference.getTimezone());
+        }
+        
+        // Fetch weekly availability
+        List<UserAvailability> weeklyAvailability = availabilityRepository.findByUserId(userId);
+        if (!weeklyAvailability.isEmpty()) {
+            List<AvailabilityDTO> weeklyDTOs = new ArrayList<>();
+            for (UserAvailability ua : weeklyAvailability) {
+                AvailabilityDTO dto = new AvailabilityDTO();
+                dto.setDayOfWeek(ua.getDayOfWeek());
+                dto.setStartTime(ua.getStartTime());
+                dto.setEndTime(ua.getEndTime());
+                weeklyDTOs.add(dto);
+            }
+            request.setWeeklyAvailability(weeklyDTOs);
+        }
+        
+        // Fetch date overrides
+        List<UserDateOverrideAvailability> overrides = overrideRepository.findByUserId(userId);
+        if (!overrides.isEmpty()) {
+            List<DateOverrideDTO> overrideDTOs = new ArrayList<>();
+            for (UserDateOverrideAvailability override : overrides) {
+                DateOverrideDTO dto = new DateOverrideDTO();
+                dto.setDate(override.getDate());
+                dto.setStartTime(override.getStartTime());
+                dto.setEndTime(override.getEndTime());
+                dto.setUnavailable(override.getUnavailable());
+                overrideDTOs.add(dto);
+            }
+            request.setDateOverrides(overrideDTOs);
+        }
+        
+        return request;
+    }
+  
 
     public List<AvailableSlotDTO> getAvailableSlots(String emailPrefix, String timezone) {
         User user = userRepository.findByEmail(emailPrefix)
@@ -199,6 +256,18 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
         }
         
         String emailPrefix = user.getEmail().substring(0, user.getEmail().indexOf("@"));
-        return "https://meetsync.app/u/" + emailPrefix;
+        String base = bookingBaseUrl != null ? bookingBaseUrl.trim() : "https:base_url_missing";
+        if (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        return base + "/u/" + emailPrefix;
     }
+
+   public UserMeetingPreference getUserMeetingPreference(Long userId) {
+        UserMeetingPreference preference = preferenceRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User has not set up availability"));
+        return preference;
+    }
+
+
 }

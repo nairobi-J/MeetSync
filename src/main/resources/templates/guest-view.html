@@ -181,11 +181,26 @@
     // 3. Functions - Explicitly attached to window to prevent ReferenceErrors
     window.enterEvent = function() {
         const input = document.getElementById('guestName');
-        if (!input.value.trim()) {
+        const enteredName = input.value.trim();
+        
+        if (!enteredName) {
             alert("Please enter a name");
             return;
         }
-        currentUser = input.value.trim();
+        
+        // duplicate name check
+        const existingNames = new Set();
+        Object.values(globalData).forEach(participants => {
+            participants.forEach(name => existingNames.add(name));
+        });
+        
+        if (existingNames.has(enteredName)) {
+            alert(`The name "${enteredName}" has already been used for this event. Please choose a different name.`);
+            input.focus();
+            return;
+        }
+        
+        currentUser = enteredName;
         document.getElementById('currentUserName').innerText = currentUser;
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');

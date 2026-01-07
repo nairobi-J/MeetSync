@@ -1,10 +1,13 @@
 package com.root.meetsync.config;
 
+import com.root.meetsync.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
@@ -14,9 +17,11 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final ClientRegistrationRepository clientRegistrationRepository;
+    private final UserService userService;
 
-    public SecurityConfig(ClientRegistrationRepository clientRegistrationRepository) {
+    public SecurityConfig(ClientRegistrationRepository clientRegistrationRepository, @Lazy UserService userService) {
         this.clientRegistrationRepository = clientRegistrationRepository;
+        this.userService = userService;
     }
 
     @Bean
@@ -29,7 +34,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login/**", "/create-event", "/api/events/create", "/event/**","/event/participant/**").permitAll()
+                        .requestMatchers("/", "/login/**", "/signup","/css/**", "/create-event", "/api/events/create", "/event/**","/event/participant/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -44,8 +49,22 @@ public class SecurityConfig {
                         .authorizationEndpoint(authorization -> authorization
                                 .authorizationRequestResolver(authorizationRequestResolver(this.clientRegistrationRepository))
                         )
+                        .successHandler(((request, response, authentication) -> {
+                            //runs only once per successful login
+                            if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+                                userService.processOAuthUser(oauthToken); // create/update user in DB
+                            }
+                        }))
                         .defaultSuccessUrl("/dashboard", true)
+                )
+
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
                 );
+
 
         return http.build();
     }
