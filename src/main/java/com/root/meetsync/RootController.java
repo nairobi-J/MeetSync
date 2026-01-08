@@ -4,6 +4,7 @@ package com.root.meetsync;
 import com.root.meetsync.entity.*;
 import com.root.meetsync.repository.*;
 import jakarta.transaction.Transactional;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
@@ -210,6 +211,26 @@ public String finalizeEvent(@PathVariable String shareLink, @RequestParam Long s
         confirmedEventRepository.deleteByEvent_Id(event.getId());
         return "redirect:/event/" + shareLink + "/overview";
 
+    }
+    @Transactional
+    @PostMapping("/event/{shareLink}/toggle-cell")
+    public ResponseEntity<Void>toggleHostCell(@PathVariable String shareLink,
+                                              @RequestParam Long slotId,
+                                              Authentication auth){
+        Event event = eventRepository.findByShareLink(shareLink).orElseThrow(()-> new RuntimeException("EVent nai vai"));
+        String email = getEmailFromAuth(auth);
+        User host = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("Host na tumi bro"));
+        Optional<HostAvailability>existing = hostAvailabilityRepository.findByHostAndEventSlot_Id(host, slotId);
+        if(existing.isPresent()){
+            hostAvailabilityRepository.delete(existing.get());
+        }else{
+            HostAvailability ha = new HostAvailability();
+            ha.setHost(host);
+            ha.setEventSlot(eventSlotRepository.getReferenceById(slotId));
+            hostAvailabilityRepository.save(ha);
+        }
+     return ResponseEntity.ok().build();
+        
     }
 
 

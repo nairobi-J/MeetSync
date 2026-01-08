@@ -128,11 +128,11 @@
 
 <script th:inline="javascript">
     let isMouseDown = false;
-    let selectedSlotIds = new Set();
+    let selectedSlotIds = new Set(/*[[${savedHostSlotIds}]]*/ []);
     const heatmapData = [(${heatmapDataJson})];
 
 
-    selectedSlotIds.add(String([[${id}]]));
+    //selectedSlotIds.add(String([[${id}]]));
 
     const personal = document.getElementById('scroll-personal');
     const heatmap = document.getElementById('scroll-heatmap');
@@ -182,20 +182,7 @@
         updateHeatmapUI();
     }
 
-    function updateHeatmapUI() {
-        document.querySelectorAll('.heat-cell').forEach(heatCell => {
-            const id = heatCell.dataset.slotId;
-            let voters = heatmapData[id] ? [...heatmapData[id]] : [];
-            if (selectedSlotIds.has(id)) {
-                if (!voters.includes("You (Host)")) voters.push("You (Host)");
-            } else {
-                voters = voters.filter(v => v !== "You (Host)");
-            }
-            const count = voters.length;
-            heatCell.className = 'heat-cell has-tooltip h-12 border-b border-slate-50 relative transition-all heat-' + Math.min(count, 3);
-            heatCell.querySelector('.tooltip').innerText = count > 0 ? count + " available:\n" + voters.join('\n') : "No one";
-        });
-    }
+
 
     function submitAvailability() {
         // Show Loader
@@ -211,7 +198,44 @@
             else document.getElementById('screen-loader').classList.add('hidden');
         });
     }
+    function toggleSlot(cell){
+        const slotId = cell.dataset.slotId;
+        const formData = new URLSearchParams();
+        formData.append('slotId', slotId);
+        fetch(window.location.pathname + '/toggle-cell', {
+            method: 'POST',
+            body: formData
+        }).then(res => {
+            if(res.ok){
+                if(selectedSlotIds.has(parseInt(slotId))){
+                    selectedSlotIds.delete(parseInt(slotId));
+                    cell.classList.remove('selected');
+                } else {
+                    selectedSlotIds.add(parseInt(slotId));
+                    cell.classList.add('selected');
+                }
+                updateHeatmapUI();
+            }
+        })
+    }
+    function updateHeatmapUI() {
+        document.querySelectorAll('.heat-cell').forEach(heatCell => {
+            const id = parseInt(heatCell.dataset.slotId);
+            let voters = heatmapData[id] ? [...heatmapData[id]] : [];
 
+            // Check if host has selected this locally
+            if (selectedSlotIds.has(id)) {
+                if (!voters.includes("You (Host)")) voters.push("You (Host)");
+            } else {
+                voters = voters.filter(v => v !== "You (Host)");
+            }
+
+            const count = voters.length;
+            heatCell.className = 'heat-cell has-tooltip h-12 border-b border-slate-50 relative transition-all heat-' + Math.min(count, 3);
+            heatCell.querySelector('.tooltip').innerText = count > 0 ? count + " available:\n" + voters.join('\n') : "No one";
+        });
+    }
+    //initHeatmap();
     updateHeatmapUI();
 </script>
 </body>
