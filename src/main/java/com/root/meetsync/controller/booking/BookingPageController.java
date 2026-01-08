@@ -28,7 +28,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
+
 
 @Controller
 @RequiredArgsConstructor
@@ -61,7 +61,7 @@ public class BookingPageController {
             model.addAttribute("error", e.getMessage());
         }
 
-        return "availability/booking";
+        return "bookings/booking";
     }
 
     @PostMapping("/u/{emailPrefix}")
