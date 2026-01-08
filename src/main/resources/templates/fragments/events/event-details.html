@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Event Details</title>
+</head>
+<body>
+
+<h2 th:text="${event.title}"></h2>
+
+<p><b>Timezone:</b> <span th:text="${event.timezone}"></span></p>
+<p><b>Earliest Time:</b> <span th:text="${event.earliestTime}"></span></p>
+<p><b>Latest Time:</b> <span th:text="${event.latestTime}"></span></p>
+<p><b>Slot Duration:</b> <span th:text="${event.slotDuration}"></span> minutes</p>
+<p><b>Share Link:</b> <span th:text="${event.shareLink}"></span></p>
+<p><b>Created At:</b> <span th:text="${event.createdAt}"></span></p>
+
+<a href="/events">← Back to events</a>
+
+</body>
+</html>
