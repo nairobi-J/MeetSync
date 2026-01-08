@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Confirm EVent</title>
+</head>
+<body>
+ <h1>Confirm Event : <span th:text="${event.title}"></span></h1>
+<p>Choose a final time for the event</p>
+<form th:action="@{'/event/' + ${event.shareLink} + '/confirm'}" method="post">
+  <label for="slots">Select Winner Slot:</label>
+  <select name="slotId" id = "slots" required>
+    <option value="">Select Time</option>
+      <option th:each="slot : ${event.slots}" th:value="${slot.id}" th:text="${slot.slotDate} + ' at ' + ${slot.startTime}"></option>
+  </select>
+  <br><br>
+  <button type="submit"> Confirm & save it to database</button>
+    <a th:href="@{'/event/' + ${event.shareLink} + '/overview'}">Go Back</a>
+
+</form>
+</body>
+</html>

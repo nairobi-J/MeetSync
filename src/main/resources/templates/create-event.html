@@ -84,7 +84,7 @@
     //calendar creation
     function createCalendar(monthOffset = 0){
         const grid = document.getElementById('calendar-grid')
-        //previous month dates removed from grid
+
         grid.querySelectorAll(".day-cell").forEach(d => d.remove());
 
         const displayDate= new Date(currentYear, currentMonth + monthOffset, 1);

@@ -12,6 +12,7 @@ public class BookingRequestDTO {
     private String inviteeEmail;
     private LocalDate bookingDate;
     private LocalTime bookingTime;
+    private String timezone;
     
     // Helper method to get full datetime
     public LocalDateTime getStartTime() {

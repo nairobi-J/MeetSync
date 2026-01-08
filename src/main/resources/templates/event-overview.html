@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Event Overview | MeetSync</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .heat-0 { background-color: #f1f5f9; }
+        .heat-1 { background-color: #dcfce7; }
+        .heat-2 { background-color: #86efac; }
+        .heat-3 { background-color: #22c55e; }
+
+        .tooltip { visibility: hidden; position: absolute; z-index: 50; background: #0f172a; color: white; padding: 10px 14px; border-radius: 8px; font-size: 12px; pointer-events: none; white-space: pre-line; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .has-tooltip:hover .tooltip { visibility: visible; bottom: 110%; left: 50%; transform: translateX(-50%); }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; scroll-behavior: smooth; }
+
+
+        .confirmed-highlight {
+            ring: 4px solid #3b82f6 !important;
+            box-shadow: inset 0 0 0 4px #3b82f6;
+            z-index: 10;
+        }
+
+
+        .selection-active { cursor: crosshair !important; }
+        .selection-active .heat-cell:hover { outline: 2px solid #3b82f6; outline-offset: -2px; }
+    </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-900 min-h-screen">
+
+<div id="confirmDialog" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full transform transition-all scale-100">
+        <h3 class="text-xl font-black text-slate-900 mb-2">Finalize Schedule?</h3>
+        <p id="selectedTimeLabel" class="text-slate-500 font-medium text-sm mb-6 leading-relaxed"></p>
+
+        <form th:action="@{'/event/' + ${event.shareLink} + '/confirm'}" method="post">
+            <input type="hidden" name="slotId" id="modalSlotId">
+            <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition mb-3">Confirm This Time</button>
+            <button type="button" onclick="closeConfirmModal()" class="w-full bg-slate-100 text-slate-600 py-3 rounded-xl font-bold hover:bg-slate-200 transition">Cancel</button>
+        </form>
+    </div>
+</div>
+
+<nav class="bg-white border-b border-slate-200 px-8 py-3 mb-8">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">M</div>
+            <span class="text-xl font-bold tracking-tight">MeetSync</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <button onclick="copyParticipantLink()" id="copyBtn" class="text-slate-600 hover:text-blue-600 font-semibold text-sm transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                Copy Link
+            </button>
+            <a th:href="@{'/event/' + ${event.shareLink}}" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-200 transition">Edit Availability</a>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-8 pb-12">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight" th:text="${event.title}">Event Name</h1>
+            <p class="text-slate-500 font-medium" th:text="${event.timezone}">GMT+6</p>
+        </div>
+        <div class="flex items-center gap-2 bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
+            <button onclick="scrollHeatmap(-300)" class="p-2 hover:bg-slate-50 rounded-xl transition text-slate-400 hover:text-slate-900">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <div class="h-4 w-[1px] bg-slate-200 mx-1"></div>
+            <button onclick="scrollHeatmap(300)" class="p-2 hover:bg-slate-50 rounded-xl transition text-slate-400 hover:text-slate-900">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-8">
+        <aside class="col-span-12 lg:col-span-3 space-y-6">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <div th:if="${bestSlot != null}" class="mb-8 p-5 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-100">
+                    <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest mb-2">Recommended Time</p>
+                    <p class="font-bold text-lg" th:text="${#temporals.format(bestSlot.slotDate, 'EEE, MMM d')}"></p>
+                    <p class="text-white/90 font-medium" th:text="${#temporals.format(bestSlot.startTime, 'h:mm a')}"></p>
+                </div>
+
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-800">Participants</h3>
+                    <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-xs font-bold" th:text="${totalParticipants}">0</span>
+                </div>
+
+                <div id="availability-list" class="space-y-3 min-h-[200px]">
+                    <p class="text-sm text-slate-400 italic">Select a slot on the right to see availability</p>
+                </div>
+
+                <div class="space-y-3 pt-4 border-t border-slate-50 mt-4">
+                    <button th:if="${confirmedEvent == null}" onclick="toggleSelectionMode()" id="confirmBtn"
+                            class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition shadow-xl shadow-blue-100 flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                        Confirm Schedule
+                    </button>
+
+                    <div th:if="${confirmedEvent != null}" class="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                        <p class="text-[10px] font-black text-emerald-600 uppercase mb-1">Status: Confirmed</p>
+                        <p class="text-sm font-bold text-emerald-800" th:text="${#temporals.format(confirmedEvent.selectedSlots.slotDate, 'MMM d') + ' @ ' + #temporals.format(confirmedEvent.selectedSlots.startTime, 'h:mm a')}"></p>
+
+                        <form th:action="@{'/event/' + ${event.shareLink} + '/reschedule'}" method="post" class="mt-3">
+                            <button type="submit" class="text-xs font-bold text-slate-400 hover:text-red-500 transition underline">Reschedule Confirmation</button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+        <section class="col-span-12 lg:col-span-9">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
+                <div id="heatmap-container" class="flex overflow-x-auto no-scrollbar">
+                    <div class="sticky left-0 z-20 bg-white border-r border-slate-100 w-20 flex-shrink-0">
+                        <div class="h-16 border-b border-slate-100"></div>
+                        <div th:each="time : ${hours}" class="h-14 border-b border-slate-50 flex items-center justify-center text-[11px] font-bold text-slate-400 uppercase" th:text="${#temporals.format(time, 'h a')}"></div>
+                    </div>
+
+                    <div class="flex flex-1">
+                        <div th:each="date : ${#lists.sort(#lists.toList(#sets.toSet(event.slots.![slotDate])))}" class="flex-1 min-w-[150px] border-r border-slate-50 last:border-0">
+                            <div class="h-16 border-b border-slate-100 bg-slate-50/30 flex flex-col items-center justify-center">
+                                <span class="text-[11px] font-black text-slate-900 uppercase tracking-tighter" th:text="${#temporals.format(date, 'EEEE')}"></span>
+                                <span class="text-xs text-slate-400 font-bold" th:text="${#temporals.format(date, 'MMM d')}"></span>
+                            </div>
+                            <div th:each="time : ${hours}">
+                                <div th:each="slot : ${event.slots}"
+                                     th:if="${slot.slotDate == date && slot.startTime == time}"
+                                     class="heat-cell has-tooltip h-14 border-b border-slate-50 relative cursor-pointer transition-all"
+                                     th:classappend="${confirmedEvent != null && confirmedEvent.selectedSlots.id == slot.id} ? 'confirmed-highlight' : ''"
+                                     th:attr="data-slot-id=${slot.id}, data-label=${#temporals.format(slot.slotDate, 'EEEE, MMM d') + ' @ ' + #temporals.format(slot.startTime, 'h:mm a')}"
+                                     onclick="handleCellClick(this)">
+                                    <div class="tooltip shadow-2xl">No one available</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<input type="hidden" id="eventShareLink" th:value="${event.shareLink}">
+
+<script th:inline="javascript">
+    const heatmapData = [(${heatmapDataJson})];
+    let isSelectionMode = false;
+
+    function scrollHeatmap(distance) {
+        document.getElementById('heatmap-container').scrollBy({ left: distance, behavior: 'smooth' });
+    }
+
+    function toggleSelectionMode() {
+        isSelectionMode = !isSelectionMode;
+        const btn = document.getElementById('confirmBtn');
+        const container = document.getElementById('heatmap-container');
+
+        if (isSelectionMode) {
+            btn.innerHTML = "Select a slot...";
+            btn.classList.replace('bg-blue-600', 'bg-slate-900');
+            container.classList.add('selection-active');
+        } else {
+            btn.innerHTML = "Confirm Schedule";
+            btn.classList.replace('bg-slate-900', 'bg-blue-600');
+            container.classList.remove('selection-active');
+        }
+    }
+
+    function handleCellClick(cell) {
+        if (!isSelectionMode) {
+            updateAvailabilityList(cell);
+            return;
+        }
+
+        const slotId = cell.dataset.slotId;
+        const timeLabel = cell.dataset.label;
+
+        document.getElementById('modalSlotId').value = slotId;
+        document.getElementById('selectedTimeLabel').innerText = "Finalize meeting for:\n" + timeLabel;
+        document.getElementById('confirmDialog').classList.remove('hidden');
+    }
+
+    function closeConfirmModal() {
+        document.getElementById('confirmDialog').classList.add('hidden');
+        toggleSelectionMode();
+    }
+
+    function updateAvailabilityList(cell) {
+        const id = cell.dataset.slotId;
+        const voters = heatmapData[id] || [];
+        const list = document.getElementById('availability-list');
+
+        if(voters.length > 0) {
+            list.innerHTML = voters.map(v => `
+                <div class="flex items-center bg-slate-50 p-3 rounded-2xl border border-slate-100 transition hover:border-blue-200">
+                    <div class="w-8 h-8 bg-white shadow-sm border border-slate-200 text-blue-600 rounded-xl flex items-center justify-center text-xs font-bold mr-3">${v.charAt(0).toUpperCase()}</div>
+                    <span class="text-sm font-bold text-slate-700">${v}</span>
+                </div>
+            `).join('');
+        } else {
+            list.innerHTML = '<p class="text-sm italic text-slate-400">No one available for this slot</p>';
+        }
+    }
+
+
+
+    function copyParticipantLink() {
+        const shareLink = document.getElementById('eventShareLink').value;
+        const participantUrl = window.location.protocol + "//" + window.location.host + "/event/participant/" + shareLink;
+        const btn = document.getElementById('copyBtn');
+
+        navigator.clipboard.writeText(participantUrl).then(() => {
+            const original = btn.innerHTML;
+            btn.innerHTML = `<span class="text-emerald-600 font-bold">Link Copied!</span>`;
+            setTimeout(() => { btn.innerHTML = original; }, 2000);
+        });
+    }
+    function initHeatmap() {
+        document.querySelectorAll('.heat-cell').forEach(cell => {
+            const id = cell.dataset.slotId;
+            const voters = heatmapData[id] || [];
+            const count = voters.length;
+
+            // Apply colors based on vote count
+            cell.classList.remove('heat-0', 'heat-1', 'heat-2', 'heat-3');
+            if (count >= 3) cell.classList.add('heat-3');
+            else if (count === 2) cell.classList.add('heat-2');
+            else if (count === 1) cell.classList.add('heat-1');
+            else cell.classList.add('heat-0');
+
+            const tooltip = cell.querySelector('.tooltip');
+            tooltip.innerText = count > 0 ? `${count} Available:\n${voters.join('\n')}` : "Empty slot";
+        });
+    }
+
+    initHeatmap();
+</script>
+</body>
+</html>

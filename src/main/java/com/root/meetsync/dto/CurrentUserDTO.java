@@ -1,7 +1,7 @@
 package com.root.meetsync.dto;
 
 import lombok.*;
-
+@Data
 @Getter
 @Setter
 @NoArgsConstructor
@@ -13,4 +13,5 @@ public class CurrentUserDTO {
     private String email;
     private String googleId;
     private String profilePic;
+    private String timezone;
 }
