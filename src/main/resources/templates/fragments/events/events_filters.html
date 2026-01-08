@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Filters Section Fragment -->
+<div th:fragment="filters" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+
+        <!-- Left Side: Search and Filters -->
+        <div class="flex items-center space-x-4 w-full md:w-auto">
+            <!-- Search -->
+            <div class="relative flex-1 md:w-80">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <input
+                        type="text"
+                        id="eventSearch"
+                        placeholder="Search events..."
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+            </div>
+
+            <!-- Status Filter Dropdown -->
+            <div class="relative">
+                <button id="statusFilterBtn" class="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    <span th:text="${selectedFilter == 'all' ? 'All' : (selectedFilter == 'scheduled' ? 'Scheduled' : (selectedFilter == 'expired' ? 'Expired' : 'Pending'))}">All</span>
+                    <i class="fas fa-chevron-down text-sm"></i>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="statusFilterDropdown" class="hidden absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                    <a th:href="@{/events(filter='all')}" class="block px-4 py-3 text-gray-700 hover:bg-gray-100 transition">
+                        All Events
+                    </a>
+                    <a th:href="@{/events(filter='scheduled')}" class="block px-4 py-3 text-gray-700 hover:bg-gray-100 transition">
+                        Scheduled
+                    </a>
+                    <a th:href="@{/events(filter='expired')}" class="block px-4 py-3 text-gray-700 hover:bg-gray-100 transition">
+                        Expired
+                    </a>
+                    <a th:href="@{/events(filter='pending')}" class="block px-4 py-3 text-gray-700 hover:bg-gray-100 transition">
+                        Pending
+                    </a>
+                </div>
+            </div>
+
+            <!-- Hosted Filter (Placeholder) -->
+            <button class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                Hosted
+            </button>
+        </div>
+
+        <!-- Right Side: Time Range and Month Navigation -->
+        <div class="flex items-center space-x-4">
+            <!-- Time Range Selector -->
+            <div class="flex bg-white border border-gray-300 rounded-lg overflow-hidden">
+                <a th:href="@{/events(filter=${selectedFilter}, timeRange='today')}"
+                   th:classappend="${selectedTimeRange == 'today' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}"
+                   class="px-4 py-2 text-sm transition">
+                    Today
+                </a>
+                <a th:href="@{/events(filter=${selectedFilter}, timeRange='week')}"
+                   th:classappend="${selectedTimeRange == 'week' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}"
+                   class="px-4 py-2 text-sm border-l border-gray-300 transition">
+                    Week
+                </a>
+            </div>
+
+            <!-- Month Navigation -->
+            <div class="flex items-center space-x-3 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+                <a th:href="@{/events(filter=${selectedFilter}, timeRange='month', month=${currentMonth == 1 ? 12 : currentMonth - 1}, year=${currentMonth == 1 ? currentYear - 1 : currentYear})}"
+                   class="text-gray-600 hover:text-gray-900 transition">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                <span class="font-medium text-gray-900 min-w-[150px] text-center"
+                      th:text="${currentMonthName + ' ' + currentYear}">
+                        December 2025
+                    </span>
+                <a th:href="@{/events(filter=${selectedFilter}, timeRange='month', month=${currentMonth == 12 ? 1 : currentMonth + 1}, year=${currentMonth == 12 ? currentYear + 1 : currentYear})}"
+                   class="text-gray-600 hover:text-gray-900 transition">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
