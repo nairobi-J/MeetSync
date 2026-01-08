@@ -1,6 +1,8 @@
 package com.root.meetsync.advice;
 
 import com.root.meetsync.dto.CurrentUserDTO;
+import com.root.meetsync.entity.User;
+import com.root.meetsync.service.NotificationService;
 import com.root.meetsync.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.core.Authentication;
@@ -12,9 +14,11 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 public class GlobalUserControllerAdvice {
 
     private final UserService userService;
+    private final NotificationService notificationService;
 
-    public GlobalUserControllerAdvice(UserService userService) {
+    public GlobalUserControllerAdvice(UserService userService, NotificationService notificationService) {
         this.userService = userService;
+        this.notificationService = notificationService;
     }
 
     @ModelAttribute("currentUser")
@@ -59,5 +63,26 @@ public class GlobalUserControllerAdvice {
         session.setAttribute("currentUserDTO", currentUser);
 
         return currentUser;
+    }
+    
+    @ModelAttribute("unreadNotificationCount")
+    public Long getUnreadNotificationCount(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return 0L;
+        }
+        
+        String email;
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            email = oauthToken.getPrincipal().getAttribute("email");
+        } else {
+            email = authentication.getName();
+        }
+        
+        User user = userService.findByEmail(email).orElse(null);
+        if (user == null) {
+            return 0L;
+        }
+        
+        return notificationService.getUnreadCount(user);
     }
 }
