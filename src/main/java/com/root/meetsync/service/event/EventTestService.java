@@ -35,6 +35,7 @@ public class EventTestService {
                         .id(event.getId())
                         .title(event.getTitle())
                         .timezone(event.getTimezone())
+                        .shareLink(event.getShareLink())
                         .build())
                 .toList();
     }

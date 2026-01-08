@@ -36,10 +36,12 @@
             Scheduled
         </span>
 
-        <a th:href="@{/events/{id}(id=${event.id})}"
+        <!--/*@thymesVar id="shareLink" type=""*/-->
+        <a th:href="@{'/event/' + ${event.shareLink} + '/overview'}"
            class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg border border-gray-300 transition">
             View Details
         </a>
+
     </div>
 </div>
 

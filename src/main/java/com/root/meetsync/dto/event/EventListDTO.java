@@ -11,4 +11,5 @@ public class EventListDTO {
     private Long id;
     private String title;
     private String timezone;
+    private String shareLink;
 }
