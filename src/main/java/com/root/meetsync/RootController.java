@@ -4,6 +4,7 @@ package com.root.meetsync;
 import com.root.meetsync.entity.*;
 import com.root.meetsync.repository.*;
 import jakarta.transaction.Transactional;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
@@ -23,12 +24,16 @@ public class RootController {
     private final EventSlotRepository eventSlotRepository;
     private final HostAvailabilityRepository hostAvailabilityRepository;
     private final ParticipantAvailabilityRepository participantAvailabilityRepository;
-    public RootController(EventRepository eventRepository, EventSlotRepository eventSlotRepository, HostAvailabilityRepository hostAvailabilityRepository, UserRepository userRepository, ParticipantAvailabilityRepository participantAvailabilityRepository) {
+    private final ConfirmedEventRepository confirmedEventRepository;
+    public RootController(EventRepository eventRepository, EventSlotRepository eventSlotRepository,
+                          HostAvailabilityRepository hostAvailabilityRepository, UserRepository userRepository,
+                          ParticipantAvailabilityRepository participantAvailabilityRepository, ConfirmedEventRepository confirmedEventRepository) {
         this.eventRepository = eventRepository;
         this.eventSlotRepository = eventSlotRepository;
         this.hostAvailabilityRepository = hostAvailabilityRepository;
         this.userRepository = userRepository;
         this.participantAvailabilityRepository = participantAvailabilityRepository;
+        this.confirmedEventRepository = confirmedEventRepository;
     }
     @GetMapping("/event-create")
     public String showCreateEventPage() {
@@ -120,6 +125,28 @@ Event event = eventRepository.findByShareLink(shareLink)
     }
 
 
+@GetMapping("/event/{shareLink}/confirm")
+public String showConfirmEventPage(@PathVariable String shareLink, Model model){
+        Event event = eventRepository.findByShareLink(shareLink).orElseThrow(() -> new RuntimeException("event not found"));
+        model.addAttribute("event", event);
+        return "confirm-event";
+}
+
+
+@Transactional
+@PostMapping("event/{shareLink}/confirm")
+public String finalizeEvent(@PathVariable String shareLink, @RequestParam Long slotId){
+    Event event = eventRepository.findByShareLink(shareLink).orElseThrow(()-> new RuntimeException("vai event e nai"));
+    EventSlot selectedSlot = eventSlotRepository.findById(slotId).orElseThrow();
+
+    ConfirmedEvent confirmed = new ConfirmedEvent();
+    confirmed.setEvent(event);
+    confirmed.setSelectedSlots(selectedSlot);
+    confirmed.setConfirmedAt(java.time.LocalDateTime.now());
+
+    confirmedEventRepository.save(confirmed);
+    return "redirect:/event/" + shareLink + "/overview";
+}
 
 
 
@@ -128,7 +155,7 @@ Event event = eventRepository.findByShareLink(shareLink)
     public String showEventOverview(@PathVariable String shareLink, Model model, Authentication auth) {
         Event event = eventRepository.findByShareLink(shareLink)
                 .orElseThrow();
-
+        Optional<ConfirmedEvent> confirmedEvent = confirmedEventRepository.findByEvent_Id(event.getId());
         // 1. Setup Time Headers for the grid
         List<LocalTime> hours = new ArrayList<>();
         LocalTime current = event.getEarliestTime();
@@ -174,9 +201,39 @@ Event event = eventRepository.findByShareLink(shareLink)
         model.addAttribute("heatmapDataJson", convertMapToJson(combinedHeatmap)); // Uses your helper method
         model.addAttribute("bestSlot", bestSlot);
         model.addAttribute("totalParticipants", uniqueGuests + 1);
-
+        model.addAttribute("confirmedEvent", confirmedEvent.orElse(null));
         return "event-overview";
     }
+    @Transactional
+    @PostMapping("/event/{shareLink}/reschedule")
+    public String rescheduledEvent(@PathVariable String shareLink){
+        Event event = eventRepository.findByShareLink(shareLink).orElseThrow();
+        confirmedEventRepository.deleteByEvent_Id(event.getId());
+        return "redirect:/event/" + shareLink + "/overview";
+
+    }
+    @Transactional
+    @PostMapping("/event/{shareLink}/toggle-cell")
+    public ResponseEntity<Void>toggleHostCell(@PathVariable String shareLink,
+                                              @RequestParam Long slotId,
+                                              Authentication auth){
+        Event event = eventRepository.findByShareLink(shareLink).orElseThrow(()-> new RuntimeException("EVent nai vai"));
+        String email = getEmailFromAuth(auth);
+        User host = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("Host na tumi bro"));
+        Optional<HostAvailability>existing = hostAvailabilityRepository.findByHostAndEventSlot_Id(host, slotId);
+        if(existing.isPresent()){
+            hostAvailabilityRepository.delete(existing.get());
+        }else{
+            HostAvailability ha = new HostAvailability();
+            ha.setHost(host);
+            ha.setEventSlot(eventSlotRepository.getReferenceById(slotId));
+            hostAvailabilityRepository.save(ha);
+        }
+     return ResponseEntity.ok().build();
+        
+    }
+
+
     private String convertMapToJson(Map<Long, List<String>> map) {
         StringBuilder sb = new StringBuilder("{");
         Iterator<Map.Entry<Long, List<String>>> it = map.entrySet().iterator();
@@ -193,6 +250,8 @@ Event event = eventRepository.findByShareLink(shareLink)
         }
         return sb.append("}").toString();
     }
+
+
     private String getEmailFromAuth(Authentication auth) {
         if (auth instanceof OAuth2AuthenticationToken oauth) return (String) oauth.getPrincipal().getAttributes().get("email");
         return auth != null ? auth.getName() : null;

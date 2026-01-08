@@ -1,5 +1,6 @@
 package com.root.meetsync.dto.booking;
 
+import com.root.meetsync.entity.User;
 import com.root.meetsync.entity.booking.BookingStatus;
 import lombok.Data;
 

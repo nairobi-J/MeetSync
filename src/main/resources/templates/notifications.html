@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeetSync - Notifications</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/home_style.css}">
+</head>
+
+<body class="bg-gray-50">
+
+    <!-- Top Navigation -->
+    <div th:replace="~{fragments/home_nav :: navbar}"></div>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/home_sidebar :: sidebar}"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1  mt-16 p-8">
+            <div class="max-w-5xl mx-auto">
+                <!-- Page Header -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900">Notifications</h1>
+                            <p class="text-gray-600 mt-1">Stay updated with your meetings and events</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                                <span th:text="${unreadCount}">0</span> Unread
+                            </span>
+                            <form th:action="@{/notifications/mark-all-read}" method="post" style="display: inline;">
+                                <button type="submit"
+                                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+                                    <i class="fas fa-check-double mr-2"></i>Mark All as Read
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success Message -->
+                <div th:if="${message}" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                    <span th:text="${message}"></span>
+                </div>
+
+                <!-- Error Message -->
+                <div th:if="${error}" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                    <span th:text="${error}"></span>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="mb-6">
+                    <div class="border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-8">
+                            <button onclick="filterNotifications('all')"
+                                th:classappend="${filter == 'all'} ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'"
+                                class="filter-tab border-b-2 py-4 px-1 text-sm font-medium hover:text-gray-700 hover:border-gray-300 flex items-center space-x-2">
+                                <span>All</span>
+                            </button>
+                            <button onclick="filterNotifications('unread')"
+                                th:classappend="${filter == 'unread'} ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'"
+                                class="filter-tab border-b-2 py-4 px-1 text-sm font-medium hover:text-gray-700 hover:border-gray-300 flex items-center space-x-2">
+                                <span>Unread</span>
+                                <span th:if="${unreadCount > 0}"
+                                    class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold"
+                                    th:text="${unreadCount}">0</span>
+                            </button>
+                            <button onclick="filterNotifications('events')"
+                                th:classappend="${filter == 'events'} ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'"
+                                class="filter-tab border-b-2 py-4 px-1 text-sm font-medium hover:text-gray-700 hover:border-gray-300 flex items-center space-x-2">
+                                <span>Events</span>
+                                <span th:if="${eventCount > 0}"
+                                    class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold"
+                                    th:text="${eventCount}">0</span>
+                            </button>
+                            <button onclick="filterNotifications('bookings')"
+                                th:classappend="${filter == 'bookings'} ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'"
+                                class="filter-tab border-b-2 py-4 px-1 text-sm font-medium hover:text-gray-700 hover:border-gray-300 flex items-center space-x-2">
+                                <span>Booking Requests</span>
+                                <span th:if="${bookingCount > 0}"
+                                    class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold"
+                                    th:text="${bookingCount}">0</span>
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- Notifications List -->
+                <div class="space-y-2">
+                    <div th:if="${notifications.isEmpty()}" class="text-center py-12">
+                        <i class="fas fa-bell-slash text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 text-lg">No notifications yet</p>
+                        <p class="text-gray-400 text-sm mt-2">You'll see notifications here when you have updates</p>
+                    </div>
+
+                    <!-- Notification Item -->
+                    <div th:each="notification : ${notifications}"
+                        th:attr="data-id=${notification.id}, data-read=${notification.isRead}, data-type=${notification.type}"
+                        th:classappend="${!notification.isRead} ? 'bg-blue-50 border-l-4 border-l-blue-600' : 'bg-white'"
+                        class="notification-item p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+                        <div class="flex items-start space-x-4">
+                            <!-- Icon -->
+                            <div class="flex-shrink-0">
+                                <div th:classappend="${notification.colorClass}"
+                                    class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                                    <i th:class="${notification.iconClass}" class="text-lg"></i>
+                                </div>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-semibold text-gray-900" th:text="${notification.title}">
+                                            Event Created
+                                        </p>
+                                        <p class="text-sm text-gray-600 mt-1" th:text="${notification.message}">
+                                            Your meeting "Team Standup" has been created successfully.
+                                        </p>
+                                        <div class="flex items-center space-x-4 mt-2">
+                                            <span class="text-xs text-gray-500" th:text="${notification.timeAgo}">
+                                                2 hours ago
+                                            </span>
+                                            <span class="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded"
+                                                th:text="${notification.typeLabel}">
+                                                Event
+                                            </span>
+                                        </div>
+
+                                        <!-- Booking Actions for BOOKING_PENDING -->
+                                        <div th:if="${notification.type.name() == 'BOOKING_PENDING'}"
+                                            class="flex items-center space-x-2 mt-3">
+
+                                            <!-- Confirm Button -->
+                                            <button type="button"
+                                                th:onclick="|confirmBooking(${notification.relatedEntityId},${notification.id})|"
+                                                class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded">
+                                                <i class="fas fa-check mr-1"></i> Confirm Booking
+                                            </button>
+
+                                            <!-- Cancel Button -->
+                                            <button type="button"
+                                                th:onclick="|cancelBooking(${notification.relatedEntityId},${notification.id})|"
+                                                class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded">
+                                                <i class="fas fa-times mr-1"></i> Cancel Booking
+                                            </button>
+
+                                        </div>
+
+
+                                        <!-- Actions -->
+                                    </div>
+                                    <div class="flex items-center space-x-2 ml-4">
+                                        <form th:if="${!notification.isRead}"
+                                            th:action="@{/notifications/{id}/mark-read(id=${notification.id})}"
+                                            method="post" style="display: inline;">
+                                            <input type="hidden" name="page" th:value="${currentPage}" />
+                                            <button type="submit"
+                                                class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        <form th:action="@{/notifications/{id}/delete(id=${notification.id})}"
+                                            method="post"
+                                            onsubmit="return confirm('Are you sure you want to delete this notification?');"
+                                            style="display: inline;">
+                                            <input type="hidden" name="page" th:value="${currentPage}" />
+                                            <button type="submit" class="text-red-600 hover:text-red-700 text-sm">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div th:if="${totalPages > 1}" class="mt-8 flex items-center justify-center space-x-2">
+                        <a th:if="${currentPage > 0}" th:href="@{/notifications(page=${currentPage - 1})}"
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+
+                        <span class="px-4 py-2 text-sm text-gray-700">
+                            Page <span th:text="${currentPage + 1}">1</span> of <span th:text="${totalPages}">1</span>
+                        </span>
+
+                        <a th:if="${currentPage < totalPages - 1}" th:href="@{/notifications(page=${currentPage + 1})}"
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+        </main>
+    </div>
+
+    <script>
+        // Client-side filtering
+        function filterNotifications(filter) {
+            const items = document.querySelectorAll('.notification-item');
+            const tabs = document.querySelectorAll('.filter-tab');
+
+            // Update active tab
+            tabs.forEach(tab => {
+                tab.classList.remove('border-blue-600', 'text-blue-600');
+                tab.classList.add('border-transparent', 'text-gray-500');
+            });
+            event.target.classList.add('border-blue-600', 'text-blue-600');
+            event.target.classList.remove('border-transparent', 'text-gray-500');
+
+            // Filter items
+            items.forEach(item => {
+                const isRead = item.dataset.read === 'true';
+                const type = item.dataset.type;
+
+                let show = false;
+                if (filter === 'all') {
+                    show = true;
+                } else if (filter === 'unread') {
+                    show = !isRead;
+                } else if (filter === 'events') {
+                    show = type.includes('EVENT');
+                } else if (filter === 'bookings') {
+                    show = type.includes('BOOKING');
+                }
+
+                item.style.display = show ? 'block' : 'none';
+            });
+        }
+
+
+
+        // Booking action functions
+        function confirmBooking(bookingId, notificationId) {
+            fetch(`/${bookingId}/confirm/${notificationId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(res => {
+                if (res.ok) {
+                    window.location.href = '/notifications';
+                } else {
+                    alert('Failed to confirm booking');
+                }
+            }).catch(err => {
+                console.error(err);
+                alert('Something went wrong');
+            });
+        }
+
+        function cancelBooking(bookingId, notificationId) {
+            if (!confirm('Are you sure you want to cancel this booking request?')) {
+                return;
+            }
+
+            fetch(`/${bookingId}/cancel/${notificationId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(res => {
+                if (res.ok) {
+                    window.location.href = '/notifications';
+                } else {
+                    alert('Failed to cancel booking');
+                }
+            }).catch(err => {
+                console.error(err);
+                alert('Something went wrong');
+            });
+        }
+    </script>
+</body>
+
+</html>

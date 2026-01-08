@@ -36,10 +36,9 @@ public class AuthController {
             email = authentication.getName();
         }
 
-        // Call the service method we created earlier ---check 
+
         userService.updatePassword(email, password);
 
-        // Now that password is set, take them to the dashboard
         return "redirect:/dashboard?passwordSet=true";
     }
 }

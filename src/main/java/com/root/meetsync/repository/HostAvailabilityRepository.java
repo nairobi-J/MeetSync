@@ -7,10 +7,15 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 
 public interface  HostAvailabilityRepository extends JpaRepository<HostAvailability, Long> {
-    List<HostAvailability> findByEventSlot_Event_Id(Long eventId);
+    List<HostAvailability> findByEventSlot_Event_Id( Long eventId);
+
+
+    Optional<HostAvailability> findByHostAndEventSlot_Id(User host, Long slotId);
+
     @Modifying
     @Transactional
     void deleteByHostAndEventSlot_Event_Id(User host, Long eventId);
