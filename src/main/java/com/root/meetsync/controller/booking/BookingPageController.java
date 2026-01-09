@@ -11,6 +11,7 @@ import com.root.meetsync.service.NotificationService;
 import com.root.meetsync.service.UserService;
 import com.root.meetsync.service.availability.IAvailabilityService;
 import com.root.meetsync.service.booking.IBookingService;
+import com.root.meetsync.service.impl.GoogleCalendarServiceImpl;
 import lombok.RequiredArgsConstructor;
 
 import org.aspectj.weaver.ast.Not;
@@ -39,6 +40,7 @@ public class BookingPageController {
     private final UserService userService;
     private final IBookingService bookingService;
     private final NotificationService notificationService;
+    private final GoogleCalendarServiceImpl googleCalendarServiceImpl;
 
     @GetMapping("/u/{emailPrefix}")
     public String showPublicBookingPage(@PathVariable String emailPrefix,
@@ -99,6 +101,14 @@ public class BookingPageController {
             String prefix = response.getHostEmail().split("@")[0];
             User host = userService.getUserByEmailPrefix(prefix);
 
+            // 3. AUTO-TRIGGER GOOGLE CALENDAR
+            try {
+                googleCalendarServiceImpl.createGoogleEvent(host, response);
+            } catch (Exception e) {
+                System.err.println("Google Calendar Sync Failed: " + e.getMessage());
+                // We don't throw an error here so the DB confirmation still finishes
+            }
+
         //   delete pending notification
            notificationService.deleteNotification(notificationId);
 
@@ -112,7 +122,7 @@ public class BookingPageController {
                         "You have confirmed the booking with " + response.getInviteeName() + " on " + bookingTime,
                         Notification.NotificationType.BOOKING_CONFIRMED, response.getId(), "Booking", "/bookings");
             }
-            redirectAttributes.addFlashAttribute("success", "Schedule confirmed successfully!");
+            redirectAttributes.addFlashAttribute("success", "Schedule confirmed successfully & synced to Google Calendar!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

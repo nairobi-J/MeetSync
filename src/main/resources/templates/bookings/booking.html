@@ -85,7 +85,7 @@
                             class="w-full h-full object-cover"
                             referrerpolicy="no-referrer" 
                             alt="Profile Picture"
-                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        >
                         <span th:if="*{profilePic == null}"
                             class="text-2xl font-bold text-blue-600"
                             th:text="${name != null ? name.substring(0,1).toUpperCase() : 'U'}">
@@ -203,7 +203,7 @@
       
         const emailPrefixData = /*[[${emailPrefix}]]*/ '';
         const availableSlotsData = /*[[${availableSlots}]]*/[];
-        
+
         // Initialize the booking schedule
         initializeBookingSchedule(emailPrefixData, availableSlotsData);
         /*]]>*/
