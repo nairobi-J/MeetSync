@@ -7,25 +7,76 @@
             <div class="flex items-center justify-between">
                 <!-- Logo -->
                 <div class="flex items-center">
-                    <a th:href="@{/landing}" class="text-2xl font-bold text-blue-600">MeetSync</a>
+                    <a th:href="@{/}" class="text-2xl font-bold text-blue-600">MeetSync</a>
                 </div>
                 
                 <!-- Desktop Navigation -->
                 <div class="hidden md:flex items-center space-x-8">
-                    <a th:href="@{/landing}" class="text-gray-700 hover:text-blue-600 transition">Home</a>
+                    <a th:href="@{/}" class="text-gray-700 hover:text-blue-600 transition">Home</a>
                     <a href="#features" class="text-gray-700 hover:text-blue-600 transition">Features</a>
                     <a href="#" class="text-gray-700 hover:text-blue-600 transition">About Us</a>
-                    <a href="#" class="text-gray-700 hover:text-blue-600 transition">Members</a>
                 </div>
                 
                 <!-- Auth Buttons -->
                 <div class="hidden md:flex items-center space-x-4">
-                    <a th:href="@{/login}" class="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-lg transition">
-                        Log In
-                    </a>
-                    <a th:href="@{/signup}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition">
-                        Sign Up
-                    </a>
+                    <th:block th:if="${currentUser == null}">
+                        <a th:href="@{/login}" class="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-lg transition">
+                            Log In
+                        </a>
+                        <a th:href="@{/signup}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition">
+                            Sign Up
+                        </a>
+                    </th:block>
+
+                    <!-- CONDITION 2: Show the Profile Dropdown ONLY if user IS logged in -->
+                    <div th:if="${currentUser != null}" class="relative">
+                        <button id="userProfileBtn" class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition focus:outline-none">
+
+                            <img th:if="${currentUser.profilePic}"
+                                 th:src="${currentUser.profilePic}"
+                                 class="w-10 h-10 rounded-full border border-blue-500 object-cover"
+                                 referrerpolicy="no-referrer" alt="">
+
+                            <i th:unless="${currentUser.profilePic}"
+                               class="far fa-user-circle text-2xl text-blue-600"></i>
+
+                            <span class="hidden md:block font-medium" th:text="${currentUser.name}">User Name</span>
+                            <i class="fas fa-chevron-down text-xs opacity-50"></i>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div id="userProfileDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+
+                            <div class="p-6 border-b border-gray-200">
+                                <h3 class="text-xl font-bold text-gray-900" th:text="${currentUser.name}">User Name</h3>
+                                <p class="text-sm text-gray-600 mt-1" th:text="${currentUser.email}">user@email.com</p>
+                            </div>
+
+                            <div class="p-4 border-b border-gray-200 space-y-1">
+                                <h4 class="text-sm font-semibold text-gray-900 mb-3 px-3">Account</h4>
+
+                                <!-- NEW: Dashboard Link -->
+                                <a th:href="@{/dashboard}" class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition">
+                                    <i class="fas fa-columns w-5"></i>
+                                    <span>Dashboard</span>
+                                </a>
+
+                                <a th:href="@{/profile}" class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition">
+                                    <i class="far fa-user w-5"></i>
+                                    <span>My Profile</span>
+                                </a>
+                            </div>
+
+                            <div class="p-4">
+                                <form th:action="@{/logout}" method="post">
+                                    <button type="submit" class="w-full bg-red-50 text-red-600 hover:bg-red-100 font-medium py-3 px-4 rounded-lg transition">
+                                        LOG OUT
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 
                 <!-- Mobile Menu Button -->
@@ -37,17 +88,55 @@
             <!-- Mobile Menu -->
             <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 border-t border-gray-200 pt-4">
                 <div class="flex flex-col space-y-4">
-                    <a th:href="@{/landing}" class="text-gray-700 hover:text-blue-600 transition">Home</a>
+                    <a th:href="@{/}" class="text-gray-700 hover:text-blue-600 transition">Home</a>
                     <a href="#features" class="text-gray-700 hover:text-blue-600 transition">Features</a>
                     <a href="#" class="text-gray-700 hover:text-blue-600 transition">About Us</a>
-                    <a href="#" class="text-gray-700 hover:text-blue-600 transition">Members</a>
+
                     <div class="flex flex-col space-y-2 pt-4 border-t border-gray-200">
-                        <a th:href="@{/login}" class="text-center text-gray-700 hover:text-blue-600 px-4 py-2 rounded-lg border border-gray-300 transition">
-                            Log In
-                        </a>
-                        <a th:href="@{/signup}" class="text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition">
-                            Sign Up
-                        </a>
+                        <!-- normal view -->
+                        <th:block th:if="${currentUser == null}">
+                            <a th:href="@{/login}" class="text-center text-gray-700 hover:text-blue-600 px-4 py-2 rounded-lg border border-gray-300 transition">
+                                Log In
+                            </a>
+                            <a th:href="@{/signup}" class="text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition">
+                                Sign Up
+                            </a>
+                        </th:block>
+
+                        <!-- 2. LOGGED IN VIEW: Show if currentUser exists -->
+                        <th:block th:if="${currentUser != null}">
+                            <!-- User Identity Info -->
+                            <div class="flex items-center space-x-3 px-2 py-3 bg-gray-50 rounded-lg mb-2">
+                                <img th:if="${currentUser.profilePic}"
+                                     th:src="${currentUser.profilePic}"
+                                     class="w-10 h-10 rounded-full border border-blue-500"
+                                     referrerpolicy="no-referrer">
+                                <i th:unless="${currentUser.profilePic}"
+                                   class="far fa-user-circle text-3xl text-blue-600"></i>
+                                <div class="overflow-hidden">
+                                    <p class="font-bold text-gray-900 truncate" th:text="${currentUser.name}">User Name</p>
+                                    <p class="text-xs text-gray-500 truncate" th:text="${currentUser.email}">user@email.com</p>
+                                </div>
+                            </div>
+
+                            <!-- Navigation Links -->
+                            <a th:href="@{/dashboard}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+                                <i class="fas fa-columns w-5 text-gray-400"></i>
+                                <span>Dashboard</span>
+                            </a>
+                            <a th:href="@{/profile}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+                                <i class="far fa-user w-5 text-gray-400"></i>
+                                <span>My Profile</span>
+                            </a>
+
+                            <!-- Logout Button -->
+                            <form th:action="@{/logout}" method="post" class="pt-2">
+                                <button type="submit" class="w-full text-center bg-red-50 text-red-600 hover:bg-red-100 font-medium py-2 rounded-lg border border-red-100 transition uppercase text-sm tracking-wider">
+                                    LOG OUT
+                                </button>
+                            </form>
+                        </th:block>
+
                     </div>
                 </div>
             </div>
