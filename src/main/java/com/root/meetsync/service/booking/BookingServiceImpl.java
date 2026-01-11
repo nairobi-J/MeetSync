@@ -1,5 +1,4 @@
 package com.root.meetsync.service.booking;
-
 import com.root.meetsync.dto.booking.BookingRequestDTO;
 import com.root.meetsync.dto.booking.BookingResponseDTO;
 import com.root.meetsync.entity.User;
