@@ -3,6 +3,7 @@
 <html>
 <head>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <title>Year Calender</title>
 <style>
 body {
@@ -126,6 +127,8 @@ bdHolidays.put("12-25", "Christmas Day");
      int year;
   
 =======
+=======
+>>>>>>> Stashed changes
 <title>Basic Month calendar</title>
 </head>
 <body>
@@ -144,6 +147,9 @@ bdHolidays.put("12-25", "Christmas Day");
          day = Integer.parseInt(dayParam);
      }
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     
    
@@ -160,7 +166,11 @@ bdHolidays.put("12-25", "Christmas Day");
      String yearValue = request.getParameter("yearValue");
      if(yearValue != null) year = Integer.parseInt(yearValue);
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
      else year = today.get(Calendar.YEAR);
+=======
+     else year = cal.get(Calendar.YEAR);
+>>>>>>> Stashed changes
 =======
      else year = cal.get(Calendar.YEAR);
 >>>>>>> Stashed changes
@@ -170,8 +180,11 @@ bdHolidays.put("12-25", "Christmas Day");
      String monthParam = request.getParameter("month");
      
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
    
 =======
+=======
+>>>>>>> Stashed changes
      if(hourParam != null){
     	 hour = Integer.parseInt(hourParam);
      }
@@ -183,6 +196,9 @@ bdHolidays.put("12-25", "Christmas Day");
          month = Integer.parseInt(monthParam);
          
      }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     
      String yearAction = request.getParameter("yearAction");
@@ -193,8 +209,11 @@ bdHolidays.put("12-25", "Christmas Day");
      }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
      
 =======
+=======
+>>>>>>> Stashed changes
       
      cal.set(year, month, day, hour, minute, 0);
 
@@ -204,6 +223,9 @@ bdHolidays.put("12-25", "Christmas Day");
      
 
      //cal.set(year + 1, month - 1, 1);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
      
 %>
@@ -211,7 +233,11 @@ bdHolidays.put("12-25", "Christmas Day");
 
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <form method="post" class="year-header">
+=======
+<form method="post" style="display:flex; gap:10px;">
+>>>>>>> Stashed changes
 =======
 <form method="post" style="display:flex; gap:10px;">
 >>>>>>> Stashed changes
@@ -224,9 +250,15 @@ bdHolidays.put("12-25", "Christmas Day");
     <!-- persist state -->
     <input type="hidden" name="yearValue" value="<%= year %>">
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     <%-- <input type="hidden" name="month" value="<%= month %>">
     <input type="hidden" name="hour" value="<%= hour %>">
 <input type="hidden" name="minute" value="<%= minute %>"> --%>
+=======
+    <input type="hidden" name="month" value="<%= month %>">
+    <input type="hidden" name="hour" value="<%= hour %>">
+<input type="hidden" name="minute" value="<%= minute %>">
+>>>>>>> Stashed changes
 =======
     <input type="hidden" name="month" value="<%= month %>">
     <input type="hidden" name="hour" value="<%= hour %>">
@@ -236,6 +268,7 @@ bdHolidays.put("12-25", "Christmas Day");
 </form>
 
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 
 
@@ -342,6 +375,8 @@ boolean isHoliday = holidayName != null;
 </div>
 
 =======
+=======
+>>>>>>> Stashed changes
 <form method="post" style="display:flex; gap:10px;">
 <%
     for (int i = 0; i < 12; i++) {
@@ -413,6 +448,9 @@ boolean isHoliday = holidayName != null;
       
       
 </table>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 

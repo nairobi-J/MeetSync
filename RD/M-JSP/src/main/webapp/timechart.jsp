@@ -3,7 +3,11 @@
 <html>
 <head>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <title>Event creation</title>
+=======
+<title>Time Slot Picker</title>
+>>>>>>> Stashed changes
 =======
 <title>Time Slot Picker</title>
 >>>>>>> Stashed changes
@@ -12,16 +16,22 @@
 body {
     font-family: Arial, sans-serif;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     padding: 20px;
 }
 
 .controls {
     margin-bottom: 15px;
 =======
+=======
+>>>>>>> Stashed changes
 }
 
 .controls {
     margin-bottom: 10px;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }
 
@@ -29,16 +39,22 @@ body {
     display: grid;
     grid-template-columns: 70px 1fr;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     width: 520px;
     border: 1px solid #ccc;
     user-select: none;
 =======
+=======
+>>>>>>> Stashed changes
     width: 500px;
     border: 1px solid #ccc;
 }
 
 .hours {
     background: #f5f5f5;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }
 
@@ -46,21 +62,28 @@ body {
     height: 60px;
     border-bottom: 1px solid #ddd;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     font-size: 12px;
     text-align: right;
     padding-right: 6px;
     line-height: 60px;
     background: #f5f5f5;
 =======
+=======
+>>>>>>> Stashed changes
     text-align: right;
     padding-right: 6px;
     font-size: 12px;
     line-height: 60px;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }
 
 .timeline {
     position: relative;
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     height: 1440px;
     background: white;
@@ -115,6 +138,8 @@ body {
     
     <button onclick="openModal()">Create Event</button>
 =======
+=======
+>>>>>>> Stashed changes
     height: 1440px; /* 24h * 60min */
     background: white;
 }
@@ -186,11 +211,15 @@ function buildSlots() {
         <option value="30" selected>30 minutes</option>
         <option value="60">1 hour</option>
     </select>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 </div>
 
 <div class="calendar">
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     <div>
         <% for (int h = 0; h < 24; h++) { %>
@@ -341,6 +370,8 @@ function drawFromInputs(){
 	drawSelection(start, end);
 }
 =======
+=======
+>>>>>>> Stashed changes
     <!-- HOURS (JSP LOOP) -->
     <div class="hours">
         <% for (int h = 0; h < 24; h++) { %>
@@ -362,6 +393,9 @@ function drawFromInputs(){
 
 <script>
 buildSlots(); // initial render
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 </script>
 
