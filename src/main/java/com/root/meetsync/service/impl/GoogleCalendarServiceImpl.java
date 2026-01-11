@@ -8,6 +8,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
+import com.google.api.services.calendar.model.EventReminder;
 import com.google.api.client.util.DateTime;
 import com.root.meetsync.dto.booking.BookingResponseDTO;
 import com.root.meetsync.entity.User;
@@ -57,7 +58,21 @@ public class GoogleCalendarServiceImpl {
         // 4. Build the Event
         Event event = new Event()
                 .setSummary("MeetSync: " + booking.getInviteeName())
-                .setDescription("Meeting confirmed via MeetSync with " + booking.getInviteeEmail());
+                .setDescription("Meeting confirmed via MeetSync with " + booking.getInviteeEmail())
+                ;
+           
+        // add attendees
+       event.setAttendees(java.util.Collections.singletonList(
+               new com.google.api.services.calendar.model.EventAttendee().setEmail(booking.getInviteeEmail())
+               ));
+        // event reminder - minutes before
+        event.setReminders(new Event.Reminders().setUseDefault(false).setOverrides(java.util.Collections.singletonList(
+                new EventReminder().setMethod("popup").setMinutes(booking.getRemindersMinutesBefore())
+        )));
+
+        
+
+
 
         // Convert LocalDateTime to Google DateTime format
         DateTime start = new DateTime(Date.from(booking.getStartTime().atZone(ZoneId.systemDefault()).toInstant()));
@@ -67,6 +82,6 @@ public class GoogleCalendarServiceImpl {
         event.setEnd(new EventDateTime().setDateTime(end).setTimeZone(host.getTimezone()));
 
         // 5. Push to Primary Calendar
-        service.events().insert("primary", event).execute();
+        service.events().insert("primary", event).setSendUpdates("all").execute();
     }
 }

@@ -35,6 +35,9 @@ public class Booking {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
+    @Column(name = "reminders_minutes_before")
+    private Integer remindersMinutesBefore = 30; // Default 30 minutes
+
     @Column(name = "timezone")
     private String timezone;
 
