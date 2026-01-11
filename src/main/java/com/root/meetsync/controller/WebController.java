@@ -29,12 +29,18 @@ public class  WebController {
     }
 
     @GetMapping("/login")
-    public String showLoginPage() {
+    public String showLoginPage(Authentication authentication) {
+        if(authentication!= null && authentication.isAuthenticated()) {
+            return "redirect:/";
+        }
         return "login";
     }
 
     @GetMapping("/signup")
-    public String showSignupPage() {
+    public String showSignupPage(Authentication authentication) {
+        if(authentication!= null && authentication.isAuthenticated()) {
+            return "redirect:/";
+        }
         return "signup";
     }
 
