@@ -1,47 +1,23 @@
 <script setup>
-<<<<<<< Updated upstream:R&D/Vue Js/meetsync-vue/src/components/Calendar.vue
-import { ref, computed } from 'vue'
-import EventCard from './EventCard.vue'
-import { useCalendarLogic } from './CalendarLogic.js'
-=======
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import EventCard from './EventCard.vue'
->>>>>>> Stashed changes:RD/VueJs/meetsync-vue/src/components/Calendar.vue
 
+const viewMode = ref('monthly') // 'daily' | 'weekly' | 'monthly' | 'yearly'
+const currentDate = ref(new Date())
+const selectedDates = ref(new Set())
+const isDragging = ref(false)
+const dragStartDate = ref(null)
 
-const showActionModal = ref(false)
-const showDetailsModal = ref(false)
-const selectedActionDate = ref(null) // Stores the date user clicked
+const monthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+]
 
-const {
-  viewMode, currentDate, selectedDates, calendarTitle, dayNames,
-  calendarDays, weekDays, timeSlots, yearMonths,
-  isDateSelected, getSlotTitle, handleMouseDown, handleMouseEnter,
-  previousPeriod, nextPeriod, goToToday, jumpToDate,
-  isCardOpen, currentCardTitle, editingEventId, saveEvent, deleteEvent,events
-} = useCalendarLogic()
+const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-const formatDateToLocalYMD = (date) => {
-  if (!date) return ''
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  const result = `${y}-${m}-${d}`
-  
-   console.log('Generating Date:', result) 
-  
-  return result
-}
+const currentMonth = computed(() => currentDate.value.getMonth())
+const currentYear = computed(() => currentDate.value.getFullYear())
 
-<<<<<<< Updated upstream:R&D/Vue Js/meetsync-vue/src/components/Calendar.vue
-//for monthly
-const isDayHasEvent = (dateString) => {
-      if(!dateString) return false
-
-      return events.value.some(event =>
-        event.slots.some(slot => slot.startsWith(dateString))
-      )
-=======
 const events = ref({})
 
 const activeSlot = ref(false)
@@ -128,61 +104,38 @@ const calendarTitle = computed(() => {
     return `${monthNames[currentMonth.value]} ${currentYear.value}`
   } else {
     return `${currentYear.value}`
->>>>>>> Stashed changes:RD/VueJs/meetsync-vue/src/components/Calendar.vue
   }
+})
 
-const isToday = (dateString) => {
-  if (!dateString) return false
-  const now = new Date()
-  const y = now.getFullYear()
-  const m = String(now.getMonth() + 1).padStart(2, '0')
-  const d = String(now.getDate()).padStart(2, '0')
-  return dateString === `${y}-${m}-${d}`
+const getDaysInMonth = (month, year) => {
+  return new Date(year, month + 1, 0).getDate()
 }
 
-
-
-const handleMonthDateClick = (dateString) => {
-  if (!dateString) return
-
-  if (isDayHasEvent(dateString)) {
-    selectedActionDate.value = dateString
-    showActionModal.value = true
-  } 
-  else {
-    jumpToDate(dateString)
-  }
+const getFirstDayOfMonth = (month, year) => {
+  return new Date(year, month, 1).getDay()
 }
 
-const handleActionAdd = () => {
-  jumpToDate(selectedActionDate.value)
-  showActionModal.value = false
-}
+const calendarDays = computed(() => {
+  const daysInMonth = getDaysInMonth(currentMonth.value, currentYear.value)
+  const firstDay = getFirstDayOfMonth(currentMonth.value, currentYear.value)
+  const days = []
 
-const handleActionSee = () => {
-  showActionModal.value = false
-  showDetailsModal.value = true
-}
+  const prevMonthDays = getDaysInMonth(
+    currentMonth.value === 0 ? 11 : currentMonth.value - 1,
+    currentMonth.value === 0 ? currentYear.value - 1 : currentYear.value
+  )
 
-//Get list of events for the Details 
-const currentDayEvents = computed(() => {
-  if (!selectedActionDate.value) return []
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const prevMonth = currentMonth.value === 0 ? 11 : currentMonth.value - 1
+    const prevYear = currentMonth.value === 0 ? currentYear.value - 1 : currentYear.value
 
-  const list = []
-  
-  events.value.forEach(event => {
-    event.slots.forEach(slot => {
-      if (slot.startsWith(selectedActionDate.value)) {
-        const time = slot.split('T')[1]
-        list.push({ time, title: event.title })
-      }
+    days.push({
+      date: prevMonthDays - i,
+      dateString: `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(prevMonthDays - i).padStart(2, '0')}`,
+      isCurrentMonth: false
     })
-  })
+  }
 
-<<<<<<< Updated upstream:R&D/Vue Js/meetsync-vue/src/components/Calendar.vue
-  // Sort by time 
-  return list.sort((a, b) => a.time.localeCompare(b.time))
-=======
   for (let i = 1; i <= daysInMonth; i++) {
     days.push({
       date: i,
@@ -319,21 +272,39 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('mouseup', handleMouseUp)
->>>>>>> Stashed changes:RD/VueJs/meetsync-vue/src/components/Calendar.vue
 })
 </script>
-
 
 <template>
   <div class="calendar-container">
     <div class="calendar-controls">
       <div class="view-switcher">
-        <button :class="{ active: viewMode === 'daily' }" @click="viewMode = 'daily'">Daily</button>
-        <button :class="{ active: viewMode === 'weekly' }" @click="viewMode = 'weekly'">Weekly</button>
-        <button :class="{ active: viewMode === 'monthly' }" @click="viewMode = 'monthly'">Monthly</button>
-        <button :class="{ active: viewMode === 'yearly' }" @click="viewMode = 'yearly'">Yearly</button>
+        <button
+          :class="{ active: viewMode === 'daily' }"
+          @click="viewMode = 'daily'"
+        >
+          Daily
+        </button>
+        <button
+          :class="{ active: viewMode === 'weekly' }"
+          @click="viewMode = 'weekly'"
+        >
+          Weekly
+        </button>
+        <button
+          :class="{ active: viewMode === 'monthly' }"
+          @click="viewMode = 'monthly'"
+        >
+          Monthly
+        </button>
+        <button
+          :class="{ active: viewMode === 'yearly' }"
+          @click="viewMode = 'yearly'"
+        >
+          Yearly
+        </button>
       </div>
-      
+
       <div class="navigation">
         <button @click="previousPeriod" class="nav-btn">←</button>
         <h2>{{ calendarTitle }}</h2>
@@ -342,6 +313,7 @@ onUnmounted(() => {
 
       <div class="action-buttons">
         <button @click="goToToday" class="today-btn">Today</button>
+        <button @click="clearSelection" class="clear-btn">Clear Selection</button>
       </div>
     </div>
 
@@ -356,11 +328,11 @@ onUnmounted(() => {
           'calendar-day',
           {
             'other-month': !day.isCurrentMonth,
-            'selected': day.isCurrentMonth && isDayHasEvent(day.dateString),
-            'is-today': isToday(day.dateString)
+            'selected': isDateSelected(day.dateString)
           }
         ]"
-        @click="day.date && handleMonthDateClick(day.dateString)"
+        @mousedown="handleMouseDown(day.dateString)"
+        @mouseenter="handleMouseEnter(day.dateString)"
       >
         {{ day.date }}
       </div>
@@ -386,40 +358,11 @@ onUnmounted(() => {
             ]"
             @mousedown="handleMouseDown(`${day.dateString}T${time}`)"
             @mouseenter="handleMouseEnter(`${day.dateString}T${time}`)"
-          >
-          <span class="slot-event-title">
-            {{ getSlotTitle(`${day.dateString}T${time}`) }}
-          </span>
-          </div>
+          />
         </div>
       </div>
     </div>
 
-<<<<<<< Updated upstream:R&D/Vue Js/meetsync-vue/src/components/Calendar.vue
-  
-    <div v-else-if="viewMode === 'daily'" class="calendar-grid daily">
-      <div class="daily-header">
-        <h3>{{ currentDate.toLocaleDateString('en-US', { weekday: 'long' }) }}</h3>
-      </div>
-      <div class="daily-body">
-        <div v-for="time in timeSlots" :key="time"
-          :class="[
-            'time-slot-daily',
-            { 'selected': isDateSelected(`${formatDateToLocalYMD(currentDate)}T${time}`) }
-          ]"
-          @mousedown="handleMouseDown(`${formatDateToLocalYMD(currentDate)}T${time}`)"
-          @mouseenter="handleMouseEnter(`${formatDateToLocalYMD(currentDate)}T${time}`)"
-        >
-          <span class="time-label">{{ time }}</span>
-          <span 
-            v-if="getSlotTitle(`${formatDateToLocalYMD(currentDate)}T${time}`)"
-            class="slot-event-title"
-          >
-             {{ getSlotTitle(`${formatDateToLocalYMD(currentDate)}T${time}`) }}
-          </span>
-        </div>
-      </div>
-=======
 <div v-else-if="viewMode === 'daily'" class="calendar-grid daily">
   <div class="daily-header">
     <h3>{{ currentDate.toDateString() }}</h3>
@@ -448,7 +391,6 @@ onUnmounted(() => {
       >
         {{ events[getDailySlotKey(time)].title }}
       </span>
->>>>>>> Stashed changes:RD/VueJs/meetsync-vue/src/components/Calendar.vue
     </div>
   </div>
 </div>
@@ -456,83 +398,24 @@ onUnmounted(() => {
 
 
 
-   <div v-else-if="viewMode === 'yearly'" class="calendar-grid yearly-dashboard">
-      <div v-for="month in yearMonths" :key="month.index" class="mini-calendar">
-        
-        <div class="mini-month-title">{{ month.name }}</div>
-
-        <div class="mini-week-header">
-          <span v-for="dayName in dayNames" :key="dayName">{{ dayName.charAt(0) }}</span>
-        </div>
-
-        <div class="mini-days-grid">
-          <div
-            v-for="(day, dIndex) in month.days"
-            :key="dIndex"
-            :class="[
-              'mini-day',
-              { 
-                'empty': !day.date,
-                'selected': day.date && isDateSelected(day.dateString)
-              }
-            ]"
-            @click="day.date && jumpToDate(day.dateString)"
-          >
-            {{ day.date }}
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- for monthly viewmode card -->
-
-    <div v-if="showActionModal" class="modal-overlay" @click.self="showActionModal = false">
-      <div class="modal-content action-modal">
-        <h3>Actions for {{ selectedActionDate }}</h3>
-        <div class="modal-buttons">
-          <button @click="handleActionAdd" class="btn-add">Add Event</button>
-          <button @click="handleActionSee" class="btn-see">See Events</button>
-        </div>
-        <button class="btn-close-text" @click="showActionModal = false">Cancel</button>
-      </div>
-    </div>
-
-    
-    <div v-if="showDetailsModal" class="modal-overlay" @click.self="showDetailsModal = false">
-      <div class="modal-content details-modal">
-        <h3>Events on {{ selectedActionDate }}</h3>
-        
-        <div class="events-list">
-          <div v-if="currentDayEvents.length === 0">No events found.</div>
-          
-          <div v-else v-for="(item, idx) in currentDayEvents" :key="idx" class="event-list-item">
-            <span class="event-time">{{ item.time }}</span>
-            <span class="event-name">{{ item.title }}</span>
-          </div>
-        </div>
-
-        <button class="btn-close" @click="showDetailsModal = false">Close</button>
+    <div v-else-if="viewMode === 'yearly'" class="calendar-grid yearly">
+      <div
+        v-for="month in yearMonths"
+        :key="month.index"
+        :class="[
+          'year-month',
+          { 'selected': isDateSelected(month.dateString) }
+        ]"
+        @mousedown="handleMouseDown(month.dateString)"
+        @mouseenter="handleMouseEnter(month.dateString)"
+      >
+        {{ month.name }}
       </div>
     </div>
 
     <div class="selection-info">
       <p><strong>Selected:</strong> {{ selectedDates.size }} date(s)</p>
-<<<<<<< Updated upstream:R&D/Vue Js/meetsync-vue/src/components/Calendar.vue
-      
-=======
->>>>>>> Stashed changes:RD/VueJs/meetsync-vue/src/components/Calendar.vue
     </div>
-
- 
-    <EventCard 
-      :is-open="isCardOpen"
-      :initial-title="currentCardTitle"
-      :is-edit-mode="!!editingEventId"
-      @close="isCardOpen = false"
-      @save="saveEvent"
-      @delete="deleteEvent"
-    />
   </div>
 <EventCard
   v-if="activeSlot"
@@ -546,9 +429,6 @@ onUnmounted(() => {
 
 </template>
 
-<<<<<<< Updated upstream:R&D/Vue Js/meetsync-vue/src/components/Calendar.vue
-<style scoped src="./CalendarStyle.css"></style>
-=======
 <style scoped>
 .calendar-container {
   max-width: 1200px;
@@ -896,4 +776,3 @@ onUnmounted(() => {
   }
 }
 </style>
->>>>>>> Stashed changes:RD/VueJs/meetsync-vue/src/components/Calendar.vue

@@ -3,6 +3,7 @@ package com.root.meetsync;
 
 import com.root.meetsync.entity.*;
 import com.root.meetsync.repository.*;
+import com.root.meetsync.service.impl.GoogleCalendarServiceImpl;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -25,15 +26,18 @@ public class RootController {
     private final HostAvailabilityRepository hostAvailabilityRepository;
     private final ParticipantAvailabilityRepository participantAvailabilityRepository;
     private final ConfirmedEventRepository confirmedEventRepository;
+    private final GoogleCalendarServiceImpl googleCalendarServiceImpl;
+
     public RootController(EventRepository eventRepository, EventSlotRepository eventSlotRepository,
                           HostAvailabilityRepository hostAvailabilityRepository, UserRepository userRepository,
-                          ParticipantAvailabilityRepository participantAvailabilityRepository, ConfirmedEventRepository confirmedEventRepository) {
+                          ParticipantAvailabilityRepository participantAvailabilityRepository, ConfirmedEventRepository confirmedEventRepository, GoogleCalendarServiceImpl googleCalendarServiceImpl) {
         this.eventRepository = eventRepository;
         this.eventSlotRepository = eventSlotRepository;
         this.hostAvailabilityRepository = hostAvailabilityRepository;
         this.userRepository = userRepository;
         this.participantAvailabilityRepository = participantAvailabilityRepository;
         this.confirmedEventRepository = confirmedEventRepository;
+        this.googleCalendarServiceImpl = googleCalendarServiceImpl;
     }
     @GetMapping("/event-create")
     public String showCreateEventPage() {
@@ -143,8 +147,13 @@ public String finalizeEvent(@PathVariable String shareLink, @RequestParam Long s
     confirmed.setEvent(event);
     confirmed.setSelectedSlots(selectedSlot);
     confirmed.setConfirmedAt(java.time.LocalDateTime.now());
-
     confirmedEventRepository.save(confirmed);
+    // TRIGGER SYNC
+    try {
+        googleCalendarServiceImpl.createGoogleEventFromHeatmap(confirmed);
+    } catch (Exception e) {
+        e.printStackTrace(); // Log error but don't stop the user
+    }
     return "redirect:/event/" + shareLink + "/overview";
 }
 
