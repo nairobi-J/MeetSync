@@ -259,7 +259,7 @@ function renderTimes() {
         btn.textContent = t.label;
         btn.className = 'time-slot w-full text-center text-sm px-4 py-2.5 rounded-lg border border-gray-300 bg-white hover:border-blue-500 hover:bg-blue-50 text-gray-700 font-medium transition';
         if (selectedTime === t.time) {
-            btn.className = 'time-slot w-full text-center text-sm px-4 py-2.5 rounded-lg border-2 border-blue-600 bg-blue-50 text-blue-700 font-semibold';
+            btn.className = 'time-slot w-full text-center text-sm px-4 py-2.5 rounded-lg border-2 border-blue-600 bg-blue-600 text-white font-semibold';
         }
         btn.onclick = () => { selectedTime = t.time; renderTimes(); };
         container.appendChild(btn);

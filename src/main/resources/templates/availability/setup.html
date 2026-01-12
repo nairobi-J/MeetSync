@@ -19,8 +19,7 @@
                 <div class="max-w-7xl mx-auto ">
 
                     <!-- Header -->
-                    <div class="mt-20">
-                       
+                    <div class="mt-20 mb-6">
                         <h1 class="text-4xl font-bold text-gray-800">
                             <i class="fas fa-calendar-check text-blue-600"></i>
                             Setup Your Availability
@@ -28,33 +27,6 @@
                         <p class="text-gray-600 mt-2">Configure when you're available </p>
                     </div>
 
-                    <!-- Booking Link Section -->
-                    <div th:if="${bookingLink}" class="p-4 mb-6">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1 mr-4">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                    <i class="fas fa-link text-blue-600 mr-2"></i>
-                                    Personal Link
-                                </label>
-                                <input type="text" 
-                                       th:value="${bookingLink}"
-                                       id="bookingLinkInput"
-                                       readonly
-                                       class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono">
-                            </div>
-                            <div class="flex justify-center space-x-4">
-                                <button type="button" onclick="copyBookingLink()" 
-                                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg">
-                                    <i class="fas fa-copy mr-2"></i>Copy Link
-                                </button>
-                                <a th:href="${bookingLink}" 
-                                   target="_blank"
-                                   class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg inline-flex items-center">
-                                    <i class="fas fa-external-link-alt mr-2"></i>Preview
-                                </a>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Alerts -->
                     <div th:replace="~{fragments/toast :: alerts}"></div>
@@ -192,6 +164,54 @@
                                         <!-- Hidden container for weekly availability form inputs -->
                                         <div id="weeklyAvailabilityInputsContainer"></div>
                                     </div>
+
+                                    <!-- Advanced Settings Toggle -->
+                                    <div class="mt-6">
+                                        <button type="button" onclick="toggleAdvancedSettings()" class="w-full flex items-center justify-between
+                   bg-gray-100 hover:bg-gray-200
+                   px-4 py-3 rounded-lg font-semibold text-gray-700 transition">
+
+                                            <span>
+                                                <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
+                                                Advanced Settings (Select Specific Date & Time)
+                                            </span>
+
+                                            <svg id="advancedArrow" class="w-5 h-5 transition-transform duration-300"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+
+                                        <!-- Advanced Settings Collapsible -->
+                                        <div id="advancedSettings"
+                                            class="hidden mt-4 overflow-hidden transition-all duration-300">
+
+                                            <!-- Calendar -->
+                                            <div class="mb-6">
+                                                <div th:replace="~{availability/fragments/components :: calendar}"></div>
+                                            </div>
+
+                                            <!-- Override Dates Settings -->
+                                            <div id="overrideDatesSection" class="bg-white rounded-lg shadow-lg p-6">
+                                                <h3 class="text-lg font-bold text-gray-800 mb-4">
+                                                    Override Specific Dates
+                                                </h3>
+                                                <p class="text-sm text-gray-600 mb-4">
+                                                    Select dates from the calendar to set custom availability or mark as
+                                                    unavailable.
+                                                </p>
+
+                                                <!-- Override entries will be added here dynamically -->
+                                                <div id="overrideEntriesContainer" class="space-y-3">
+                                                    <!-- Template for override entries -->
+                                                </div>
+
+                                                <!-- Hidden container for actual form inputs -->
+                                                <div id="dateOverridesInputsContainer"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
 
@@ -215,61 +235,37 @@
                                 </div>
                             </div>
 
-                            <!-- Right Panel - Calendar -->
+                            <!-- Right Panel - Personal Link -->
                             <div class="lg:col-span-1">
-                                <!-- Advanced Settings Toggle -->
-                                <button type="button" onclick="toggleAdvancedSettings()" class="w-full flex items-center justify-between
-               bg-gray-100 hover:bg-gray-200
-               px-4 py-3 rounded-lg font-semibold text-gray-700 transition">
-
-                                    <span>
-                                        <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
-                                        Advanced Settings (Seelct Specific Date & Time)
-                                    </span>
-
-                                    <svg id="advancedArrow" class="w-5 h-5 transition-transform duration-300"
-                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-
-                                <!-- advance settings Collapsible -->
-
-                                <div id="advancedSettings"
-                                  
-                                class="hidden mt-4  mt-4 overflow-hidden transition-all duration-300">
-
-
-                                    <!-- calendar -->
-                                    <div class="sticky top-8">
-                                        <div th:replace="~{availability/fragments/components :: calendar}"></div>
-                                    </div>
-
-
-                                    <!-- Override Dates Settings -->
-                                    <div id="overrideDatesSection" class="bg-white rounded-lg shadow-lg p-6 mt-8">
-                                        <h3 class="text-lg font-bold text-gray-800 mb-4">
-                                            
-                                            Override Specific Dates
-                                        </h3>
-                                        <p class="text-sm text-gray-600 mb-4">
-                                            Select dates from the calendar to set custom availability or mark as
-                                            unavailable.
-                                        </p>
-
-                                        <!-- Override entries will be added here dynamically -->
-                                        <div id="overrideEntriesContainer" class="space-y-3">
-                                            <!-- Template for override entries -->
+                                <!-- Booking Link Section -->
+                                <div th:if="${bookingLink}" class="bg-white rounded-lg shadow-lg p-6 sticky top-8">
+                                    <h3 class="text-lg font-bold text-gray-800 mb-4">
+                                        <i class="fas fa-link text-blue-600 mr-2"></i>
+                                        Personal Link
+                                    </h3>
+                                    <div class="space-y-1">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-gray-500 mb-2">
+                                                Share your link to others to let them book meetings with you
+                                            </label>
+                                            <input type="text" 
+                                                   th:value="${bookingLink}"
+                                                   id="bookingLinkInput"
+                                                   readonly
+                                                   class="w-full px-4 py-2 text-blue-600 text-sm font-mono">
                                         </div>
-
-                                        <!-- Hidden container for actual form inputs -->
-                                        <div id="dateOverridesInputsContainer"></div>
+                                        <div class="flex flex-col space-y-2">
+                                            <button type="button" onclick="copyBookingLink()" 
+                                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg">
+                                                <i class="fas fa-copy mr-2"></i>Copy Link
+                                            </button>
+                                            <a th:href="${bookingLink}" 
+                                               target="_blank"
+                                               class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg inline-flex items-center justify-center">
+                                                <i class="fas fa-external-link-alt mr-2"></i>Preview
+                                            </a>
+                                        </div>
                                     </div>
-
-
-
-
                                 </div>
                             </div>
 
