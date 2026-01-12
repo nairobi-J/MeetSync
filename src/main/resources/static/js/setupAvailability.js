@@ -424,33 +424,6 @@ function loadExistingAvailability() {
     }
 }
 
-// Copy booking link
-function copyBookingLink() {
-    const input = document.getElementById('bookingLinkInput');
-    if (input) {
-        input.select();
-        input.setSelectionRange(0, 99999); // For mobile devices
-        
-        // Modern clipboard API
-        navigator.clipboard.writeText(input.value).then(() => {
-            const button = event.target.closest('button');
-            const originalHTML = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
-            button.classList.add('bg-green-600');
-            button.classList.remove('bg-blue-600');
-            
-            setTimeout(() => {
-                button.innerHTML = originalHTML;
-                button.classList.remove('bg-green-600');
-                button.classList.add('bg-blue-600');
-            }, 2000);
-        }).catch(() => {
-            // Fallback for older browsers
-            document.execCommand('copy');
-            alert('Link copied to clipboard!');
-        });
-    }
-}
 
 // Set existing data (called from template inline script)
 function setExistingData(weeklyAvailability, dateOverridesData) {
@@ -477,6 +450,15 @@ function showSaveLoadingSpinner(show) {
         saveBtn.disabled = false;
     }
 }
+
+function showPersonalLinkBlock() {
+    const block = document.getElementById('personalLinkBlock');
+    if (block) {
+        block.classList.remove('hidden');
+        block.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function () {

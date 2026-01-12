@@ -236,7 +236,7 @@
                             </div>
 
                             <!-- Right Panel - Personal Link -->
-                            <div class="lg:col-span-1">
+                            <div class="lg:col-span-1" th:classappend="${success} ? '' : 'hidden'">
                                 <!-- Booking Link Section -->
                                 <div th:if="${bookingLink}" class="bg-white rounded-lg shadow-lg p-6 sticky top-8">
                                     <h3 class="text-lg font-bold text-gray-800 mb-4">
@@ -290,6 +290,9 @@
         setExistingData(weeklyAvailabilityData, dateOverridesData);
         /*]]>*/
     </script>
+
+
+
 
 
 
