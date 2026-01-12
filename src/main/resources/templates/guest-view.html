@@ -155,6 +155,7 @@
     const globalData = /*[[${heatmapData}]]*/ {}; 
     const eventId = /*[[${event.id}]]*/ 0;
     const shareLink = /*[[${event.shareLink}]]*/ '';
+    const isHost = /*[[${isHost}]]*/ false; // Whether current viewer is the host
     
     // Post-submission data from flash attributes
     const successMessage = /*[[${successMessage}]]*/ null;
@@ -186,28 +187,65 @@
             return;
         }
         
-        const existingNames = new Set();
-        Object.values(globalData).forEach(participants => {
-            participants.forEach(name => existingNames.add(name));
-        });
+        // Check if user is an existing participant
+        // For hosts, globalData contains names; for participants, it's just counts
+        // We need to fetch from server to check if user exists
+        let isExistingUser = false;
         
-        let isExistingUser = existingNames.has(enteredName);
+        if (isHost) {
+            // For hosts, we can check directly from the data
+            const existingNames = new Set();
+            Object.values(globalData).forEach(participants => {
+                if (Array.isArray(participants)) {
+                    participants.forEach(name => existingNames.add(name));
+                }
+            });
+            isExistingUser = existingNames.has(enteredName);
+        }
+        // For non-hosts, we'll check after entering by trying to load selections
         
         currentUser = enteredName;
         document.getElementById('currentUserName').innerText = currentUser;
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');
         
-        if (isExistingUser) {
-            
+        if (isHost && isExistingUser) {
             isEditingExistingUser = true;
             loadExistingSelections(enteredName);
-           
             showEditingMessage(enteredName);
+        } else if (!isHost) {
+            // For participants, try to load existing selections
+            // If they exist, we'll show the editing message
+            fetch(`/event/participant/${shareLink}/availability/${enteredName}`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    return null;
+                })
+                .then(slotIds => {
+                    if (slotIds && slotIds.length > 0) {
+                        isEditingExistingUser = true;
+                        // Load the selections
+                        mySelections.clear();
+                        slotIds.forEach(slotId => {
+                            mySelections.add(slotId.toString());
+                            const cell = document.querySelector(`[data-slot-id="${slotId}"]`);
+                            if (cell) {
+                                cell.classList.add('selected');
+                            }
+                        });
+                        updateSubmitButton();
+                        refreshHeatmapWithPreview();
+                        showEditingMessage(enteredName);
+                    }
+                })
+                .catch(err => {
+                    console.log("No existing selections found or error:", err);
+                });
         }
         
         updateSubmitButton();
-        
         refreshHeatmap();
     };
 
@@ -245,26 +283,50 @@
         
         // Calculate preview data by adding current user's selections to global data
         previewData = {};
-        Object.keys(globalData).forEach(slotId => {
-            previewData[slotId] = [...globalData[slotId]]; // Copy existing participants
-        });
         
-        // Add current user's selections to preview
-        mySelections.forEach(slotId => {
-            if (!previewData[slotId]) {
-                previewData[slotId] = [];
-            }
-            if (!previewData[slotId].includes(currentUser)) {
-                previewData[slotId].push(currentUser);
-            }
-        });
-        
-        // Remove current user from slots they deselected
-        Object.keys(previewData).forEach(slotId => {
-            if (!mySelections.has(slotId)) {
-                previewData[slotId] = previewData[slotId].filter(name => name !== currentUser);
-            }
-        });
+        if (isHost) {
+            // Host sees names - work with arrays of names
+            Object.keys(globalData).forEach(slotId => {
+                previewData[slotId] = [...globalData[slotId]]; // Copy existing participants
+            });
+            
+            // Add current user's selections to preview
+            mySelections.forEach(slotId => {
+                if (!previewData[slotId]) {
+                    previewData[slotId] = [];
+                }
+                if (!previewData[slotId].includes(currentUser)) {
+                    previewData[slotId].push(currentUser);
+                }
+            });
+            
+            // Remove current user from slots they deselected
+            Object.keys(previewData).forEach(slotId => {
+                if (!mySelections.has(slotId)) {
+                    previewData[slotId] = previewData[slotId].filter(name => name !== currentUser);
+                }
+            });
+        } else {
+            // Participant sees only counts - work with numbers
+            Object.keys(globalData).forEach(slotId => {
+                previewData[slotId] = globalData[slotId]; // Copy existing count
+            });
+            
+            // Adjust counts based on user's selections
+            mySelections.forEach(slotId => {
+                if (previewData[slotId] === undefined) {
+                    previewData[slotId] = 1; // User is the first
+                } else {
+                    // Check if user was already counted in the original data
+                    // Since we can't tell from count alone, assume they weren't and increment
+                    previewData[slotId] = (previewData[slotId] || 0) + 1;
+                }
+            });
+            
+            // For existing users editing, we need to handle removal
+            // This is approximate since we can't tell from counts alone
+            // The actual count will be corrected on the server after submission
+        }
         
         // Refresh heatmap with preview data
         refreshHeatmapWithPreview();
@@ -355,34 +417,63 @@
         
         document.querySelectorAll('.heat-cell').forEach(cell => {
             const slotId = cell.dataset.slotId;
-            const participants = dataToUse[slotId] || [];
-            const count = participants.length;
-
-            cell.classList.remove('heat-0', 'heat-1', 'heat-2', 'heat-3');
-            if (count >= 3) cell.classList.add('heat-3');
-            else if (count === 2) cell.classList.add('heat-2');
-            else if (count === 1) cell.classList.add('heat-1');
-            else cell.classList.add('heat-0');
-
             const tooltip = cell.querySelector('.tooltip');
             
-            if (isPreviewMode) {
+            let count = 0;
+            let tooltipText = "";
+            
+            if (isHost) {
+                // Host sees participant names
+                const participants = dataToUse[slotId] || [];
+                count = participants.length;
                 
-                const originalParticipants = globalData[slotId] || [];
-                const isUserSelected = mySelections.has(slotId);
-                const previewText = count > 0 
-                    ? `${count} available:\n${participants.join('\n')}` 
-                    : "No one available";
+                cell.classList.remove('heat-0', 'heat-1', 'heat-2', 'heat-3');
+                if (count >= 3) cell.classList.add('heat-3');
+                else if (count === 2) cell.classList.add('heat-2');
+                else if (count === 1) cell.classList.add('heat-1');
+                else cell.classList.add('heat-0');
                 
-                if (isUserSelected && !originalParticipants.includes(currentUser)) {
-                    tooltip.innerHTML = `<strong style="color: #60a5fa;">PREVIEW</strong><br>${previewText}`;
+                if (isPreviewMode) {
+                    const originalParticipants = globalData[slotId] || [];
+                    const isUserSelected = mySelections.has(slotId);
+                    const previewText = count > 0 
+                        ? `${count} available:\n${participants.join('\n')}` 
+                        : "No one available";
+                    
+                    if (isUserSelected && !originalParticipants.includes(currentUser)) {
+                        tooltip.innerHTML = `<strong style="color: #60a5fa;">PREVIEW</strong><br>${previewText}`;
+                    } else {
+                        tooltip.innerText = previewText;
+                    }
                 } else {
-                    tooltip.innerText = previewText;
+                    tooltipText = count > 0 
+                        ? `${count} available:\n${participants.join('\n')}` 
+                        : "No one available";
+                    tooltip.innerText = tooltipText;
                 }
             } else {
-                tooltip.innerText = count > 0 
-                    ? `${count} available:\n${participants.join('\n')}` 
-                    : "No one available";
+                // Participant sees only counts (privacy mode)
+                const dataValue = dataToUse[slotId];
+                count = typeof dataValue === 'number' ? dataValue : (dataValue ? dataValue.length : 0);
+                
+                cell.classList.remove('heat-0', 'heat-1', 'heat-2', 'heat-3');
+                if (count >= 3) cell.classList.add('heat-3');
+                else if (count === 2) cell.classList.add('heat-2');
+                else if (count === 1) cell.classList.add('heat-1');
+                else cell.classList.add('heat-0');
+                
+                if (isPreviewMode && mySelections.has(slotId)) {
+                    // Show preview indicator for participant's selections
+                    tooltipText = count > 0 
+                        ? `PREVIEW: ${count} available` 
+                        : "PREVIEW: No one available";
+                    tooltip.innerHTML = `<strong style="color: #60a5fa;">${tooltipText}</strong>`;
+                } else {
+                    tooltipText = count > 0 
+                        ? `${count} available` 
+                        : "No one available";
+                    tooltip.innerText = tooltipText;
+                }
             }
         });
     }
