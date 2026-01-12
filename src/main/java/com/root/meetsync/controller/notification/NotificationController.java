@@ -1,7 +1,6 @@
 package com.root.meetsync.controller.notification;
 
 import com.root.meetsync.dto.Notification.NotificationDTO;
-import com.root.meetsync.entity.Notification;
 import com.root.meetsync.entity.User;
 import com.root.meetsync.service.NotificationService;
 import com.root.meetsync.service.UserService;

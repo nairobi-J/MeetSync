@@ -42,6 +42,19 @@ public class AvailabilityService {
         }
     }
 
+    public List<Long> getUserAvailability(String participantName, Long eventId) {
+        List<ParticipantAvailability> userAvailability = participantAvailabilityRepository
+            .findByParticipantNameAndEventSlot_Event_Id(participantName, eventId);
+        
+        return userAvailability.stream()
+            .map(pa -> pa.getEventSlot().getId())
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    public boolean hasUserSubmitted(String participantName, Long eventId) {
+        return participantAvailabilityRepository.existsByParticipantNameAndEventSlot_Event_Id(participantName, eventId);
+    }
+
      public Map<LocalDate, List<SlotCountDto>> getHeatmapStat(Long eventId){
         List<SlotCountDto> slotCounts = participantAvailabilityRepository.countTotalAttendeesBySlot(eventId);
 

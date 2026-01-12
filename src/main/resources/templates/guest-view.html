@@ -66,15 +66,26 @@
 <div id="mainContent" class="hidden max-w-[1600px] mx-auto p-6">
     <!-- Success Message Section -->
     <div th:if="${successMessage}" class="mb-6 bg-green-100 border-l-4 border-green-500 p-6 rounded-xl shadow-md">
-        <div class="flex items-center">
-            <div class="flex-shrink-0">
-                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-green-700 font-semibold" th:text="${successMessage}">Success message</p>
+                    <p class="text-green-600 text-sm mt-1">Thank you, <span th:text="${participantName}" class="font-medium">participant</span>! Your selections have been added to the heatmap below.</p>
+                </div>
             </div>
-            <div class="ml-3">
-                <p class="text-green-700 font-semibold" th:text="${successMessage}">Success message</p>
-                <p class="text-green-600 text-sm mt-1">Thank you, <span th:text="${participantName}" class="font-medium">participant</span>! Your selections have been added to the heatmap below.</p>
+            <div class="ml-4">
+                <a th:href="@{'/event/participant/' + ${event.shareLink} + '/edit/' + ${participantName}}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    Edit My Availability
+                </a>
             </div>
         </div>
     </div>
@@ -95,7 +106,11 @@
 
     <div class="flex justify-between items-center mb-8">
         <div>
-            <h1 class="text-3xl font-black text-slate-800" th:text="${event.title}">Event Title</h1>
+            <h1 class="text-3xl font-black text-slate-800">
+                <span th:if="${editMode}">Update Your Availability - </span>
+                <span th:text="${event.title}">Event Title</span>
+            </h1>
+            <p th:if="${editMode}" class="text-slate-600 text-sm mt-1">Modify your time slot selections below and click "Update" when done.</p>
             <!-- <p class="text-slate-500" th:text="${event.description}">Event Description</p> -->
         </div>
         <div class="text-right">
@@ -231,16 +246,23 @@
 
     const globalData = /*[[${heatmapData}]]*/ {}; 
     const eventId = /*[[${event.id}]]*/ 0;
+    const shareLink = /*[[${event.shareLink}]]*/ '';
     
     // Post-submission data from flash attributes
     const successMessage = /*[[${successMessage}]]*/ null;
     const submittedParticipantName = /*[[${participantName}]]*/ null;
     const submittedSlots = /*[[${submittedSlots}]]*/ null;
     
+    // Edit mode data
+    const editMode = /*[[${editMode}]]*/ false;
+    const editParticipantName = /*[[${participantName}]]*/ null;
+    const existingSelections = /*[[${existingSelections}]]*/ [];
+    
     // 2. Variables
     let currentUser = "";
     let isMouseDown = false;
     let mySelections = new Set();
+    let isEditingExistingUser = false; // Track if user is editing existing selections
     
     // Preview mode variables
     let previewData = {};
@@ -256,22 +278,26 @@
             return;
         }
         
-        // duplicate name check
+        // Check if this name has already submitted
         const existingNames = new Set();
         Object.values(globalData).forEach(participants => {
             participants.forEach(name => existingNames.add(name));
         });
         
-        if (existingNames.has(enteredName)) {
-            alert(`The name "${enteredName}" has already been used for this event. Please choose a different name.`);
-            input.focus();
-            return;
-        }
+        let isExistingUser = existingNames.has(enteredName);
         
         currentUser = enteredName;
         document.getElementById('currentUserName').innerText = currentUser;
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');
+        
+        if (isExistingUser) {
+            // Load existing selections for this user
+            isEditingExistingUser = true;
+            loadExistingSelections(enteredName);
+            // Show a message that they're editing
+            showEditingMessage(enteredName);
+        }
         
         // Initialize the submit button state
         updateSubmitButton();
@@ -355,14 +381,25 @@
         if (mySelections.size > 0) {
             submitButton.disabled = false;
             submitButton.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all duration-300 transform hover:scale-[1.02]';
-            submitButton.textContent = `Submit My Availability (${mySelections.size} slots)`;
+            
+            // Different text based on edit mode
+            if (editMode || isEditingExistingUser) {
+                submitButton.textContent = `Update My Availability (${mySelections.size} slots)`;
+            } else {
+                submitButton.textContent = `Submit My Availability (${mySelections.size} slots)`;
+            }
             
             if (selectionSummary) selectionSummary.classList.remove('hidden');
             if (selectionCount) selectionCount.textContent = mySelections.size;
         } else {
             submitButton.disabled = true;
             submitButton.className = 'w-full bg-gray-400 text-white font-bold py-3 rounded-xl transition-all duration-300 cursor-not-allowed';
-            submitButton.textContent = 'Select at least one slot to continue';
+            
+            if (editMode || isEditingExistingUser) {
+                submitButton.textContent = 'Select at least one slot to update';
+            } else {
+                submitButton.textContent = 'Select at least one slot to continue';
+            }
             
             if (selectionSummary) selectionSummary.classList.add('hidden');
         }
@@ -501,43 +538,77 @@
     document.addEventListener('DOMContentLoaded', () => {
         console.log("DOM loaded, attaching event listeners...");
         
-        // Check if this is a post-submission page load
-        const urlParams = new URLSearchParams(window.location.search);
-        const isPostSubmission = urlParams.get('submitted') === 'true' || successMessage !== null;
-        
-        if ((isPostSubmission && submittedParticipantName) || successMessage !== null) {
-            console.log("Post-submission page detected for:", submittedParticipantName || 'unknown participant');
+        // Check if this is edit mode
+        if (editMode && editParticipantName) {
+            console.log("Edit mode detected for:", editParticipantName);
+            console.log("Existing selections:", existingSelections);
             
             // Auto-fill the participant name and enter the event
-            const participantName = submittedParticipantName || 'Guest';
-            document.getElementById('guestName').value = participantName;
-            currentUser = participantName;
+            document.getElementById('guestName').value = editParticipantName;
+            currentUser = editParticipantName;
             
             // Skip the login section and show main content directly
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('mainContent').classList.remove('hidden');
             document.getElementById('currentUserName').textContent = currentUser;
             
-            // Scroll to success message if it exists
-            setTimeout(() => {
-                const successDiv = document.querySelector('.bg-green-100');
-                if (successDiv) {
-                    successDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
+            // Pre-populate existing selections
+            if (existingSelections && existingSelections.length > 0) {
+                mySelections = new Set(existingSelections.map(id => id.toString()));
+                console.log("Pre-populated selections:", mySelections);
                 
-                // Refresh heatmap to show current data
-                refreshHeatmap();
-                
-                // Clean up the URL by removing the submitted parameter
-                const url = new URL(window.location);
-                url.searchParams.delete('submitted');
-                window.history.replaceState({}, '', url.toString());
-            }, 100);
+                // Mark the cells as selected
+                setTimeout(() => {
+                    mySelections.forEach(slotId => {
+                        const cell = document.querySelector(`[data-slot-id="${slotId}"]`);
+                        if (cell) {
+                            cell.classList.add('selected');
+                        }
+                    });
+                    updateSubmitButton();
+                    refreshHeatmap();
+                }, 100);
+            }
+        }
+        // Check if this is a post-submission page load (but not edit mode)
+        else if (!editMode) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isPostSubmission = urlParams.get('submitted') === 'true' || successMessage !== null;
             
-            // Don't attach selection event listeners for post-submission view
-            return;
-        } else if (isPostSubmission) {
-            console.log("Post-submission page detected but no participant name in flash attributes");
+            if ((isPostSubmission && submittedParticipantName) || successMessage !== null) {
+                console.log("Post-submission page detected for:", submittedParticipantName || 'unknown participant');
+                
+                // Auto-fill the participant name and enter the event
+                const participantName = submittedParticipantName || 'Guest';
+                document.getElementById('guestName').value = participantName;
+                currentUser = participantName;
+                
+                // Skip the login section and show main content directly
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('mainContent').classList.remove('hidden');
+                document.getElementById('currentUserName').textContent = currentUser;
+            
+                // Scroll to success message if it exists
+                setTimeout(() => {
+                    const successDiv = document.querySelector('.bg-green-100');
+                    if (successDiv) {
+                        successDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    
+                    // Refresh heatmap to show current data
+                    refreshHeatmap();
+                    
+                    // Clean up the URL by removing the submitted parameter
+                    const url = new URL(window.location);
+                    url.searchParams.delete('submitted');
+                    window.history.replaceState({}, '', url.toString());
+                }, 100);
+                
+                // Don't attach selection event listeners for post-submission view
+                return;
+            } else if (isPostSubmission) {
+                console.log("Post-submission page detected but no participant name in flash attributes");
+            }
         }
         
         // Only attach selection event listeners if this is NOT a post-submission view
@@ -590,7 +661,77 @@
             });
         }, 1000);
     });
-
+    
+    // Function to load existing selections for a returning user
+    function loadExistingSelections(participantName) {
+        console.log("Loading existing selections for:", participantName);
+        
+        // Fetch existing selections from the backend
+        fetch(`/event/participant/${shareLink}/availability/${participantName}`)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Failed to fetch existing selections');
+            })
+            .then(slotIds => {
+                console.log("Existing selections:", slotIds);
+                
+                // Clear current selections
+                mySelections.clear();
+                
+                // Add existing selections
+                slotIds.forEach(slotId => {
+                    mySelections.add(slotId.toString());
+                    
+                    // Mark the cells as selected
+                    const cell = document.querySelector(`[data-slot-id="${slotId}"]`);
+                    if (cell) {
+                        cell.classList.add('selected');
+                    }
+                });
+                
+                // Update submit button
+                updateSubmitButton();
+                
+                // Refresh heatmap with preview
+                refreshHeatmapWithPreview();
+            })
+            .catch(err => {
+                console.error("Error loading existing selections:", err);
+                // Continue anyway - they can make new selections
+            });
+    }
+    
+    // Function to show editing message
+    function showEditingMessage(participantName) {
+        // Create and show an info banner
+        const existingBanner = document.querySelector('.editing-info-banner');
+        if (existingBanner) {
+            existingBanner.remove();
+        }
+        
+        const banner = document.createElement('div');
+        banner.className = 'editing-info-banner mb-6 bg-blue-100 border-l-4 border-blue-500 p-4 rounded-xl shadow-md';
+        banner.innerHTML = `
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-blue-700 font-medium">Welcome back, ${participantName}!</p>
+                    <p class="text-blue-600 text-sm">Your previous selections are being loaded. You can modify them and submit to update your availability.</p>
+                </div>
+            </div>
+        `;
+        
+        // Insert after the main content div starts
+        const mainContent = document.getElementById('mainContent');
+        const firstChild = mainContent.firstElementChild;
+        mainContent.insertBefore(banner, firstChild);
+    }
 </script>
 </body>
 </html>
