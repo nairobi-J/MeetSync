@@ -8,6 +8,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
+import com.google.api.services.calendar.model.EventReminder;
 import com.google.api.client.util.DateTime;
 import com.root.meetsync.dto.booking.BookingResponseDTO;
 import com.root.meetsync.entity.ConfirmedEvent;

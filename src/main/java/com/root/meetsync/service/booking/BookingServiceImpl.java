@@ -79,6 +79,7 @@ public class BookingServiceImpl implements IBookingService {
         booking.setInviteeEmail(request.getInviteeEmail());
         booking.setStartTime(startTime);
         booking.setEndTime(endTime);
+        booking.setRemindersMinutesBefore(preference.getMinNoticeHours() * 60); // set reminders based on min notice
         booking.setTimezone(request.getTimezone());
         booking.setStatus(BookingStatus.PENDING);
 
@@ -124,6 +125,7 @@ public class BookingServiceImpl implements IBookingService {
         dto.setInviteeEmail(booking.getInviteeEmail());
         dto.setStartTime(booking.getStartTime());
         dto.setEndTime(booking.getEndTime());
+        dto.setRemindersMinutesBefore(booking.getRemindersMinutesBefore());
         dto.setTimezone(booking.getTimezone());
         dto.setStatus(booking.getStatus());
         dto.setCreatedAt(booking.getCreatedAt());
