@@ -6,6 +6,7 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.Calendar.Events;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.services.calendar.model.EventReminder;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class GoogleCalendarServiceImpl {
@@ -92,4 +94,48 @@ public class GoogleCalendarServiceImpl {
 
         service.events().insert("primary", event).execute();
     }
+
+    public List<Event> getAllGoogleCalendarEvents(User user) throws Exception {
+
+    // 1. Validate tokens
+    if (user.getOauthToken() == null || user.getOauthToken().getRefreshToken() == null) {
+        throw new IllegalStateException("No Google refresh token found for user: " + user.getEmail());
+    }
+
+    // 2. Get fresh Access Token
+    GoogleTokenResponse response = new GoogleRefreshTokenRequest(
+            new NetHttpTransport(),
+            new GsonFactory(),
+            user.getOauthToken().getRefreshToken(),
+            clientId,
+            clientSecret
+    ).execute();
+
+    String accessToken = response.getAccessToken();
+
+    // 3. Initialize Google Calendar Client
+    Calendar service = new Calendar.Builder(
+            GoogleNetHttpTransport.newTrustedTransport(),
+            GsonFactory.getDefaultInstance(),
+            null
+    )
+            .setApplicationName("MeetSync")
+            .setHttpRequestInitializer(
+                    request -> request.getHeaders().setAuthorization("Bearer " + accessToken)
+            )
+            .build();
+
+    // 4. Fetch events from primary calendar
+    com.google.api.services.calendar.model.Events events = service.events()
+            .list("primary")
+            .setMaxResults(50)                 
+            .setSingleEvents(true)            
+            .setOrderBy("startTime")
+            .setTimeMin(new DateTime(System.currentTimeMillis())) // upcoming only
+            .execute();
+
+    // 5. Return event list
+    return events.getItems();
+}
+
 }
