@@ -110,7 +110,11 @@ public String submitAvailability(
 }
 
 
-private void populateGuestModel(Model model, Event event) {
+// private void populateGuestModel(Model model, Event event) {
+//     populateGuestModel(model, event, false);
+// }
+
+private void populateGuestModel(Model model, Event event, boolean isHost) {
     // time slots based on event's earliest and latest times
     List<LocalTime> hours = generateTimeSlots(event.getEarliestTime(), event.getLatestTime());
     
@@ -132,8 +136,15 @@ private void populateGuestModel(Model model, Event event) {
     model.addAttribute("hours", hours);
     model.addAttribute("dates", dates);
     model.addAttribute("slotMap", slotMap);
-    model.addAttribute("heatmapData", availabilityService.getHeatmapDataForGuestView(event.getId()));
-
+    model.addAttribute("isHost", isHost);
+    
+    if (isHost) {
+        
+        model.addAttribute("heatmapData", availabilityService.getHeatmapDataForHostView(event.getId()));
+    } else {
+       
+        model.addAttribute("heatmapData", availabilityService.getHeatmapDataForParticipant(event.getId()));
+    }
 }
 
  @GetMapping("/event/participant/{shareLink}")
@@ -162,7 +173,7 @@ private void populateGuestModel(Model model, Event event) {
             }
         }
     
-        populateGuestModel(model, event);
+        populateGuestModel(model, event, isHost);
 
         if (isHost) {
             
@@ -213,7 +224,7 @@ private void populateGuestModel(Model model, Event event) {
         List<Long> existingSelections = availabilityService.getUserAvailability(participantName, event.getId());
         
         // Populate the model with event data and edit-specific data
-        populateGuestModel(model, event);
+        populateGuestModel(model, event, false); 
         model.addAttribute("editMode", true);
         model.addAttribute("participantName", participantName);
         model.addAttribute("existingSelections", existingSelections);

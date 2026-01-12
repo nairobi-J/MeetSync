@@ -63,7 +63,7 @@ public class AvailabilityService {
         );
     }
 
-   public Map<String, List<String>> getHeatmapDataForGuestView(Long eventId) {
+   public Map<String, List<String>> getHeatmapDataForHostView(Long eventId) {
    
     List<ParticipantAvailability> participants = participantAvailabilityRepository.findByEventSlot_Event_Id(eventId);
     List<HostAvailability> hosts = hostAvailabilityRepository.findByEventSlot_Event_Id(eventId);
@@ -87,4 +87,46 @@ public class AvailabilityService {
 
     return heatmap;
 }
+
+    
+    
+     //Instead of participant names, returns only the count of participants for each slot.
+
+     
+    public Map<String, Object> getHeatmapDataForParticipant(Long eventId) {
+        List<ParticipantAvailability> participants = participantAvailabilityRepository.findByEventSlot_Event_Id(eventId);
+        List<HostAvailability> hosts = hostAvailabilityRepository.findByEventSlot_Event_Id(eventId);
+        
+        
+        Map<String, Long> participantCounts = participants.stream()
+            .collect(java.util.stream.Collectors.groupingBy(
+                pa -> pa.getEventSlot().getId().toString(),
+                java.util.stream.Collectors.counting()
+            ));
+        
+        
+        Map<String, Long> hostCounts = hosts.stream()
+            .collect(java.util.stream.Collectors.groupingBy(
+                ha -> ha.getEventSlot().getId().toString(),
+                java.util.stream.Collectors.counting()
+            ));
+        
+        
+        Map<String, Object> heatmapCounts = new java.util.HashMap<>();
+        
+        // Add participant counts
+        participantCounts.forEach((slotId, count) -> {
+            Long hostCount = hostCounts.getOrDefault(slotId, 0L);
+            heatmapCounts.put(slotId, count + hostCount);
+        });
+        
+        // Add any slots that only have host votes
+        hostCounts.forEach((slotId, count) -> {
+            if (!heatmapCounts.containsKey(slotId)) {
+                heatmapCounts.put(slotId, count);
+            }
+        });
+        
+        return heatmapCounts;
+    }
 }
