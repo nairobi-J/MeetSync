@@ -46,7 +46,10 @@ public class EventServiceImpl implements EventService {
         event.setTimezone(request.getTimezone());
         event.setEarliestTime(request.getEarliestTime());
         event.setLatestTime(request.getLatestTime());
-        event.setSlotDuration(60);
+
+        // Use default to 60min duration if not provided
+        Integer slotDuration = request.getSlotDuration() != null ? request.getSlotDuration() : 60;
+        event.setSlotDuration(slotDuration);
         event.setShareLink(UUID.randomUUID().toString());
 
         if (request.getSelectedDates() != null) {
@@ -55,17 +58,18 @@ public class EventServiceImpl implements EventService {
             for (LocalDate date : request.getSelectedDates()) {
                 LocalTime timeTracker = request.getEarliestTime();
 
-
                 while (timeTracker.isBefore(request.getLatestTime())) {
                     EventSlot slot = new EventSlot();
                     slot.setEvent(event);
                     slot.setSlotDate(date);
                     slot.setStartTime(timeTracker);
-                    slot.setEndTime(timeTracker.plusHours(1));
+                    
+                    LocalTime endTime = timeTracker.plusMinutes(slotDuration);
+                    slot.setEndTime(endTime);
                     slots.add(slot);
 
-
-                    timeTracker = timeTracker.plusHours(1);
+                    // Move to next slot
+                    timeTracker = timeTracker.plusMinutes(slotDuration);
                 }
             }
             event.setSlots(slots);

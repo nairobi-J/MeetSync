@@ -12,6 +12,7 @@ import java.util.List;
 public class CreateEventRequest {
     private String title;
     private String timezone;
+    private Integer slotDuration;
 
     @DateTimeFormat(pattern = "HH:mm")
     private LocalTime earliestTime;
