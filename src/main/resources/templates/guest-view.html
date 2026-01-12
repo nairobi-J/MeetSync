@@ -4,56 +4,11 @@
     <meta charset="UTF-8">
     <title>Interactive Heatmap | MeetSync</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Personal Selection (Left Grid) */
-        .personal-cell.selected { background-color: #3b82f6 !important; border: 1px solid #1d4ed8; }
-
-        /* Heatmap Colors (Right Grid) */
-        .heat-0 { background-color: #ffffff; }
-        .heat-1 { background-color: #dcfce7; border: 1px solid #bbf7d0; }
-        .heat-2 { background-color: #86efac; border: 1px solid #4ade80; } 
-        .heat-3 { background-color: #22c55e; border: 1px solid #16a34a; } 
-
-        /* Preview  */
-        .heat-cell {
-            transition: all 0.2s ease-in-out;
-        }
-
-        .tooltip {
-            visibility: hidden; position: absolute; z-index: 50;
-            background: #1e293b; color: white; padding: 6px 10px;
-            border-radius: 6px; font-size: 11px; pointer-events: none;
-            white-space: pre-line;
-        }
-        .has-tooltip:hover .tooltip { visibility: visible; }
-        
-        /* Smooth scrolling for the viewports */
-        .viewport-scroll {
-            scroll-behavior: smooth;
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        .viewport-scroll::-webkit-scrollbar { display: none; }
-
-        /* Animation for preview */
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        #previewIndicator {
-            animation: slideInRight 0.3s ease-out;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/guest-view-styles.css}">
 </head>
 <body class="bg-slate-50 min-h-screen">
 
+<!-- Login Section -->
 <div id="loginSection" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
     <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
         <h2 class="text-2xl font-bold mb-4">Join Event</h2>
@@ -64,59 +19,12 @@
 </div>
 
 <div id="mainContent" class="hidden max-w-[1600px] mx-auto p-6">
-    <!-- Success Message Section -->
-    <div th:if="${successMessage}" class="mb-6 bg-green-100 border-l-4 border-green-500 p-6 rounded-xl shadow-md">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-green-700 font-semibold" th:text="${successMessage}">Success message</p>
-                    <p class="text-green-600 text-sm mt-1">Thank you, <span th:text="${participantName}" class="font-medium">participant</span>! Your selections have been added to the heatmap below.</p>
-                </div>
-            </div>
-            <div class="ml-4">
-                <a th:href="@{'/event/participant/' + ${event.shareLink} + '/edit/' + ${participantName}}" 
-                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                    </svg>
-                    Edit My Availability
-                </a>
-            </div>
-        </div>
-    </div>
+    <!-- Success/Error Messages -->
+    <th:block th:replace="~{fragments/guest-view-fragments :: successMessage}"></th:block>
+    <th:block th:replace="~{fragments/guest-view-fragments :: errorMessage}"></th:block>
 
-    <!-- Error Message Section -->
-    <div th:if="${errorMessage}" class="mb-6 bg-red-100 border-l-4 border-red-500 p-6 rounded-xl shadow-md">
-        <div class="flex items-center">
-            <div class="flex-shrink-0">
-                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-            </div>
-            <div class="ml-3">
-                <p class="text-red-700 font-semibold" th:text="${errorMessage}">Error message</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="flex justify-between items-center mb-8">
-        <div>
-            <h1 class="text-3xl font-black text-slate-800">
-                <span th:if="${editMode}">Update Your Availability - </span>
-                <span th:text="${event.title}">Event Title</span>
-            </h1>
-            <p th:if="${editMode}" class="text-slate-600 text-sm mt-1">Modify your time slot selections below and click "Update" when done.</p>
-            <!-- <p class="text-slate-500" th:text="${event.description}">Event Description</p> -->
-        </div>
-        <div class="text-right">
-            <p class="text-sm font-bold text-slate-500">Responding as: <span id="currentUserName" class="text-blue-600"></span></p>
-        </div>
-    </div>
+    <!-- Page Header -->
+    <th:block th:replace="~{fragments/guest-view-fragments :: pageHeader}"></th:block>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Left Panel: Personal Selection (hidden after submission) -->
@@ -262,13 +170,13 @@
     let currentUser = "";
     let isMouseDown = false;
     let mySelections = new Set();
-    let isEditingExistingUser = false; // Track if user is editing existing selections
+    let isEditingExistingUser = false; 
     
     // Preview mode variables
     let previewData = {};
     let isPreviewMode = false;
 
-    // 3. Functions - Explicitly attached to window to prevent ReferenceErrors
+    // 3. Functions 
     window.enterEvent = function() {
         const input = document.getElementById('guestName');
         const enteredName = input.value.trim();
@@ -278,7 +186,6 @@
             return;
         }
         
-        // Check if this name has already submitted
         const existingNames = new Set();
         Object.values(globalData).forEach(participants => {
             participants.forEach(name => existingNames.add(name));
@@ -292,14 +199,13 @@
         document.getElementById('mainContent').classList.remove('hidden');
         
         if (isExistingUser) {
-            // Load existing selections for this user
+            
             isEditingExistingUser = true;
             loadExistingSelections(enteredName);
-            // Show a message that they're editing
+           
             showEditingMessage(enteredName);
         }
         
-        // Initialize the submit button state
         updateSubmitButton();
         
         refreshHeatmap();
@@ -323,7 +229,7 @@
         }
         console.log(`Toggled slot ${slotId}. Current selections:`, Array.from(mySelections));
         
-        // Update live preview
+       
         updateLivePreview();
     }
     
@@ -331,10 +237,10 @@
     function updateLivePreview() {
         if (!currentUser) return;
         
-        // Update submit button state
+        
         updateSubmitButton();
         
-        // Enable preview mode
+       
         isPreviewMode = true;
         
         // Calculate preview data by adding current user's selections to global data
@@ -433,15 +339,13 @@
         mySelections.clear();
         isPreviewMode = false;
         
-        // Remove selected styling from all personal cells
+        
         document.querySelectorAll('.personal-cell.selected').forEach(cell => {
             cell.classList.remove('selected');
         });
-        
-        // Update submit button
+    
         updateSubmitButton();
         
-        // Reset to original data
         refreshHeatmap();
         hidePreviewIndicator();
     };
@@ -463,7 +367,7 @@
             const tooltip = cell.querySelector('.tooltip');
             
             if (isPreviewMode) {
-                // Show preview tooltip with different styling
+                
                 const originalParticipants = globalData[slotId] || [];
                 const isUserSelected = mySelections.has(slotId);
                 const previewText = count > 0 
@@ -595,7 +499,7 @@
                         successDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                     
-                    // Refresh heatmap to show current data
+                    
                     refreshHeatmap();
                     
                     // Clean up the URL by removing the submitted parameter
@@ -677,10 +581,10 @@
             .then(slotIds => {
                 console.log("Existing selections:", slotIds);
                 
-                // Clear current selections
+                
                 mySelections.clear();
                 
-                // Add existing selections
+            
                 slotIds.forEach(slotId => {
                     mySelections.add(slotId.toString());
                     
@@ -691,19 +595,15 @@
                     }
                 });
                 
-                // Update submit button
                 updateSubmitButton();
                 
-                // Refresh heatmap with preview
                 refreshHeatmapWithPreview();
             })
             .catch(err => {
                 console.error("Error loading existing selections:", err);
-                // Continue anyway - they can make new selections
             });
     }
     
-    // Function to show editing message
     function showEditingMessage(participantName) {
         // Create and show an info banner
         const existingBanner = document.querySelector('.editing-info-banner');
