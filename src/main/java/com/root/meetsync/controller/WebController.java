@@ -12,12 +12,9 @@ import com.root.meetsync.entity.User; // Added this import
 import com.root.meetsync.service.UserService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.SessionAttribute;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.ZoneId;
-import java.util.List;
 
 @Controller
 public class  WebController {

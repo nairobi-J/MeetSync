@@ -1,6 +1,5 @@
 package com.root.meetsync.controller.booking;
 
-import com.root.meetsync.dto.Notification.NotificationDTO;
 import com.root.meetsync.dto.availability.AvailableSlotDTO;
 import com.root.meetsync.dto.booking.BookingRequestDTO;
 import com.root.meetsync.dto.booking.BookingResponseDTO;
@@ -14,8 +13,6 @@ import com.root.meetsync.service.booking.IBookingService;
 import com.root.meetsync.service.impl.GoogleCalendarServiceImpl;
 import lombok.RequiredArgsConstructor;
 
-import org.aspectj.weaver.ast.Not;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +20,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
