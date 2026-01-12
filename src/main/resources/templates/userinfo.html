@@ -190,7 +190,7 @@
         <i class="fas fa-check-circle"></i> Profile updated successfully!
     </div>
 
-    <form th:action="@{/profile/update}" method="post" enctype="multipart/form-data">
+    <form th:action="@{/profile/update}" method="post">
 
         <!-- Profile Picture Section -->
         <div class="image-container">
@@ -199,11 +199,6 @@
                  class="profile-img"
                  referrerpolicy="no-referrer"
                  alt="Profile">
-
-            <label for="fileInput" class="edit-photo-btn">
-                <i class="fas fa-camera"></i>
-            </label>
-            <input type="file" id="fileInput" name="profilePic" style="display: none;" onchange="previewImage(event)">
         </div>
 
         <!-- Name Field -->

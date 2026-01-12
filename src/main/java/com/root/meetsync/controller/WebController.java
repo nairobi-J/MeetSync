@@ -59,9 +59,7 @@ public class  WebController {
     public String updateProfile(
             @RequestParam String name,
             @RequestParam String timezone,
-            @RequestParam(required = false) MultipartFile profilePic,
-            HttpSession session, // Inject Session
-            Authentication authentication
+            HttpSession session // Inject Session
     ) throws IOException {
 
         // 1. Get current cached user to access the ID and old photo URL
@@ -70,23 +68,15 @@ public class  WebController {
             return "redirect:/login";
         }
 
-        String profilePicUrl = currentUser.getProfilePic();
-
-        if (profilePic != null && !profilePic.isEmpty()) {
-            profilePicUrl = userService.storeProfileImage(profilePic);
-        }
-
         userService.updateProfile(
                 currentUser.getId(),
                 name,
-                timezone,
-                profilePicUrl
+                timezone
         );
 
         // Update session (IMPORTANT)
         currentUser.setName(name);
         currentUser.setTimezone(timezone);
-        currentUser.setProfilePic(profilePicUrl);
 
         // Re-save the updated DTO into the session
         session.setAttribute("currentUserDTO", currentUser);

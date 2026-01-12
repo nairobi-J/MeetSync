@@ -1,7 +1,7 @@
 package com.root.meetsync.entity;
 
 import jakarta.persistence.*;
-import org.aspectj.weaver.patterns.ConcreteCflowPointcut;
+
 
 import java.time.LocalDateTime;
 @Entity
