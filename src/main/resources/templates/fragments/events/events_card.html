@@ -83,21 +83,5 @@
     </div>
 </div>
 
-<script>
-function confirmDelete(form) {
-    // Get event title from data attribute
-    const eventTitle = form.getAttribute('data-event-title');
-    
-    const message = `Are you sure you want to delete "${eventTitle}"?\n\n` +
-                   `This will:\n` +
-                   `• Remove all time slots\n` +
-                   `• Delete all participant responses\n` +
-                   `• This action cannot be undone!\n\n` +
-                   `Do you want to continue?`;
-    
-    return confirm(message);
-}
-</script>
-
 </body>
 </html>
