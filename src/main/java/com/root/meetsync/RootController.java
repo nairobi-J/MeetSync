@@ -53,7 +53,7 @@ public class RootController {
         LocalTime current = event.getEarliestTime();
         while (current.isBefore(event.getLatestTime())) {
             hours.add(current);
-            current = current.plusHours(1);
+            current = current.plusMinutes(event.getSlotDuration());
         }
 
         String email = getEmailFromAuth(auth);
@@ -170,7 +170,7 @@ public String finalizeEvent(@PathVariable String shareLink, @RequestParam Long s
         LocalTime current = event.getEarliestTime();
         while (current.isBefore(event.getLatestTime())) {
             hours.add(current);
-            current = current.plusHours(1);
+            current = current.plusMinutes(event.getSlotDuration());
         }
 
         // 2. Prepare Combined Heatmap Data (Host + Participants);

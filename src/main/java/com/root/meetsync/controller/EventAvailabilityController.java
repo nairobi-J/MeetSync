@@ -45,16 +45,16 @@ public class EventAvailabilityController {
     @Autowired
     ParticipantAvailabilityRepository participantAvailabilityRepository;
 
-public List<LocalTime> generateTimeSlots(LocalTime earliest, LocalTime latest) {
+public List<LocalTime> generateTimeSlots(LocalTime earliest, LocalTime latest, int slotDuration) {
     List<LocalTime> slots = new ArrayList<>();
     LocalTime current = earliest;
     
-    System.out.println("Generating time slots from " + earliest + " to " + latest);
+    System.out.println("Generating time slots from " + earliest + " to " + latest + " with duration " + slotDuration + " minutes");
     
     while (current.isBefore(latest)) {
         slots.add(current);
         System.out.println("Added time slot: " + current);
-        current = current.plusHours(1);
+        current = current.plusMinutes(slotDuration);
     }
     
     System.out.println("Generated " + slots.size() + " time slots total");
@@ -116,7 +116,7 @@ public String submitAvailability(
 
 private void populateGuestModel(Model model, Event event, boolean isHost) {
     // time slots based on event's earliest and latest times
-    List<LocalTime> hours = generateTimeSlots(event.getEarliestTime(), event.getLatestTime());
+    List<LocalTime> hours = generateTimeSlots(event.getEarliestTime(), event.getLatestTime(), event.getSlotDuration());
     
     // unique dates from event slots
     List<LocalDate> dates = event.getSlots().stream()

@@ -44,7 +44,7 @@
             <div class="flex border rounded-xl overflow-hidden shadow-inner">
                 <div class="w-20 bg-slate-50 border-r border-slate-200 flex-shrink-0">
                     <div class="h-12 border-b bg-slate-100/50"></div>
-                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h a')}"></div>
+                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h:mm a')}"></div>
                 </div>
                 <div id="personal-viewport" class="flex-1 overflow-x-auto bg-white viewport-scroll">
                     <div class="flex">
@@ -107,7 +107,7 @@
             <div class="flex border rounded-xl overflow-hidden shadow-inner">
                 <div class="w-20 bg-slate-50 border-r border-slate-200 flex-shrink-0">
                     <div class="h-12 border-b bg-slate-100/50"></div>
-                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h a')}"></div>
+                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h:mm a')}"></div>
                 </div>
                 <div id="heatmap-viewport" class="flex-1 overflow-x-auto bg-white viewport-scroll">
                     <div class="flex">
