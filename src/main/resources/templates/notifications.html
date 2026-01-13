@@ -139,16 +139,26 @@
 
                                             <!-- Confirm Button -->
                                             <button type="button"
+                                                th:id="|confirm-btn-${notification.id}|"
                                                 th:onclick="|confirmBooking(${notification.relatedEntityId},${notification.id})|"
-                                                class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded">
-                                                <i class="fas fa-check mr-1"></i> Confirm Booking
+                                                class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded disabled:opacity-50 disabled:cursor-not-allowed">
+                                                <i class="fas fa-check mr-1"></i> 
+                                                <span class="btn-text">Confirm Booking</span>
+                                                <span class="btn-loading hidden">
+                                                    <i class="fas fa-spinner fa-spin mr-1"></i> Confirming...
+                                                </span>
                                             </button>
 
                                             <!-- Cancel Button -->
                                             <button type="button"
+                                                th:id="|cancel-btn-${notification.id}|"
                                                 th:onclick="|cancelBooking(${notification.relatedEntityId},${notification.id})|"
-                                                class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded">
-                                                <i class="fas fa-times mr-1"></i> Cancel Booking
+                                                class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded disabled:opacity-50 disabled:cursor-not-allowed">
+                                                <i class="fas fa-times mr-1"></i> 
+                                                <span class="btn-text">Cancel Booking</span>
+                                                <span class="btn-loading hidden">
+                                                    <i class="fas fa-spinner fa-spin mr-1"></i> Canceling...
+                                                </span>
                                             </button>
 
                                         </div>
@@ -242,6 +252,17 @@
 
         // Booking action functions
         function confirmBooking(bookingId, notificationId) {
+            const btn = document.getElementById(`confirm-btn-${notificationId}`);
+            const cancelBtn = document.getElementById(`cancel-btn-${notificationId}`);
+            const btnText = btn.querySelector('.btn-text');
+            const btnLoading = btn.querySelector('.btn-loading');
+            
+            // Set loading state
+            btn.disabled = true;
+            cancelBtn.disabled = true;
+            btnText.classList.add('hidden');
+            btnLoading.classList.remove('hidden');
+            
             fetch(`/${bookingId}/confirm/${notificationId}`, {
                 method: 'PUT',
                 headers: {
@@ -252,10 +273,20 @@
                     window.location.href = '/notifications';
                 } else {
                     alert('Failed to confirm booking');
+                    // Reset button state on error
+                    btn.disabled = false;
+                    cancelBtn.disabled = false;
+                    btnText.classList.remove('hidden');
+                    btnLoading.classList.add('hidden');
                 }
             }).catch(err => {
                 console.error(err);
                 alert('Something went wrong');
+                // Reset button state on error
+                btn.disabled = false;
+                cancelBtn.disabled = false;
+                btnText.classList.remove('hidden');
+                btnLoading.classList.add('hidden');
             });
         }
 
@@ -263,6 +294,17 @@
             if (!confirm('Are you sure you want to cancel this booking request?')) {
                 return;
             }
+
+            const btn = document.getElementById(`cancel-btn-${notificationId}`);
+            const confirmBtn = document.getElementById(`confirm-btn-${notificationId}`);
+            const btnText = btn.querySelector('.btn-text');
+            const btnLoading = btn.querySelector('.btn-loading');
+            
+            // Set loading state
+            btn.disabled = true;
+            confirmBtn.disabled = true;
+            btnText.classList.add('hidden');
+            btnLoading.classList.remove('hidden');
 
             fetch(`/${bookingId}/cancel/${notificationId}`, {
                 method: 'PUT',
@@ -274,10 +316,20 @@
                     window.location.href = '/notifications';
                 } else {
                     alert('Failed to cancel booking');
+                    // Reset button state on error
+                    btn.disabled = false;
+                    confirmBtn.disabled = false;
+                    btnText.classList.remove('hidden');
+                    btnLoading.classList.add('hidden');
                 }
             }).catch(err => {
                 console.error(err);
                 alert('Something went wrong');
+                // Reset button state on error
+                btn.disabled = false;
+                confirmBtn.disabled = false;
+                btnText.classList.remove('hidden');
+                btnLoading.classList.add('hidden');
             });
         }
     </script>

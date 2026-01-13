@@ -90,10 +90,10 @@
                                                     Notice</label>
                                                 <select th:field="*{minNoticeHours}"
                                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                                                    <option value="1">1 hour before</option>
-                                                    <option value="2" selected>2 hours before</option>
-                                                    <option value="24">1 Day before</option>
-                                                    <option value="48">2 Days before</option>
+                                                    <option value="30" th:selected="${minNoticeHours == 30}">30 minutes before</option>
+                                                    <option value="60" th:selected="${minNoticeHours == 60}">1 hour before</option>
+                                                    <option value="120" th:selected="${minNoticeHours == 120}">2 hours before</option>
+                                                    
                                                 </select>
                                             </div>
                                         </div>
