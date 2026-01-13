@@ -92,7 +92,8 @@ public class WebController {
     public String dashboard(
             @ModelAttribute("currentUser") CurrentUserDTO currentUser,
             Authentication authentication,
-            Model model) {
+            Model model,
+            HttpSession session) {
 
         User user = getAuthenticatedUser(authentication);
 
@@ -100,13 +101,16 @@ public class WebController {
             return "redirect:/set-password";
         }
 
-        LocalDate currentDate = LocalDate.now();
-        YearMonth currentMonthObj = YearMonth.now();
-        int displayMonth = currentMonthObj.getMonthValue();
-        int displayYear = currentDate.getYear();
+        Integer savedMonth = (Integer) session.getAttribute("viewedMonth");
+        Integer savedYear  = (Integer) session.getAttribute("viewedYear");
+        LocalDate now = LocalDate.now();
+        int displayMonth = (savedMonth != null) ? savedMonth : now.getMonthValue();
+        int displayYear  = (savedYear  != null) ? savedYear  : now.getYear();
 
-        model.addAttribute("currentDate", currentDate);
-        model.addAttribute("currentMonth", currentMonthObj);
+        YearMonth ym = YearMonth.of(displayYear, displayMonth);
+
+        model.addAttribute("currentDate", now);
+        model.addAttribute("currentMonth", ym);
         model.addAttribute("currentYear", displayYear);
         model.addAttribute("activePage", "dash");
 
@@ -146,6 +150,16 @@ public class WebController {
 
         return events;
     }
+
+    @PostMapping("/api/set-viewed-month")
+    @ResponseBody
+    public void setViewedMonth(
+        @RequestParam int month,
+        @RequestParam int year,
+        HttpSession session) {
+            session.setAttribute("viewedMonth", month);
+            session.setAttribute("viewedYear", year);
+        }
 
     private List<Map<String, Object>> convertGoogleEventsToCalendarEvents(
             List<Event> googleEvents, int targetMonth, int targetYear) {

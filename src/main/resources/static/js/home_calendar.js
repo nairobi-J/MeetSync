@@ -60,14 +60,17 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     async function updateCalendar() {
+        fetch('/api/set-viewed-month', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `month=${currentMonth + 1}&year=${currentYear}`
+    }).catch(err => console.log("Session save failed (non-critical)", err));
         document.getElementById('calendarLoading').classList.remove('hidden');
 
         localStorage.setItem('calendarMonth', currentMonth);
         localStorage.setItem('calendarYear', currentYear);
 
         miniCalendarDate = new Date(currentYear, currentMonth);
-
-        await fetchEventsForCurrentMonth();
 
         renderMainCalendar();
         updateMiniCalendar();
