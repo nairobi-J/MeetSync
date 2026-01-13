@@ -58,14 +58,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function updateCalendar() {
+        document.getElementById('calendarLoading').classList.remove('hidden');
+
         localStorage.setItem('calendarMonth', currentMonth);
         localStorage.setItem('calendarYear', currentYear);
 
         miniCalendarDate = new Date(currentYear, currentMonth);
 
         await fetchEventsForCurrentMonth();
+
         renderMainCalendar();
         updateMiniCalendar();
+
+        document.getElementById('calendarLoading').classList.add('hidden');
     }
 
     async function fetchEventsForCurrentMonth() {
@@ -75,6 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 events = await res.json();
             } else {
                 events = [];
+                console.error('Failed to fetch events:', res.status);
             }
         } catch (err) {
             console.error("Failed to load events:", err);
