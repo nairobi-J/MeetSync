@@ -1,20 +1,21 @@
 package com.root.meetsync.controller;
 
-import com.root.meetsync.dto.CurrentUserDTO;
-import jakarta.servlet.http.HttpSession;
+import java.io.IOException;
+import java.time.ZoneId;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-
-import com.root.meetsync.entity.User; // Added this import
-import com.root.meetsync.service.UserService;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PostMapping; // Added this import
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.io.IOException;
-import java.time.ZoneId;
+import com.root.meetsync.dto.CurrentUserDTO;
+import com.root.meetsync.entity.User;
+import com.root.meetsync.service.UserService;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class  WebController {
@@ -100,6 +101,9 @@ public class  WebController {
         if (user.getPassword() == null || user.getPassword().isEmpty()) {
             return "redirect:/set-password";
         }
+
+        model.addAttribute("activePage", "dash");
+        
         return "MainHome";
     }
 
