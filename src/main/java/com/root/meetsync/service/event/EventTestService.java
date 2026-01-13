@@ -8,9 +8,12 @@ import com.root.meetsync.entity.Event;
 import com.root.meetsync.entity.EventSlot;
 import com.root.meetsync.entity.User;
 import com.root.meetsync.repository.ConfirmedEventRepository;
+import com.root.meetsync.repository.HostAvailabilityRepository;
+import com.root.meetsync.repository.ParticipantAvailabilityRepository;
 import com.root.meetsync.repository.event.EventTestRepository;
 import com.root.meetsync.service.UserService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,14 +24,20 @@ public class EventTestService {
     private final EventTestRepository eventTestRepository;
     private final UserService userService;
     private final ConfirmedEventRepository confirmedEventRepository;
+    private final ParticipantAvailabilityRepository participantAvailabilityRepository;
+    private final HostAvailabilityRepository hostAvailabilityRepository;
 
 
     public EventTestService(EventTestRepository eventTestRepository, 
                            UserService userService,
-                           ConfirmedEventRepository confirmedEventRepository) {
+                           ConfirmedEventRepository confirmedEventRepository,
+                           ParticipantAvailabilityRepository participantAvailabilityRepository,
+                           HostAvailabilityRepository hostAvailabilityRepository) {
         this.eventTestRepository = eventTestRepository;
         this.userService = userService;
         this.confirmedEventRepository = confirmedEventRepository;
+        this.participantAvailabilityRepository = participantAvailabilityRepository;
+        this.hostAvailabilityRepository = hostAvailabilityRepository;
     }
 
     //all events
@@ -90,5 +99,22 @@ public class EventTestService {
                 .build();
     }
 
+   
+      // Delete event
+     
+    @Transactional
+    public void deleteEvent(Long eventId, CurrentUserDTO currentUser) {
+        User user = userService.findByEmail(currentUser.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        Event event = eventTestRepository.findByIdAndHost(eventId, user)
+                .orElseThrow(() -> new RuntimeException("Event not found or you are not authorized to delete it"));
+
+       
+        confirmedEventRepository.deleteByEvent_Id(eventId);
+        participantAvailabilityRepository.deleteByEventSlot_Event_Id(eventId);
+        hostAvailabilityRepository.deleteByEventSlot_Event_Id(eventId);
+      
+        eventTestRepository.delete(event);
+    }
 }
