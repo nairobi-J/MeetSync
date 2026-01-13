@@ -9,7 +9,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -54,7 +56,22 @@ public class EventTestController {
         return "fragments/events/event-details";
     }
 
-
-
-
+    /* =========================
+       Delete event
+       ========================= */
+    @PostMapping("/{id}/delete")
+    public String deleteEvent(
+            @PathVariable Long id,
+            @ModelAttribute("currentUser") CurrentUserDTO currentUser,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            eventTestService.deleteEvent(id, currentUser);
+            redirectAttributes.addFlashAttribute("successMessage", "Event deleted successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete event: " + e.getMessage());
+        }
+        
+        return "redirect:/events";
+    }
 }

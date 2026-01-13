@@ -103,7 +103,7 @@
             <div class="h-12 border-b bg-slate-100/50"></div>
             <div th:each="time : ${hours}" 
                  class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" 
-                 th:text="${#temporals.format(time, 'h a')}"></div>
+                 th:text="${#temporals.format(time, 'h:mm a')}"></div>
         </div>
         
         <!-- Date columns with slots -->
@@ -161,7 +161,7 @@
             <div class="h-12 border-b bg-slate-100/50"></div>
             <div th:each="time : ${hours}" 
                  class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" 
-                 th:text="${#temporals.format(time, 'h a')}"></div>
+                 th:text="${#temporals.format(time, 'h:mm a')}"></div>
         </div>
         
         <!-- Date columns with heat cells -->
