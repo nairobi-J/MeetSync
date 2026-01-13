@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
 
     const calendarData = document.getElementById('calendarData');
 
@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentYear = localStorage.getItem('calendarYear')
         ? parseInt(localStorage.getItem('calendarYear'))
         : (parseInt(calendarData?.dataset.currentYear) || new Date().getFullYear());
+
+    await fetchEventsForCurrentMonth();
 
     let miniCalendarDate = new Date(currentYear, currentMonth);
 
