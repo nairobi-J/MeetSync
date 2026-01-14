@@ -20,11 +20,12 @@
 
                     <!-- Header -->
                     <div class="mt-20 mb-6">
-                        <h1 class="text-4xl font-bold text-gray-800">
+                        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">
                             <i class="fas fa-calendar-check text-blue-600"></i>
-                            Setup Your Availability
+                            <span class="hidden sm:inline">Setup Your Availability</span>
+                            <span class="sm:hidden">Availability Setup</span>
                         </h1>
-                        <p class="text-gray-600 mt-2">Configure when you're available </p>
+                        <p class="text-sm sm:text-base text-gray-600 mt-2">Configure when you're available </p>
                     </div>
 
 
@@ -49,12 +50,12 @@
 
 
                                         <!-- Duration and Timezone -->
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label
                                                     class="block text-sm font-semibold text-gray-700 mb-2">Duration</label>
                                                 <select th:field="*{meetingDurationMinutes}"
-                                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                                    class="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                                                     <option th:each="duration : ${durations}" th:value="${duration}"
                                                         th:text="${duration + ' mins'}" th:selected="${duration == 30}">
                                                         30 mins</option>
@@ -65,7 +66,7 @@
                                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Time
                                                     Zone</label>
                                                 <select th:field="*{timezone}"
-                                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                                    class="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                                                     <option th:each="tz : ${timezones}" th:value="${tz}"
                                                         th:text="${tz}">GMT +6 BDT</option>
                                                 </select>
@@ -73,12 +74,12 @@
                                         </div>
 
                                         <!-- Date Range and Min Notice -->
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Date
                                                     range</label>
                                                 <select th:field="*{futureDaysAllowed}"
-                                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                                    class="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                                                     <option value="30" selected>30 Calendar days</option>
                                                     <option value="60" >60 Calendar days</option>
                                                     <option value="90">90 Calendar days</option>
@@ -89,11 +90,11 @@
                                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Minimum
                                                     Notice</label>
                                                 <select th:field="*{minNoticeHours}"
-                                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                                                    <option value="1">1 hour before</option>
-                                                    <option value="2" selected>2 hours before</option>
-                                                    <option value="24">1 Day before</option>
-                                                    <option value="48">2 Days before</option>
+                                                    class="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                                    <option value="30" th:selected="${minNoticeHours == 30}">30 minutes before</option>
+                                                    <option value="60" th:selected="${minNoticeHours == 60}">1 hour before</option>
+                                                    <option value="120" th:selected="${minNoticeHours == 120}">2 hours before</option>
+                                                    
                                                 </select>
                                             </div>
                                         </div>
@@ -104,7 +105,7 @@
                                                 Buffer Time Between Meetings
                                             </label>
                                             <select th:field="*{bufferTimeMinutes}"
-                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                                class="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                                                 <option value="0">No buffer</option>
                                                 <option value="10">10 minutes</option>
                                                 <option value="15">15 minutes</option>
@@ -119,27 +120,27 @@
                                             Weekly Availability
                                         </h3>
 
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                                             <div>
                                                 <label class="block text-sm font-semibold text-gray-700 mb-1">Not
                                                     earlier than</label>
                                                 <input type="time" id="globalStartTime"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                                    class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                                                     value="09:00" onchange="setAllWeeklyTimes()">
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-semibold text-gray-700 mb-1">Not later
                                                     than</label>
                                                 <input type="time" id="globalEndTime"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                                    class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                                                     value="17:00" onchange="setAllWeeklyTimes()">
                                             </div>
                                         </div>
                                         <div class="space-y-2">
                                             <div th:each="day, iterStat : ${T(java.time.DayOfWeek).values()}"
-                                                class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                                                class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
 
-                                                <div class="flex items-center flex-1">
+                                                <div class="flex items-center w-full sm:flex-1">
                                                     <input type="checkbox" th:id="'day-' + ${day}" th:data-day="${day}"
                                                         th:data-index="${iterStat.index}"
                                                         class="day-checkbox w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
@@ -149,13 +150,13 @@
                                                         th:text="${#strings.capitalize(#strings.toLowerCase(day))}">Monday</label>
                                                 </div>
 
-                                                <div class="flex items-center space-x-2 flex-1">
+                                                <div class="flex items-center space-x-2 w-full sm:flex-1 pl-7 sm:pl-0">
                                                     <input type="time" th:id="'startTime-' + ${iterStat.index}"
-                                                        class="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                                                        class="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                                                         value="09:00" onchange="updateWeeklyAvailability()" disabled>
                                                     <span class="text-gray-500">-</span>
                                                     <input type="time" th:id="'endTime-' + ${iterStat.index}"
-                                                        class="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                                                        class="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                                                         value="17:00" onchange="updateWeeklyAvailability()" disabled>
                                                 </div>
                                             </div>
@@ -169,14 +170,15 @@
                                     <div class="mt-6">
                                         <button type="button" onclick="toggleAdvancedSettings()" class="w-full flex items-center justify-between
                    bg-gray-100 hover:bg-gray-200
-                   px-4 py-3 rounded-lg font-semibold text-gray-700 transition">
+                   px-3 sm:px-4 py-3 rounded-lg font-semibold text-gray-700 transition">
 
-                                            <span>
+                                            <span class="text-sm sm:text-base">
                                                 <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
-                                                Advanced Settings (Select Specific Date & Time)
+                                                <span class="hidden sm:inline">Advanced Settings (Select Specific Date & Time)</span>
+                                                <span class="sm:hidden">Advanced Settings</span>
                                             </span>
 
-                                            <svg id="advancedArrow" class="w-5 h-5 transition-transform duration-300"
+                                            <svg id="advancedArrow" class="w-5 h-5 flex-shrink-0 transition-transform duration-300"
                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 9l-7 7-7-7" />
@@ -217,10 +219,10 @@
 
 
                                 <!-- Submit Button -->
-                                <div class="flex space-x-4">
+                                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                                     <button type="submit" id="saveAvailabilityBtn"
-                                        class="flex-1 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-lg hover:shadow-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
-                                        <svg id="saveLoadingSpinner" class="hidden animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        class="flex-1 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold py-3 px-4 sm:px-6 rounded-lg transition duration-200 shadow-lg hover:shadow-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base">
+                                        <svg id="saveLoadingSpinner" class="hidden animate-spin -ml-1 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
@@ -228,7 +230,7 @@
                                         <span id="saveBtnText">Save Availability</span>
                                     </button>
                                     <a href="/dashboard"
-                                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg transition duration-200">
+                                        class="w-full sm:w-auto text-center bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-4 sm:px-6 rounded-lg transition duration-200 text-sm sm:text-base">
                                         <i class="fas fa-times mr-2"></i>
                                         Cancel
                                     </a>
@@ -238,8 +240,8 @@
                             <!-- Right Panel - Personal Link -->
                             <div class="lg:col-span-1" th:classappend="${success} ? '' : 'hidden'">
                                 <!-- Booking Link Section -->
-                                <div th:if="${bookingLink}" class="bg-white rounded-lg shadow-lg p-6 sticky top-8">
-                                    <h3 class="text-lg font-bold text-gray-800 mb-4">
+                                <div th:if="${bookingLink}" class="bg-white rounded-lg shadow-lg p-4 sm:p-6 lg:sticky lg:top-8">
+                                    <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">
                                         <i class="fas fa-link text-blue-600 mr-2"></i>
                                         Personal Link
                                     </h3>
@@ -252,16 +254,16 @@
                                                    th:value="${bookingLink}"
                                                    id="bookingLinkInput"
                                                    readonly
-                                                   class="w-full px-4 py-2 text-blue-600 text-sm font-mono">
+                                                   class="w-full px-3 sm:px-4 py-2 text-blue-600 text-xs sm:text-sm font-mono break-all">
                                         </div>
                                         <div class="flex flex-col space-y-2">
                                             <button type="button" onclick="copyBookingLink()" 
-                                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg">
+                                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg text-sm sm:text-base">
                                                 <i class="fas fa-copy mr-2"></i>Copy Link
                                             </button>
                                             <a th:href="${bookingLink}" 
                                                target="_blank"
-                                               class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg inline-flex items-center justify-center">
+                                               class="w-full bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg inline-flex items-center justify-center text-sm sm:text-base">
                                                 <i class="fas fa-external-link-alt mr-2"></i>Preview
                                             </a>
                                         </div>
@@ -279,7 +281,7 @@
 
     <!-- Load external JavaScript file -->
     <script th:src="@{/js/setupAvailability.js}"></script>
-
+    <script th:src="@{/js/sidebar_toggle.js}" defer></script>
     <!-- Calendar and Override Management Script -->
     <script th:inline="javascript">
         /*<![CDATA[*/

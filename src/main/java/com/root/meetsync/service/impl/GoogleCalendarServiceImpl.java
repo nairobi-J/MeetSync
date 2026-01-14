@@ -52,16 +52,62 @@ public class GoogleCalendarServiceImpl {
     }
 
     // --- METHOD 2: For 1-on-1 Availability (Your existing one) ---
-    public void createGoogleEvent(User host, BookingResponseDTO booking) throws Exception {
-        ZoneId zoneId = ZoneId.of(host.getTimezone() != null ? host.getTimezone() : "UTC");
+      public void createGoogleEvent(User host, BookingResponseDTO booking) throws Exception {
+        // 1. Validate tokens
+        if (host.getOauthToken() == null || host.getOauthToken().getRefreshToken() == null) {
+            System.out.println("Skip Calendar: No Refresh Token found for " + host.getEmail());
+            return;
+        }
 
-        ZonedDateTime startZoned = booking.getStartTime().atZone(zoneId);
-        ZonedDateTime endZoned = booking.getEndTime().atZone(zoneId);
+        // 2. Get fresh Access Token using Refresh Token
+        GoogleTokenResponse response = new GoogleRefreshTokenRequest(
+                new NetHttpTransport(),
+                new GsonFactory(),
+                host.getOauthToken().getRefreshToken(),
+                clientId,
+                clientSecret
+        ).execute();
 
-        String summary = "MeetSync: " + booking.getInviteeName();
-        String description = "Confirmed with " + booking.getInviteeEmail();
+        String accessToken = response.getAccessToken();
 
-        pushToGoogle(host, summary, description, startZoned, endZoned);
+        // 3. Initialize Google Calendar Client
+        Calendar service = new Calendar.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(),
+                GsonFactory.getDefaultInstance(),
+                null
+        )
+                .setApplicationName("MeetSync")
+                .setHttpRequestInitializer(request -> request.getHeaders().setAuthorization("Bearer " + accessToken))
+                .build();
+
+        // 4. Build the Event
+        Event event = new Event()
+                .setSummary("MeetSync: " + booking.getInviteeName())
+                .setDescription("Meeting confirmed via MeetSync with " + booking.getInviteeEmail())
+                ;
+           
+        // add attendees
+       event.setAttendees(java.util.Collections.singletonList(
+               new com.google.api.services.calendar.model.EventAttendee().setEmail(booking.getInviteeEmail())
+               ));
+        // event reminder - minutes before
+        event.setReminders(new Event.Reminders().setUseDefault(false).setOverrides(java.util.Collections.singletonList(
+                new EventReminder().setMethod("popup").setMinutes(booking.getRemindersMinutesBefore())
+        )));
+
+        
+
+
+
+        // Convert LocalDateTime to Google DateTime format
+        DateTime start = new DateTime(Date.from(booking.getStartTime().atZone(ZoneId.systemDefault()).toInstant()));
+        event.setStart(new EventDateTime().setDateTime(start).setTimeZone(host.getTimezone()));
+
+        DateTime end = new DateTime(Date.from(booking.getEndTime().atZone(ZoneId.systemDefault()).toInstant()));
+        event.setEnd(new EventDateTime().setDateTime(end).setTimeZone(host.getTimezone()));
+
+        // 5. Push to Primary Calendar
+        service.events().insert("primary", event).setSendUpdates("all").execute();
     }
 
     // --- PRIVATE HELPER: Handles the actual API handshake ---
