@@ -52,29 +52,95 @@
             <a th:href="@{'/dashboard'}" class="text-xl font-bold tracking-tight">MeetSync</a>
         </div>
         <div class="flex items-center gap-4">
-            <button onclick="copyParticipantLink()" id="copyBtn" class="text-slate-600 hover:text-blue-600 font-semibold text-sm transition flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
-                Copy Link
-            </button>
-            <a th:href="@{'/event/' + ${event.shareLink}}" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-200 transition">Edit Availability</a>
+            <a th:href="@{'/dashboard'}" class="text-slate-600 hover:text-slate-900 font-medium text-sm transition">
+                Dashboard
+            </a>
         </div>
     </div>
 </nav>
 
 <main class="max-w-7xl mx-auto px-8 pb-12">
-    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
         <div>
             <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight" th:text="${event.title}">Event Name</h1>
             <p class="text-slate-500 font-medium" th:text="${event.timezone}">GMT+6</p>
         </div>
-        <div class="flex items-center gap-2 bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
-            <button onclick="scrollHeatmap(-300)" class="p-2 hover:bg-slate-50 rounded-xl transition text-slate-400 hover:text-slate-900">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+    </div>
+
+    <!-- Primary Actions Bar -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <!-- Left side: Scroll controls for heatmap -->
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-medium text-slate-500 mr-2">Navigate:</span>
+            <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200">
+                <button onclick="scrollHeatmap(-300)" class="p-2 hover:bg-white rounded-md transition text-slate-400 hover:text-slate-900">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <div class="h-4 w-[1px] bg-slate-200"></div>
+                <button onclick="scrollHeatmap(300)" class="p-2 hover:bg-white rounded-md transition text-slate-400 hover:text-slate-900">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right side: Action buttons -->
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-stretch sm:items-center">
+            <!-- Edit Availability -->
+            <a th:href="@{'/event/' + ${event.shareLink}}" 
+               class="flex-1 sm:flex-none border border-slate-300 text-slate-600 py-2 px-3 rounded-lg font-medium hover:bg-slate-50 transition flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit Availability
+            </a>
+
+            <!-- Copy Link -->
+            <button onclick="copyParticipantLink()" 
+                    id="copyBtn" 
+                    class="flex-1 sm:flex-none border border-blue-300 text-blue-600 py-2 px-3 rounded-lg font-medium hover:bg-blue-50 transition flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+                Copy Link
             </button>
-            <div class="h-4 w-[1px] bg-slate-200 mx-1"></div>
-            <button onclick="scrollHeatmap(300)" class="p-2 hover:bg-slate-50 rounded-xl transition text-slate-400 hover:text-slate-900">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+
+            <!-- Primary Action: Confirm Schedule -->
+            <button th:if="${confirmedEvent == null}" 
+                    onclick="toggleSelectionMode()" 
+                    id="confirmBtn"
+                    class="flex-1 sm:flex-none bg-blue-600 text-white py-2 px-3 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2 text-sm whitespace-nowrap min-w-[140px]">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Confirm Schedule
             </button>
+
+            <!-- Confirmed Event Status -->
+            <div th:if="${confirmedEvent != null}" 
+                 class="flex-1 sm:flex-none p-3 bg-emerald-50 border border-emerald-200 rounded-lg min-w-[140px]">
+                <div class="flex items-center gap-2">
+                    <div class="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs font-medium text-emerald-800 truncate">Event Confirmed</p>
+                        <p class="text-xs text-emerald-600 truncate" th:text="${#temporals.format(confirmedEvent.selectedSlots.slotDate, 'MMM d') + ' @ ' + #temporals.format(confirmedEvent.selectedSlots.startTime, 'h:mm a')}">Jan 15 @ 2:00 PM</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reschedule button for confirmed events -->
+            <form th:if="${confirmedEvent != null}" th:action="@{'/event/' + ${event.shareLink} + '/reschedule'}" method="post">
+                <button type="submit" 
+                        class="flex-1 sm:flex-none border border-amber-500 text-amber-600 py-2 px-3 rounded-lg font-medium hover:bg-amber-50 transition flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Reschedule
+                </button>
+            </form>
         </div>
     </div>
 
@@ -96,37 +162,24 @@
                     <p class="text-sm text-slate-400 italic">Select a slot on the right to see availability</p>
                 </div>
 
-                <div class="space-y-3 pt-4 border-t border-slate-50 mt-4">
-                    <button th:if="${confirmedEvent == null}" onclick="toggleSelectionMode()" id="confirmBtn"
-                            class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition shadow-xl shadow-blue-100 flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                        Confirm Schedule
-                    </button>
-
-                    <div th:if="${confirmedEvent != null}" class="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                        <p class="text-[10px] font-black text-emerald-600 uppercase mb-1">Status: Confirmed</p>
-                        <p class="text-sm font-bold text-emerald-800" th:text="${#temporals.format(confirmedEvent.selectedSlots.slotDate, 'MMM d') + ' @ ' + #temporals.format(confirmedEvent.selectedSlots.startTime, 'h:mm a')}"></p>
-
-                        <form th:action="@{'/event/' + ${event.shareLink} + '/reschedule'}" method="post" class="mt-3">
-                            <button type="submit" class="text-xs font-bold text-slate-400 hover:text-red-500 transition underline">Reschedule Confirmation</button>
-                        </form>
-                    </div>
-                    
-                    <!-- Delete Event Button -->
+            </div>
+            
+            <!-- Danger Zone -->
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-red-100 mt-6">
+                <div class="border-t border-red-100 pt-4">
+                    <h4 class="text-xs font-bold text-red-600 uppercase tracking-wider mb-3">⚠️ Danger Zone</h4>
                     <form th:action="@{/events/{id}/delete(id=${event.id})}" method="post" 
                           th:data-event-title="${event.title}"
-                          onsubmit="return confirmDelete(this);"
-                          class="mt-3">
+                          onsubmit="return confirmDelete(this);">
                         <button type="submit" 
-                                class="w-full bg-red-50 text-red-600 py-3 px-4 rounded-2xl font-bold hover:bg-red-100 transition flex items-center justify-center gap-2 border border-red-100">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                class="w-full bg-red-50 text-red-600 py-2 px-3 rounded-lg font-medium hover:bg-red-100 transition flex items-center justify-center gap-2 border border-red-200 text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                             Delete Event
                         </button>
                     </form>
                 </div>
-
             </div>
         </aside>
 
@@ -233,7 +286,36 @@
 
         navigator.clipboard.writeText(participantUrl).then(() => {
             const original = btn.innerHTML;
-            btn.innerHTML = `<span class="text-emerald-600 font-bold">Link Copied!</span>`;
+            btn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="text-emerald-600 font-bold">Copied!</span>
+            `;
+            btn.classList.remove('text-blue-600', 'border-blue-300', 'hover:bg-blue-50');
+            btn.classList.add('text-emerald-600', 'border-emerald-300', 'hover:bg-emerald-50');
+            
+            setTimeout(() => { 
+                btn.innerHTML = original;
+                btn.classList.remove('text-emerald-600', 'border-emerald-300', 'hover:bg-emerald-50');
+                btn.classList.add('text-blue-600', 'border-blue-300', 'hover:bg-blue-50');
+            }, 2000);
+        }).catch(() => {
+            // Fallback for browsers that don't support clipboard API
+            const textArea = document.createElement('textarea');
+            textArea.value = participantUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            const original = btn.innerHTML;
+            btn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="text-emerald-600 font-bold">Copied!</span>
+            `;
             setTimeout(() => { btn.innerHTML = original; }, 2000);
         });
     }
@@ -256,6 +338,51 @@
     }
 
     initHeatmap();
+    
+    // More menu toggle functionality
+    function toggleMoreMenu() {
+        const menu = document.getElementById('moreMenu');
+        menu.classList.toggle('hidden');
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const moreButton = event.target.closest('[onclick="toggleMoreMenu()"]');
+            const menu = document.getElementById('moreMenu');
+            
+            if (!moreButton && !menu.contains(event.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Update confirm button behavior for new action bar
+    function toggleSelectionMode() {
+        isSelectionMode = !isSelectionMode;
+        const btn = document.getElementById('confirmBtn');
+        const container = document.getElementById('heatmap-container');
+
+        if (isSelectionMode) {
+            btn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Select a time slot...
+            `;
+            btn.classList.replace('bg-blue-600', 'bg-slate-900');
+            btn.classList.replace('hover:bg-blue-700', 'hover:bg-slate-800');
+            container.classList.add('selection-active');
+        } else {
+            btn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Confirm Schedule
+            `;
+            btn.classList.replace('bg-slate-900', 'bg-blue-600');
+            btn.classList.replace('hover:bg-slate-800', 'hover:bg-blue-700');
+            container.classList.remove('selection-active');
+        }
+    }
     
     // Confirmation dialog for event deletion
     function confirmDelete(form) {
