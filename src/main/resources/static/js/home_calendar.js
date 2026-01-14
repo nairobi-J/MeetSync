@@ -1,206 +1,276 @@
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // Current date state
-    let currentDate = new Date();
-    let currentMonth = currentDate.getMonth();
-    let currentYear = currentDate.getFullYear();
-    
-    // Mini calendar state (sidebar)
-    let miniCalendarDate = new Date(2026, 1); // January 2026
-    
-    // Initialize calendars
-    initMainCalendar();
-    initMiniCalendar();
-    
-    // Event listeners for mini calendar navigation
-    document.getElementById('prevMonth').addEventListener('click', function() {
+document.addEventListener('DOMContentLoaded', async function () {
+    const calendarData = document.getElementById('calendarData');
+    const urlParams = new URLSearchParams(window.location.search);
+
+    let currentMonth = parseInt(urlParams.get('month')) -1 || 
+                       parseInt(localStorage.getItem('calendarMonth')) || 
+                       (parseInt(calendarData?.dataset.currentMonth) || new Date().getMonth());
+
+    let currentYear = parseInt(urlParams.get('year')) || 
+                      parseInt(localStorage.getItem('calendarYear')) || 
+                      (parseInt(calendarData?.dataset.currentYear) || new Date().getFullYear());
+
+    // Cache: year → array of all events in that year
+    const eventCache = new Map();
+    if (initialEvents.length > 0) {
+        eventCache.set(currentYear, initialEvents);
+    }
+
+    let miniCalendarDate = new Date(currentYear, currentMonth);
+
+    // Show loader until first render
+    document.getElementById('calendarLoading').classList.remove('hidden');
+    document.getElementById('calendarGrid').style.display = 'none';
+
+    await loadYearIfNeeded(currentYear);
+    renderMainCalendar();
+    updateMiniCalendar();
+
+    document.getElementById('calendarLoading').classList.add('hidden');
+    document.getElementById('calendarGrid').style.display = 'grid';
+
+    // Navigation
+    document.getElementById('prevMainMonth')?.addEventListener('click', () => changeMonth(-1));
+    document.getElementById('nextMainMonth')?.addEventListener('click', () => changeMonth(1));
+
+    document.getElementById('todayBtn')?.addEventListener('click', goToToday);
+    document.getElementById('refreshBtn')?.addEventListener('click', refreshCurrentYear);
+
+    document.getElementById('prevMonth')?.addEventListener('click', () => {
         miniCalendarDate.setMonth(miniCalendarDate.getMonth() - 1);
-        updateMiniCalendar();
+        changeMonthFromMini();
     });
-    
-    document.getElementById('nextMonth').addEventListener('click', function() {
+
+    document.getElementById('nextMonth')?.addEventListener('click', () => {
         miniCalendarDate.setMonth(miniCalendarDate.getMonth() + 1);
-        updateMiniCalendar();
+        changeMonthFromMini();
     });
-    
-    // Initialize main calendar
-    function initMainCalendar() {
-        currentMonth = 0; // January (0-indexed)
-        currentYear = 2026;
+
+    document.getElementById('closeModal')?.addEventListener('click', () => {
+        document.getElementById('eventModal').classList.add('hidden');
+    });
+
+    async function changeMonth(delta) {
+        currentMonth += delta;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        } else if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        await navigateToMonth();
+    }
+
+    function changeMonthFromMini() {
+        currentMonth = miniCalendarDate.getMonth();
+        currentYear = miniCalendarDate.getFullYear();
+        navigateToMonth();
+    }
+
+    async function navigateToMonth() {
+        localStorage.setItem('calendarMonth', currentMonth);
+        localStorage.setItem('calendarYear', currentYear);
+
+        // Update URL without reload
+        const newUrl = `/dashboard?year=${currentYear}&month=${currentMonth + 1}`;
+        history.pushState({ month: currentMonth, year: currentYear }, '', newUrl);
+
+        miniCalendarDate = new Date(currentYear, currentMonth);
+
+        document.getElementById('calendarLoading').classList.remove('hidden');
+        await loadYearIfNeeded(currentYear);
+        renderMainCalendar();
+        updateMiniCalendar();
+        document.getElementById('calendarLoading').classList.add('hidden');
+    }
+
+    async function loadYearIfNeeded(year) {
+        if (!eventCache.has(year)) {
+            try {
+                const res = await fetch(`/api/events/year?year=${year}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    eventCache.set(year, data);
+                }
+            } catch (err) {
+                console.error('Failed to load year events:', err);
+            }
+        }
+    }
+
+    async function refreshCurrentYear() {
+        eventCache.delete(currentYear);
+        await loadYearIfNeeded(currentYear);
         renderMainCalendar();
     }
-    
-    // Render main calendar
+
+    function goToToday() {
+        const today = new Date();
+        currentMonth = today.getMonth();
+        currentYear = today.getFullYear();
+        navigateToMonth();
+    }
+
     function renderMainCalendar() {
-        const calendarGrid = document.getElementById('calendarGrid');
-        const monthYearDisplay = document.getElementById('currentMonthYear');
-        
-        // Update month/year display
-        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                          'July', 'August', 'September', 'October', 'November', 'December'];
-        monthYearDisplay.textContent = `${monthNames[currentMonth]} ${currentYear}`;
-        
-        // Clear existing calendar
-        calendarGrid.innerHTML = '';
-        
-        // Get first day of month and number of days
-        const firstDay = new Date(currentYear, currentMonth, 1);
-        const lastDay = new Date(currentYear, currentMonth + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        
-        // Get day of week (0 = Sunday, 1 = Monday, etc.)
-        let startDay = firstDay.getDay();
-        // Convert to Monday = 0, Sunday = 6
+        const grid = document.getElementById('calendarGrid');
+        const title = document.getElementById('currentMonthYear');
+
+        const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        title.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+        grid.innerHTML = '';
+
+        const first = new Date(currentYear, currentMonth, 1);
+        const last = new Date(currentYear, currentMonth + 1, 0);
+        const daysInMonth = last.getDate();
+
+        let startDay = first.getDay();
         startDay = startDay === 0 ? 6 : startDay - 1;
-        
-        // Previous month days
-        const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
+
+        const prevLast = new Date(currentYear, currentMonth, 0).getDate();
         for (let i = startDay - 1; i >= 0; i--) {
-            const dayCell = createDayCell(prevMonthLastDay - i, true);
-            calendarGrid.appendChild(dayCell);
+            grid.appendChild(createDayCell(prevLast - i, true));
         }
-        
-        // Current month days
+
+        const yearEvents = eventCache.get(currentYear) || [];
         for (let day = 1; day <= daysInMonth; day++) {
-            const dayCell = createDayCell(day, false);
-            const events = getEventsForDay(day);
-            
-            if (events.length > 0) {
-                const eventsContainer = document.createElement('div');
-                eventsContainer.className = 'mt-2 space-y-1';
-                
-                events.forEach(event => {
-                    const eventBadge = createEventBadge(event);
-                    eventsContainer.appendChild(eventBadge);
-                });
-                
-                dayCell.appendChild(eventsContainer);
+            const cell = createDayCell(day, false);
+            const dayEvents = yearEvents.filter(e => {
+                const [, m, d] = e.date.split('-').map(Number);
+                return d === day && m === currentMonth + 1;
+            });
+
+            if (dayEvents.length > 0) {
+                const container = document.createElement('div');
+                container.className = 'mt-1 space-y-1 max-h-20 overflow-y-auto';
+
+                dayEvents.forEach(ev => container.appendChild(createEventBadge(ev)));
+
+                cell.appendChild(container);
+                cell.addEventListener('click', () => showEventModal(dayEvents, day));
+                cell.classList.add('cursor-pointer');
             }
-            
-            calendarGrid.appendChild(dayCell);
+
+            grid.appendChild(cell);
         }
-        
-        // Next month days to fill grid
-        const totalCells = calendarGrid.children.length;
-        const remainingCells = 42 - totalCells; // 6 rows × 7 days
-        for (let day = 1; day <= remainingCells; day++) {
-            const dayCell = createDayCell(day, true);
-            calendarGrid.appendChild(dayCell);
+
+        const filled = grid.children.length;
+        for (let i = 1; i <= 42 - filled; i++) {
+            grid.appendChild(createDayCell(i, true));
         }
     }
-    
-    // Create day cell
-    function createDayCell(day, isOtherMonth) {
-        const dayCell = document.createElement('div');
-        dayCell.className = `min-h-[120px] p-3 border-r border-b border-gray-200 ${
-            isOtherMonth ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'
-        } cursor-pointer transition`;
-        
-        const dayNumber = document.createElement('div');
-        dayNumber.className = `text-sm font-semibold ${
-            isOtherMonth ? 'text-gray-400' : 'text-gray-700'
+
+    function createDayCell(day, otherMonth) {
+        const div = document.createElement('div');
+        div.className = `min-h-[110px] p-2 border-r border-b border-gray-200 ${
+            otherMonth ? 'bg-gray-50 text-gray-400' : 'bg-white hover:bg-gray-50'
         }`;
-        dayNumber.textContent = day;
-        
-        dayCell.appendChild(dayNumber);
-        return dayCell;
+
+        const num = document.createElement('div');
+        num.className = `text-sm font-medium ${otherMonth ? 'text-gray-400' : 'text-gray-800'}`;
+        num.textContent = day;
+        div.appendChild(num);
+
+        return div;
     }
-    
-    // Create event badge
+
     function createEventBadge(event) {
-        const badge = document.createElement('div');
-        const colorClasses = {
-            blue: 'bg-blue-100 text-blue-700',
-            orange: 'bg-orange-100 text-orange-700',
-            red: 'bg-red-100 text-red-700'
+        const colors = {
+            blue:   'bg-blue-100 text-blue-800 border-blue-300',
+            orange: 'bg-orange-100 text-orange-800 border-orange-300',
+            red:    'bg-red-100 text-red-800 border-red-300'
         };
-        
-        badge.className = `text-xs px-2 py-1 rounded ${colorClasses[event.color] || colorClasses.blue}`;
+
+        const badge = document.createElement('div');
+        badge.className = `text-xs px-2 py-0.5 rounded border ${colors[event.color] || colors.blue} truncate`;
         badge.textContent = event.title;
-        
         return badge;
     }
-    
-    // Get events for a specific day
-    function getEventsForDay(day) {
-        // Use demo events from the global variable
-        return demoEvents.filter(event => event.day === day);
 
+    function getEventsForDay(day) {
+        return events.filter(e => {
+            if (!e.date) return false;
+            const [y, m, d] = e.date.split('-').map(Number);
+            return d === day && m === currentMonth + 1 && y === currentYear;
+        });
     }
-    
-    // Initialize mini calendar (sidebar)
+
+    function showEventModal(dayEvents, day) {
+        if (dayEvents.length === 0) return;
+
+        // For now show first event – you can extend to list all
+        const ev = dayEvents[0];
+
+        document.getElementById('modalTitle').textContent = ev.title;
+        document.getElementById('modalDate').textContent = `${ev.date}`;
+        document.getElementById('modalDesc').textContent = ev.description || 'No additional details';
+
+        document.getElementById('eventModal').classList.remove('hidden');
+    }
+
+    // Mini calendar functions (keep your original ones, just ensure sync)
     function initMiniCalendar() {
         updateMiniCalendar();
     }
-    
-    // Update mini calendar display
+
     function updateMiniCalendar() {
-        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                          'July', 'August', 'September', 'October', 'November', 'December'];
         const monthDisplay = document.getElementById('miniCalendarMonth');
-        monthDisplay.textContent = `${monthNames[miniCalendarDate.getMonth()]} ${miniCalendarDate.getFullYear()}`;
-        
+        if (monthDisplay) {
+            const names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            monthDisplay.textContent = `${names[miniCalendarDate.getMonth()]} ${miniCalendarDate.getFullYear()}`;
+        }
         renderMiniCalendar();
     }
-    
-    // Render mini calendar
+
     function renderMiniCalendar() {
-        const miniCalendarDays = document.getElementById('miniCalendarDays');
-        miniCalendarDays.innerHTML = '';
-        
-        const year = miniCalendarDate.getFullYear();
-        const month = miniCalendarDate.getMonth();
-        
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        
-        let startDay = firstDay.getDay();
-        startDay = startDay === 0 ? 6 : startDay - 1;
-        
-        // Previous month days
-        const prevMonthLastDay = new Date(year, month, 0).getDate();
-        for (let i = startDay - 1; i >= 0; i--) {
-            const dayCell = createMiniDayCell(prevMonthLastDay - i, true);
-            miniCalendarDays.appendChild(dayCell);
+        const container = document.getElementById('miniCalendarDays');
+        if (!container) return;
+        container.innerHTML = '';
+
+        const y = miniCalendarDate.getFullYear();
+        const m = miniCalendarDate.getMonth();
+
+        const first = new Date(y, m, 1);
+        const last = new Date(y, m + 1, 0);
+        const days = last.getDate();
+
+        let start = first.getDay();
+        start = start === 0 ? 6 : start - 1;
+
+        const prevDays = new Date(y, m, 0).getDate();
+        for (let i = start - 1; i >= 0; i--) {
+            container.appendChild(createMiniCell(prevDays - i, true));
         }
-        
-        // Current month days
+
         const today = new Date();
-        for (let day = 1; day <= daysInMonth; day++) {
-            const isToday = day === today.getDate() && 
-                          month === today.getMonth() && 
-                          year === today.getFullYear();
-            const dayCell = createMiniDayCell(day, false, isToday);
-            miniCalendarDays.appendChild(dayCell);
+        for (let d = 1; d <= days; d++) {
+            const isToday = d === today.getDate() && m === today.getMonth() && y === today.getFullYear();
+            container.appendChild(createMiniCell(d, false, isToday));
         }
-        
-        // Next month days
-        const totalCells = miniCalendarDays.children.length;
-        const remainingCells = 42 - totalCells;
-        for (let day = 1; day <= remainingCells; day++) {
-            const dayCell = createMiniDayCell(day, true);
-            miniCalendarDays.appendChild(dayCell);
+
+        const total = container.children.length;
+        for (let i = 1; i <= 42 - total; i++) {
+            container.appendChild(createMiniCell(i, true));
         }
     }
-    
-    // Create mini calendar day cell
-    function createMiniDayCell(day, isOtherMonth, isToday = false) {
-        const dayCell = document.createElement('div');
-        dayCell.className = `py-2 text-center cursor-pointer rounded hover:bg-gray-100 ${
-            isOtherMonth ? 'text-gray-400' : 'text-gray-700'
+
+    function createMiniCell(day, other, isToday = false) {
+        const cell = document.createElement('div');
+        cell.className = `py-1.5 text-center text-sm rounded hover:bg-gray-100 cursor-pointer ${
+            other ? 'text-gray-400' : 'text-gray-700'
         } ${isToday ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`;
-        dayCell.textContent = day;
-        
-        // Click handler to navigate main calendar
-        dayCell.addEventListener('click', function() {
-            if (!isOtherMonth) {
+
+        cell.textContent = day;
+
+        cell.addEventListener('click', () => {
+            if (!other) {
                 currentMonth = miniCalendarDate.getMonth();
                 currentYear = miniCalendarDate.getFullYear();
-                renderMainCalendar();
+                updateCalendar();
             }
         });
-        
-        return dayCell;
+
+        return cell;
     }
 });
