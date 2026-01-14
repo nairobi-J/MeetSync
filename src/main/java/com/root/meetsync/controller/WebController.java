@@ -90,109 +90,101 @@ public class WebController {
 
     @GetMapping("/dashboard")
     public String dashboard(
-            @ModelAttribute("currentUser") CurrentUserDTO currentUser,
-            Authentication authentication,
-            Model model,
-            HttpSession session) {
+        @ModelAttribute("currentUser") CurrentUserDTO currentUser,
+        Authentication authentication,
+        Model model,
+        @RequestParam(name = "year", required = false) Integer paramYear,
+        @RequestParam(name = "month", required = false) Integer paramMonth) {
 
-        User user = getAuthenticatedUser(authentication);
+    User user = getAuthenticatedUser(authentication);
 
-        if (user.getPassword() == null || user.getPassword().isEmpty()) {
-            return "redirect:/set-password";
-        }
-
-        Integer savedMonth = (Integer) session.getAttribute("viewedMonth");
-        Integer savedYear  = (Integer) session.getAttribute("viewedYear");
-        LocalDate now = LocalDate.now();
-        int displayMonth = (savedMonth != null) ? savedMonth : now.getMonthValue();
-        int displayYear  = (savedYear  != null) ? savedYear  : now.getYear();
-
-        YearMonth ym = YearMonth.of(displayYear, displayMonth);
-
-        model.addAttribute("currentDate", now);
-        model.addAttribute("currentMonth", ym);
-        model.addAttribute("currentYear", displayYear);
-        model.addAttribute("activePage", "dash");
-
-        List<Map<String, Object>> events = getEventsForMonth(user, displayMonth, displayYear);
-        model.addAttribute("events", events);
-
-        return "MainHome";
+    if (user.getPassword() == null || user.getPassword().isEmpty()) {
+        return "redirect:/set-password";
     }
 
-    @GetMapping("/api/events")
+    LocalDate now = LocalDate.now();
+    int displayYear  = (paramYear != null) ? paramYear : now.getYear();
+    int displayMonth = (paramMonth != null && paramMonth >= 1 && paramMonth <= 12) ? paramMonth : now.getMonthValue();
+
+    YearMonth ym = YearMonth.of(displayYear, displayMonth);
+
+    model.addAttribute("currentDate", now);
+    model.addAttribute("currentMonth", ym);
+    model.addAttribute("currentYear", displayYear);
+    model.addAttribute("activePage", "dash");
+
+    // Initial events: full year (client will use them and fetch more years if needed)
+    List<Map<String, Object>> events = getEventsForYear(user, displayYear);
+    model.addAttribute("events", events);
+
+    return "MainHome";
+    }
+
+    @GetMapping("/api/events/year")
     @ResponseBody
-    public ResponseEntity<List<Map<String, Object>>> getEventsApi(
+    public ResponseEntity<List<Map<String, Object>>> getEventsForYearApi(
             Authentication authentication,
-            @RequestParam int month,
             @RequestParam int year) {
 
         User user = getAuthenticatedUser(authentication);
-        List<Map<String, Object>> events = getEventsForMonth(user, month, year);
+        List<Map<String, Object>> events = getEventsForYear(user, year);
         return ResponseEntity.ok(events);
     }
 
-    private List<Map<String, Object>> getEventsForMonth(User user, int targetMonth, int targetYear) {
-        List<Map<String, Object>> events = new ArrayList<>();
 
-        try {
-            if (user.getOauthToken() != null && user.getOauthToken().getRefreshToken() != null) {
-                logger.info("Fetching events for {} - month: {}/{}", user.getEmail(), targetMonth, targetYear);
-                List<Event> googleEvents = googleCalendarService.getAllGoogleCalendarEvents(user);
-                logger.info("Fetched {} Google events", googleEvents.size());
 
-                events = convertGoogleEventsToCalendarEvents(googleEvents, targetMonth, targetYear);
-                logger.info("Converted {} events for {}/{}", events.size(), targetMonth, targetYear);
-            }
-        } catch (Exception e) {
-            logger.error("Failed to load calendar events", e);
+
+
+    private List<Map<String, Object>> getEventsForYear(User user, int targetYear) {
+    List<Map<String, Object>> events = new ArrayList<>();
+
+    try {
+        if (user.getOauthToken() != null && user.getOauthToken().getRefreshToken() != null) {
+            logger.info("Fetching full year events for {} - year: {}", user.getEmail(), targetYear);
+            List<Event> googleEvents = googleCalendarService.getAllGoogleCalendarEvents(user);
+            logger.info("Fetched {} Google events", googleEvents.size());
+
+            events = convertGoogleEventsToCalendarEventsForYear(googleEvents, targetYear);
+            logger.info("Converted {} events for year {}", events.size(), targetYear);
         }
-
-        return events;
+    } catch (Exception e) {
+        logger.error("Failed to load calendar events for year " + targetYear, e);
     }
 
-    @PostMapping("/api/set-viewed-month")
-    @ResponseBody
-    public void setViewedMonth(
-        @RequestParam int month,
-        @RequestParam int year,
-        HttpSession session) {
-            session.setAttribute("viewedMonth", month);
-            session.setAttribute("viewedYear", year);
+    return events;
+    }
+
+    private List<Map<String, Object>> convertGoogleEventsToCalendarEventsForYear(
+        List<Event> googleEvents, int targetYear) {
+
+    List<Map<String, Object>> result = new ArrayList<>();
+
+    for (Event e : googleEvents) {
+        EventDateTime start = e.getStart();
+        if (start == null) continue;
+
+        LocalDate eventDate = null;
+        if (start.getDateTime() != null) {
+            eventDate = LocalDate.ofInstant(java.time.Instant.ofEpochMilli(start.getDateTime().getValue()), ZoneId.systemDefault());
+        } else if (start.getDate() != null) {
+            eventDate = LocalDate.ofInstant(java.time.Instant.ofEpochMilli(start.getDate().getValue()), ZoneId.systemDefault());
         }
 
-    private List<Map<String, Object>> convertGoogleEventsToCalendarEvents(
-            List<Event> googleEvents, int targetMonth, int targetYear) {
+        if (eventDate == null || eventDate.getYear() != targetYear) continue;
 
-        List<Map<String, Object>> result = new ArrayList<>();
-
-        for (Event e : googleEvents) {
-            EventDateTime start = e.getStart();
-            if (start == null) continue;
-
-            LocalDate eventDate = null;
-            if (start.getDateTime() != null) {
-                eventDate = LocalDate.ofInstant(java.time.Instant.ofEpochMilli(start.getDateTime().getValue()), ZoneId.systemDefault());
-            } else if (start.getDate() != null) {
-                eventDate = LocalDate.ofInstant(java.time.Instant.ofEpochMilli(start.getDate().getValue()), ZoneId.systemDefault());
-            }
-
-            if (eventDate == null) continue;
-
-            if (eventDate.getMonthValue() == targetMonth && eventDate.getYear() == targetYear) {
-                Map<String, Object> eventMap = new HashMap<>();
-                eventMap.put("date", eventDate.toString());
-                eventMap.put("day", eventDate.getDayOfMonth());
-                eventMap.put("title", e.getSummary() != null ? e.getSummary() : "Untitled");
-                eventMap.put("description", e.getDescription() != null ? e.getDescription() : "");
-                String color = "blue";
-                String summary = e.getSummary() != null ? e.getSummary().toLowerCase() : "";
-                if (summary.contains("birthday")) color = "orange";
-                eventMap.put("color", color);
-                result.add(eventMap);
-            }
-        }
-        return result;
+        Map<String, Object> eventMap = new HashMap<>();
+        eventMap.put("date", eventDate.toString());
+        eventMap.put("month", eventDate.getMonthValue());
+        eventMap.put("day", eventDate.getDayOfMonth());
+        eventMap.put("title", e.getSummary() != null ? e.getSummary() : "Untitled");
+        eventMap.put("description", e.getDescription() != null ? e.getDescription() : "");
+        String color = "blue";
+        String summary = e.getSummary() != null ? e.getSummary().toLowerCase() : "";
+        if (summary.contains("birthday")) color = "orange";
+        eventMap.put("color", color);
+        result.add(eventMap);
+    }
+    return result;
     }
 
     private User getAuthenticatedUser(Authentication auth) {

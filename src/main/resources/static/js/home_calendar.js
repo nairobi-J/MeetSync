@@ -1,100 +1,115 @@
 document.addEventListener('DOMContentLoaded', async function () {
-
     const calendarData = document.getElementById('calendarData');
+    const urlParams = new URLSearchParams(window.location.search);
 
-    let currentMonth = localStorage.getItem('calendarMonth')
-        ? parseInt(localStorage.getItem('calendarMonth'))
-        : (parseInt(calendarData?.dataset.currentMonth) || new Date().getMonth());
+    let currentMonth = parseInt(urlParams.get('month')) -1 || 
+                       parseInt(localStorage.getItem('calendarMonth')) || 
+                       (parseInt(calendarData?.dataset.currentMonth) || new Date().getMonth());
 
-    let currentYear = localStorage.getItem('calendarYear')
-        ? parseInt(localStorage.getItem('calendarYear'))
-        : (parseInt(calendarData?.dataset.currentYear) || new Date().getFullYear());
+    let currentYear = parseInt(urlParams.get('year')) || 
+                      parseInt(localStorage.getItem('calendarYear')) || 
+                      (parseInt(calendarData?.dataset.currentYear) || new Date().getFullYear());
 
-    await fetchEventsForCurrentMonth();
+    // Cache: year → array of all events in that year
+    const eventCache = new Map();
+    if (initialEvents.length > 0) {
+        eventCache.set(currentYear, initialEvents);
+    }
 
     let miniCalendarDate = new Date(currentYear, currentMonth);
 
-    // Initialize
-    initMainCalendar();
-    initMiniCalendar();
+    // Show loader until first render
+    document.getElementById('calendarLoading').classList.remove('hidden');
+    document.getElementById('calendarGrid').style.display = 'none';
 
-    // Main nav buttons
-    document.getElementById('prevMainMonth')?.addEventListener('click', prevMainMonth);
-    document.getElementById('nextMainMonth')?.addEventListener('click', nextMainMonth);
+    await loadYearIfNeeded(currentYear);
+    renderMainCalendar();
+    updateMiniCalendar();
 
-    // Mini nav buttons (sync with main)
+    document.getElementById('calendarLoading').classList.add('hidden');
+    document.getElementById('calendarGrid').style.display = 'grid';
+
+    // Navigation
+    document.getElementById('prevMainMonth')?.addEventListener('click', () => changeMonth(-1));
+    document.getElementById('nextMainMonth')?.addEventListener('click', () => changeMonth(1));
+
+    document.getElementById('todayBtn')?.addEventListener('click', goToToday);
+    document.getElementById('refreshBtn')?.addEventListener('click', refreshCurrentYear);
+
     document.getElementById('prevMonth')?.addEventListener('click', () => {
         miniCalendarDate.setMonth(miniCalendarDate.getMonth() - 1);
-        currentMonth = miniCalendarDate.getMonth();
-        currentYear = miniCalendarDate.getFullYear();
-        updateCalendar();
+        changeMonthFromMini();
     });
 
     document.getElementById('nextMonth')?.addEventListener('click', () => {
         miniCalendarDate.setMonth(miniCalendarDate.getMonth() + 1);
-        currentMonth = miniCalendarDate.getMonth();
-        currentYear = miniCalendarDate.getFullYear();
-        updateCalendar();
+        changeMonthFromMini();
     });
 
     document.getElementById('closeModal')?.addEventListener('click', () => {
         document.getElementById('eventModal').classList.add('hidden');
     });
 
-    function prevMainMonth() {
-        currentMonth--;
-        if (currentMonth < 0) {
-            currentMonth = 11;
-            currentYear--;
-        }
-        updateCalendar();
-    }
-
-    function nextMainMonth() {
-        currentMonth++;
+    async function changeMonth(delta) {
+        currentMonth += delta;
         if (currentMonth > 11) {
             currentMonth = 0;
             currentYear++;
+        } else if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
         }
-        updateCalendar();
+        await navigateToMonth();
     }
 
-    async function updateCalendar() {
-        fetch('/api/set-viewed-month', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `month=${currentMonth + 1}&year=${currentYear}`
-    }).catch(err => console.log("Session save failed (non-critical)", err));
-        document.getElementById('calendarLoading').classList.remove('hidden');
+    function changeMonthFromMini() {
+        currentMonth = miniCalendarDate.getMonth();
+        currentYear = miniCalendarDate.getFullYear();
+        navigateToMonth();
+    }
 
+    async function navigateToMonth() {
         localStorage.setItem('calendarMonth', currentMonth);
         localStorage.setItem('calendarYear', currentYear);
 
+        // Update URL without reload
+        const newUrl = `/dashboard?year=${currentYear}&month=${currentMonth + 1}`;
+        history.pushState({ month: currentMonth, year: currentYear }, '', newUrl);
+
         miniCalendarDate = new Date(currentYear, currentMonth);
 
+        document.getElementById('calendarLoading').classList.remove('hidden');
+        await loadYearIfNeeded(currentYear);
         renderMainCalendar();
         updateMiniCalendar();
-
         document.getElementById('calendarLoading').classList.add('hidden');
     }
 
-    async function fetchEventsForCurrentMonth() {
-        try {
-            const res = await fetch(`/api/events?month=${currentMonth + 1}&year=${currentYear}`);
-            if (res.ok) {
-                events = await res.json();
-            } else {
-                events = [];
-                console.error('Failed to fetch events:', res.status);
+    async function loadYearIfNeeded(year) {
+        if (!eventCache.has(year)) {
+            try {
+                const res = await fetch(`/api/events/year?year=${year}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    eventCache.set(year, data);
+                }
+            } catch (err) {
+                console.error('Failed to load year events:', err);
             }
-        } catch (err) {
-            console.error("Failed to load events:", err);
-            events = [];
         }
     }
 
-    function initMainCalendar() {
+    async function refreshCurrentYear() {
+        eventCache.delete(currentYear);
+        await loadYearIfNeeded(currentYear);
         renderMainCalendar();
+    }
+
+    function goToToday() {
+        const today = new Date();
+        currentMonth = today.getMonth();
+        currentYear = today.getFullYear();
+        navigateToMonth();
     }
 
     function renderMainCalendar() {
@@ -118,21 +133,21 @@ document.addEventListener('DOMContentLoaded', async function () {
             grid.appendChild(createDayCell(prevLast - i, true));
         }
 
+        const yearEvents = eventCache.get(currentYear) || [];
         for (let day = 1; day <= daysInMonth; day++) {
             const cell = createDayCell(day, false);
-            const dayEvents = getEventsForDay(day);
+            const dayEvents = yearEvents.filter(e => {
+                const [, m, d] = e.date.split('-').map(Number);
+                return d === day && m === currentMonth + 1;
+            });
 
             if (dayEvents.length > 0) {
                 const container = document.createElement('div');
                 container.className = 'mt-1 space-y-1 max-h-20 overflow-y-auto';
 
-                dayEvents.forEach(ev => {
-                    const badge = createEventBadge(ev);
-                    container.appendChild(badge);
-                });
+                dayEvents.forEach(ev => container.appendChild(createEventBadge(ev)));
 
                 cell.appendChild(container);
-
                 cell.addEventListener('click', () => showEventModal(dayEvents, day));
                 cell.classList.add('cursor-pointer');
             }
@@ -141,8 +156,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
         const filled = grid.children.length;
-        const remaining = 42 - filled;
-        for (let i = 1; i <= remaining; i++) {
+        for (let i = 1; i <= 42 - filled; i++) {
             grid.appendChild(createDayCell(i, true));
         }
     }

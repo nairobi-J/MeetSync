@@ -5,11 +5,15 @@
             <button id="prevMainMonth" class="p-2 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-100">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <h2 id="currentMonthYear" class="text-3xl font-bold text-gray-900">
-                <span th:text="${currentMonth.month} + ' ' + ${currentYear}"></span>
-            </h2>
+            <h2 id="currentMonthYear" class="text-3xl font-bold text-gray-900"></h2>
             <button id="nextMainMonth" class="p-2 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-100">
                 <i class="fas fa-chevron-right"></i>
+            </button>
+            <button id="todayBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Today
+            </button>
+            <button id="refreshBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                <i class="fas fa-sync-alt"></i> Refresh
             </button>
         </div>
 
@@ -38,7 +42,7 @@
         <div id="calendarGrid" class="grid grid-cols-7"></div>
     </div>
 
-    <!-- Loading Spinner Overlay -->
+    <!-- Loading Spinner -->
     <div id="calendarLoading" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-full p-6 shadow-lg">
             <svg class="animate-spin h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -48,7 +52,7 @@
         </div>
     </div>
 
-    <!-- Event Detail Modal -->
+    <!-- Event Modal -->
     <div id="eventModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
         <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 id="modalTitle" class="text-xl font-bold mb-2"></h3>
@@ -60,7 +64,7 @@
         </div>
     </div>
 
-    <!-- Data for JS -->
+    <!-- Data -->
     <div id="calendarData"
          data-current-month="[[${currentMonth.monthValue - 1}]]"
          data-current-year="[[${currentYear}]]"
@@ -68,7 +72,7 @@
 
     <script th:inline="javascript">
         /*<![CDATA[*/
-        let events = /*[[${events}]]*/ [];
+        let initialEvents = /*[[${events}]]*/ [];
         /*]]>*/
     </script>
 </main>
