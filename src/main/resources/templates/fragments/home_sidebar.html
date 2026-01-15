@@ -15,11 +15,64 @@
         class="w-64 bg-white border-r border-gray-200 fixed left-0 top-16 bottom-0 overflow-y-auto  transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
         <div class="p-4">
             <!-- Schedule New Button -->
-            <a th:href="@{/event-create}"
-                class="w-full bg-blue-600 mt-4 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center space-x-2 mb-6">
-                <i class="fas fa-plus"></i>
-                <span>Schedule New Event</span>
-            </a>
+            <div class="relative  mb-6">
+                <button id="scheduleDropdownBtn" type="button"
+                    class="w-full bg-blue-600 mt-4 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center space-x-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <i class="fas fa-plus"></i>
+                    <span>Schedule New</span>
+                    <i id="scheduleDropdownIcon"
+                        class="fas fa-chevron-down ml-2 text-xs transition-transform duration-200"></i>
+                </button>
+                <div id="scheduleDropdownMenu"
+                    class="overflow-hidden transition-all duration-300 max-h-0 mt-2    z-0">
+                    <a href="/event-create"
+                        class="block px-4 py-3 text-gray-700 hover:bg-blue-50   flex items-center space-x-2">
+                        <i class="fas fa-users mr-2 text-blue-600"></i>
+                        <span>Event Poll Scheduling</span>
+                    </a>
+                    <a href="/availability/setup"
+                        class="block px-4 py-3 text-gray-700 hover:bg-blue-50  flex items-center space-x-2">
+                        <i class="fas fa-user-check mr-2 text-blue-600"></i>
+                        <span>One-to-One Appointment</span>
+                    </a>
+                </div>
+                <script>
+                    // Collapsible dropdown logic
+                    (function () {
+                        const btn = document.getElementById('scheduleDropdownBtn');
+                        const menu = document.getElementById('scheduleDropdownMenu');
+                        const icon = document.getElementById('scheduleDropdownIcon');
+                        let expanded = false;
+                        if (btn && menu) {
+                            btn.addEventListener('click', function (e) {
+                                e.stopPropagation();
+                                expanded = !expanded;
+                                if (expanded) {
+                                    menu.classList.remove('max-h-0');
+
+                                    menu.classList.add('max-h-40');
+                                   
+
+                                    icon.classList.add('rotate-180');
+                                } else {
+                                    menu.classList.remove('max-h-40');
+                                    menu.classList.add('max-h-0');
+                                    icon.classList.remove('rotate-180');
+                                }
+                            });
+                            document.addEventListener('click', function (e) {
+                                if (expanded && !btn.contains(e.target) && !menu.contains(e.target)) {
+                                    expanded = false;
+                                    menu.classList.remove('max-h-40');
+                    
+                                    menu.classList.add('max-h-0');
+                                    icon.classList.remove('rotate-180');
+                                }
+                            });
+                        }
+                    })();
+                </script>
+            </div>
 
             <!-- Mini Calendar -->
             <div class="mb-6" th:if="${activePage == 'dash'}">
@@ -56,19 +109,21 @@
                 <h4 class="text-xs font-semibold text-gray-500 uppercase mb-3">MAIN</h4>
                 <nav class="space-y-1">
                     <a th:href="@{/dashboard}"
-                        class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-calendar w-5"></i>
+                        th:classappend="${activePage == 'dash'} ? 'bg-blue-100 text-blue-600' : 'text-gray-700'"
+                        class="flex items-center space-x-3 px-3 py-2 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-calendar w-5" th:classappend="${activePage == 'dash'} ? 'text-blue-600' : ''"></i>
                         <span>Calendar</span>
                     </a>
-                    <!--                    th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/events') ? 'bg-blue-100 text-blue-600' : ''}"-->
-                    <a th:href="@{/events} "
-                        class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="far fa-calendar-alt w-5"></i>
+                    <a th:href="@{/events}"
+                        th:classappend="${activePage == 'events'} ? 'bg-blue-100 text-blue-600' : 'text-gray-700'"
+                        class="flex items-center space-x-3 px-3 py-2 hover:bg-gray-100 rounded-lg">
+                        <i class="far fa-calendar-alt w-5" th:classappend="${activePage == 'events'} ? 'text-blue-600' : ''"></i>
                         <span>Events</span>
                     </a>
                     <a th:href="@{/availability/setup}"
-                        class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fa-solid fa-clock"></i>
+                        th:classappend="${activePage == 'availability'} ? 'bg-blue-100 text-blue-600' : 'text-gray-700'"
+                        class="flex items-center space-x-3 px-3 py-2 hover:bg-gray-100 rounded-lg">
+                        <i class="fa-solid fa-clock" th:classappend="${activePage == 'availability'} ? 'text-blue-600' : ''"></i>
                         <span>Availability</span>
                     </a>
                 </nav>
@@ -79,11 +134,12 @@
                 <h4 class="text-xs font-semibold text-gray-500 uppercase mb-3">SETTINGS</h4>
                 <nav class="space-y-1">
                     <a th:href="@{/notifications}"
-                        class="flex items-center justify-between px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+                        th:classappend="${activePage == 'notifications'} ? 'bg-blue-100 text-blue-600' : 'text-gray-700'"
+                        class="flex items-center justify-between px-3 py-2 hover:bg-gray-100 rounded-lg"
                         th:data-mark-read-url="@{/notifications/mark-all-read}"
                         onclick="markAllNotificationsRead(event)">
                         <div class="flex items-center space-x-3">
-                            <i class="far fa-bell w-5"></i>
+                            <i class="far fa-bell w-5" th:classappend="${activePage == 'notifications'} ? 'text-blue-600' : ''"></i>
                             <span>Notifications</span>
                         </div>
                         <span th:if="${unreadNotificationCount != null && unreadNotificationCount > 0}"
@@ -102,19 +158,31 @@
                     </script>
 
 
-                    <button
+                    <!-- <button
                         class="w-full flex items-center justify-between px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
                         <div class="flex items-center space-x-3">
                             <i class="fas fa-cog w-5"></i>
                             <span>Settings</span>
                         </div>
                         <i class="fas fa-chevron-down text-xs"></i>
-                    </button>
+                    </button> -->
                 </nav>
             </div>
         </div>
     </aside>
-  
+    <script>
+        function toggleScheduleDropdown() {
+            const menu = document.getElementById('scheduleDropdownMenu');
+            menu.classList.toggle('hidden');
+            // Optional: close dropdown when clicking outside
+            document.addEventListener('click', function handler(e) {
+                if (!e.target.closest('#scheduleDropdownBtn')) {
+                    menu.classList.add('hidden');
+                    document.removeEventListener('click', handler);
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>

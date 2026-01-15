@@ -26,7 +26,7 @@ public class AvailabilityPageController {
 
     @GetMapping("/setup")
     public String showAvailabilitySetup(Authentication authentication, Model model) {
-        
+
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/login";
         }
@@ -34,14 +34,14 @@ public class AvailabilityPageController {
         User user = getAuthenticatedUser(authentication);
 
         SetupAvailabilityRequest request;
-        
+
         // Try to fetch existing availability data
         try {
             request = availabilityService.getUserAvailability(user.getId());
-            
+
             if (request.getWeeklyAvailability() != null && !request.getWeeklyAvailability().isEmpty()) {
-                log.info("Loaded existing availability for user {} with {} weekly slots", 
-                    user.getId(), request.getWeeklyAvailability().size());
+                log.info("Loaded existing availability for user {} with {} weekly slots", user.getId(),
+                        request.getWeeklyAvailability().size());
                 model.addAttribute("hasExistingAvailability", true);
             } else {
                 model.addAttribute("hasExistingAvailability", false);
@@ -51,10 +51,11 @@ public class AvailabilityPageController {
             request = new SetupAvailabilityRequest();
             model.addAttribute("hasExistingAvailability", false);
         }
-        
+
         model.addAttribute("availabilityRequest", request);
         model.addAttribute("user", user);
-        
+
+        model.addAttribute("activePage", "availability");
         // Add booking link to the model
         try {
             String bookingLink = availabilityService.getUserBookingLink(user.getId());
@@ -62,34 +63,24 @@ public class AvailabilityPageController {
         } catch (Exception e) {
             log.debug("Could not retrieve booking link for user {}", user.getId());
         }
-        
+
         // days of week for form
         model.addAttribute("daysOfWeek", DayOfWeek.values());
-        
+
         // Timezone options
-        model.addAttribute("timezones", new String[]{
-        "Asia/Dhaka",
-        "Asia/Kolkata", 
-        "UTC",
-        "America/New_York",
-        "America/Los_Angeles",
-        "Europe/Paris",
-        "Asia/Tokyo",
-        "Australia/Sydney"
-    });
-        
+        model.addAttribute("timezones", new String[] { "Asia/Dhaka", "Asia/Kolkata", "UTC", "America/New_York",
+                "America/Los_Angeles", "Europe/Paris", "Asia/Tokyo", "Australia/Sydney" });
+
         // Duration options (in minutes)
-        model.addAttribute("durations", new Integer[]{15, 30, 45, 60, 90, 120});
-        
+        model.addAttribute("durations", new Integer[] { 15, 30, 45, 60, 90, 120 });
+
         return "availability/setup";
     }
 
     @PostMapping("/setup")
-    public String setupAvailability(
-            Authentication authentication,
-            @ModelAttribute SetupAvailabilityRequest request,
+    public String setupAvailability(Authentication authentication, @ModelAttribute SetupAvailabilityRequest request,
             RedirectAttributes redirectAttributes) {
-        
+
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/login";
         }
@@ -97,14 +88,13 @@ public class AvailabilityPageController {
         User user = getAuthenticatedUser(authentication);
 
         try {
-            
+
             availabilityService.setupAvailability(user.getId(), request);
             redirectAttributes.addFlashAttribute("success", "Availability saved successfully!");
-         
+
             String bookingLink = availabilityService.getUserBookingLink(user.getId());
             redirectAttributes.addFlashAttribute("bookingLink", bookingLink);
-            
-            
+
             return "redirect:/availability/setup";
         } catch (Exception e) {
             log.error("Failed to setup availability for user {}", user.getId(), e);
@@ -120,7 +110,7 @@ public class AvailabilityPageController {
 
     @GetMapping("/link")
     public String showBookingLink(Authentication authentication, Model model) {
-        
+
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/login";
         }
@@ -130,12 +120,9 @@ public class AvailabilityPageController {
         String bookingLink = availabilityService.getUserBookingLink(user.getId());
         model.addAttribute("bookingLink", bookingLink);
         model.addAttribute("user", user);
-        
+
         return "availability/link";
     }
-
-
-
 
     private User getAuthenticatedUser(Authentication authentication) {
         User user;
@@ -143,10 +130,9 @@ public class AvailabilityPageController {
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
             user = userService.processOAuthUser(oauthToken);
         } else {
-           
+
             String email = authentication.getName();
-            user = userService.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("Manual user not found"));
+            user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("Manual user not found"));
         }
 
         return user;

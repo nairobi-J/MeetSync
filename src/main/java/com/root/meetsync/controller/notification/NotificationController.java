@@ -23,7 +23,7 @@ public class NotificationController {
     
     private final NotificationService notificationService;
     private final UserService userService;
-    private final IBookingService bookingService;
+
     
     @GetMapping
     public String notificationsPage(Authentication authentication, Model model,
@@ -53,6 +53,7 @@ public class NotificationController {
         model.addAttribute("totalPages", notifications.getTotalPages());
         model.addAttribute("user", user);
         model.addAttribute("filter", filter != null ? filter : "all");
+          model.addAttribute("activePage", "notifications");
         
         return "notifications";
     }

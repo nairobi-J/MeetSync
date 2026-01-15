@@ -37,6 +37,8 @@ public class EventController {
                 errorMessage.append(error.getDefaultMessage()).append("; ")
             );
             redirectAttributes.addFlashAttribute("errorMessage", errorMessage.toString());
+           
+        
             return "redirect:/create-event";
         }
 
