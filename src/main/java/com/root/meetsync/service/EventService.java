@@ -9,4 +9,7 @@ import org.springframework.stereotype.Service;
 public interface EventService {
     // Changed OAuth2AuthenticationToken to Authentication
     Event createEvent(CreateEventRequest request, Authentication auth);
+    
+    // Check if an event with the same title exists for the user
+    boolean eventExistsByTitleAndUser(String title, Authentication auth);
 }

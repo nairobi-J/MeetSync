@@ -98,9 +98,16 @@ public class BookingPageController {
             String prefix = response.getHostEmail().split("@")[0];
             User host = userService.getUserByEmailPrefix(prefix);
 
-            // 3. AUTO-TRIGGER GOOGLE CALENDAR
+            // 3. AUTO-TRIGGER GOOGLE CALENDAR AND STORE EVENT ID
             try {
-                googleCalendarServiceImpl.createGoogleEvent(host, response);
+                String googleEventId = googleCalendarServiceImpl.createGoogleEvent(host, response);
+                if (googleEventId != null) {
+                    // Update booking with Google Calendar event ID
+                    bookingService.updateGoogleCalendarEventId(bookingId, googleEventId);
+                    System.out.println("Successfully synced booking to Google Calendar: " + googleEventId);
+                } else {
+                    System.err.println("Google Calendar Sync Failed: No event ID returned");
+                }
             } catch (Exception e) {
                 System.err.println("Google Calendar Sync Failed: " + e.getMessage());
                 // We don't throw an error here so the DB confirmation still finishes

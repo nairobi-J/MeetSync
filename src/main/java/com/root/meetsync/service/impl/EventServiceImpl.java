@@ -77,4 +77,21 @@ public class EventServiceImpl implements EventService {
 
         return eventRepository.save(event);
     }
+
+    @Override
+    public boolean eventExistsByTitleAndUser(String title, Authentication auth) {
+        String email;
+
+        // Extract email based on the type of login
+        if (auth instanceof OAuth2AuthenticationToken oauth) {
+            email = (String) oauth.getPrincipal().getAttributes().get("email");
+        } else {
+            email = auth.getName();
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+
+        return eventRepository.existsByTitleAndHost(title, user);
+    }
 }

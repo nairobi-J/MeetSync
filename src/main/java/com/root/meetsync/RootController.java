@@ -140,20 +140,47 @@ public String showConfirmEventPage(@PathVariable String shareLink, Model model){
 @Transactional
 @PostMapping("event/{shareLink}/confirm")
 public String finalizeEvent(@PathVariable String shareLink, @RequestParam Long slotId){
-    Event event = eventRepository.findByShareLink(shareLink).orElseThrow(()-> new RuntimeException("vai event e nai"));
+    Event event = eventRepository.findByShareLink(shareLink).orElseThrow(()-> new RuntimeException("Event not found"));
     EventSlot selectedSlot = eventSlotRepository.findById(slotId).orElseThrow();
 
-    ConfirmedEvent confirmed = new ConfirmedEvent();
-    confirmed.setEvent(event);
-    confirmed.setSelectedSlots(selectedSlot);
-    confirmed.setConfirmedAt(java.time.LocalDateTime.now());
-    confirmedEventRepository.save(confirmed);
-    // TRIGGER SYNC
-    try {
-        googleCalendarServiceImpl.createGoogleEventFromHeatmap(confirmed);
-    } catch (Exception e) {
-        e.printStackTrace(); // Log error but don't stop the user
+    // Check if this is an update to an existing confirmation
+    Optional<ConfirmedEvent> existingConfirmed = confirmedEventRepository.findByEvent_Id(event.getId());
+    
+    ConfirmedEvent confirmed;
+    if (existingConfirmed.isPresent()) {
+        // Update existing confirmed event
+        confirmed = existingConfirmed.get();
+        confirmed.setSelectedSlots(selectedSlot);
+        confirmed.setConfirmedAt(java.time.LocalDateTime.now());
+    } else {
+        // Create new confirmed event
+        confirmed = new ConfirmedEvent();
+        confirmed.setEvent(event);
+        confirmed.setSelectedSlots(selectedSlot);
+        confirmed.setConfirmedAt(java.time.LocalDateTime.now());
     }
+    confirmedEventRepository.save(confirmed);
+    
+    // Handle Google Calendar sync
+    try {
+        String googleEventId = googleCalendarServiceImpl.createGoogleEventFromHeatmap(confirmed);
+        if (googleEventId != null) {
+            event.setGoogleCalendarEventId(googleEventId);
+            event.setGoogleCalendarSyncStatus("SYNCED");
+            event.setLastSyncTimestamp(java.time.LocalDateTime.now());
+            System.out.println("Successfully synced to Google Calendar: " + googleEventId);
+        } else {
+            event.setGoogleCalendarSyncStatus("FAILED");
+            System.out.println("Failed to sync to Google Calendar");
+        }
+        eventRepository.save(event);
+    } catch (Exception e) {
+        e.printStackTrace();
+        event.setGoogleCalendarSyncStatus("FAILED");
+        eventRepository.save(event);
+        System.out.println("Error syncing to Google Calendar: " + e.getMessage());
+    }
+    
     return "redirect:/event/" + shareLink + "/overview";
 }
 
@@ -217,18 +244,41 @@ public String finalizeEvent(@PathVariable String shareLink, @RequestParam Long s
     @PostMapping("/event/{shareLink}/reschedule")
     public String rescheduledEvent(@PathVariable String shareLink){
         Event event = eventRepository.findByShareLink(shareLink).orElseThrow();
+        
+        // Delete Google Calendar event first if it exists
+        if (event.getGoogleCalendarEventId() != null && !event.getGoogleCalendarEventId().isEmpty()) {
+            try {
+                boolean deleted = googleCalendarServiceImpl.deleteGoogleEvent(event.getHost(), event.getGoogleCalendarEventId());
+                if (deleted) {
+                    System.out.println("Successfully deleted Google Calendar event during reschedule: " + event.getGoogleCalendarEventId());
+                } else {
+                    System.out.println("Failed to delete Google Calendar event during reschedule: " + event.getGoogleCalendarEventId());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("Error deleting Google Calendar event during reschedule: " + e.getMessage());
+            }
+            
+            // Clear the Google Calendar event ID so we'll create a new one
+            event.setGoogleCalendarEventId(null);
+            event.setGoogleCalendarSyncStatus("PENDING");
+            eventRepository.save(event);
+        }
+        
+        // Delete the confirmed event record
         confirmedEventRepository.deleteByEvent_Id(event.getId());
         return "redirect:/event/" + shareLink + "/overview";
-
     }
     @Transactional
     @PostMapping("/event/{shareLink}/toggle-cell")
     public ResponseEntity<Void>toggleHostCell(@PathVariable String shareLink,
                                               @RequestParam Long slotId,
                                               Authentication auth){
-        Event event = eventRepository.findByShareLink(shareLink).orElseThrow(()-> new RuntimeException("EVent nai vai"));
+        // Validate that the event exists
+        eventRepository.findByShareLink(shareLink).orElseThrow(()-> new RuntimeException("Event not found"));
+        
         String email = getEmailFromAuth(auth);
-        User host = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("Host na tumi bro"));
+        User host = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("Host not found"));
         Optional<HostAvailability>existing = hostAvailabilityRepository.findByHostAndEventSlot_Id(host, slotId);
         if(existing.isPresent()){
             hostAvailabilityRepository.delete(existing.get());
