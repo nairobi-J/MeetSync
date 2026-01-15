@@ -33,7 +33,7 @@ public class GoogleCalendarServiceImpl {
     private String clientSecret;
 
     // --- METHOD 1: For Heatmap/Event Confirmation (New) ---
-    public void createGoogleEventFromHeatmap(ConfirmedEvent confirmed) throws Exception {
+    public String createGoogleEventFromHeatmap(ConfirmedEvent confirmed) throws Exception {
         User host = confirmed.getEvent().getHost();
         EventSlot slot = confirmed.getSelectedSlots();
 
@@ -47,16 +47,16 @@ public class GoogleCalendarServiceImpl {
         String summary = "MeetSync: " + confirmed.getEvent().getTitle();
         String description = "Meeting finalized via MeetSync Heatmap.";
 
-        // 3. Call the common helper to push to Google
-        pushToGoogle(host, summary, description, startZoned, endZoned);
+        // 3. Call the common helper to push to Google and return event ID
+        return pushToGoogle(host, summary, description, startZoned, endZoned);
     }
 
     // --- METHOD 2: For 1-on-1 Availability (Your existing one) ---
-      public void createGoogleEvent(User host, BookingResponseDTO booking) throws Exception {
+      public String createGoogleEvent(User host, BookingResponseDTO booking) throws Exception {
         // 1. Validate tokens
         if (host.getOauthToken() == null || host.getOauthToken().getRefreshToken() == null) {
             System.out.println("Skip Calendar: No Refresh Token found for " + host.getEmail());
-            return;
+            return null;
         }
 
         // 2. Get fresh Access Token using Refresh Token
@@ -95,10 +95,6 @@ public class GoogleCalendarServiceImpl {
                 new EventReminder().setMethod("popup").setMinutes(booking.getRemindersMinutesBefore())
         )));
 
-        
-
-
-
         // Convert LocalDateTime to Google DateTime format
         DateTime start = new DateTime(Date.from(booking.getStartTime().atZone(ZoneId.systemDefault()).toInstant()));
         event.setStart(new EventDateTime().setDateTime(start).setTimeZone(host.getTimezone()));
@@ -106,14 +102,15 @@ public class GoogleCalendarServiceImpl {
         DateTime end = new DateTime(Date.from(booking.getEndTime().atZone(ZoneId.systemDefault()).toInstant()));
         event.setEnd(new EventDateTime().setDateTime(end).setTimeZone(host.getTimezone()));
 
-        // 5. Push to Primary Calendar
-        service.events().insert("primary", event).setSendUpdates("all").execute();
+        // 5. Push to Primary Calendar and return event ID
+        Event createdEvent = service.events().insert("primary", event).setSendUpdates("all").execute();
+        return createdEvent.getId();
     }
 
     // --- PRIVATE HELPER: Handles the actual API handshake ---
-    private void pushToGoogle(User host, String summary, String desc, ZonedDateTime start, ZonedDateTime end) throws Exception {
+    private String pushToGoogle(User host, String summary, String desc, ZonedDateTime start, ZonedDateTime end) throws Exception {
         if (host.getOauthToken() == null || host.getOauthToken().getRefreshToken() == null) {
-            return;
+            return null;
         }
 
         GoogleTokenResponse response = new GoogleRefreshTokenRequest(
@@ -138,7 +135,44 @@ public class GoogleCalendarServiceImpl {
                 .setDateTime(new DateTime(Date.from(end.toInstant())))
                 .setTimeZone(host.getTimezone()));
 
-        service.events().insert("primary", event).execute();
+        Event createdEvent = service.events().insert("primary", event).execute();
+        return createdEvent.getId(); // Return the Google Calendar event ID
+    }
+
+    // --- DELETE GOOGLE CALENDAR EVENT ---
+    public boolean deleteGoogleEvent(User host, String googleEventId) {
+        try {
+            if (host.getOauthToken() == null || host.getOauthToken().getRefreshToken() == null) {
+                System.out.println("Skip Calendar Delete: No Refresh Token found for " + host.getEmail());
+                return false;
+            }
+
+            if (googleEventId == null || googleEventId.isEmpty()) {
+                System.out.println("Skip Calendar Delete: No Google Event ID provided");
+                return false;
+            }
+
+            GoogleTokenResponse response = new GoogleRefreshTokenRequest(
+                    new NetHttpTransport(), new GsonFactory(),
+                    host.getOauthToken().getRefreshToken(), clientId, clientSecret
+            ).execute();
+
+            Calendar service = new Calendar.Builder(
+                    GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance(), null
+            )
+                    .setApplicationName("MeetSync")
+                    .setHttpRequestInitializer(req -> req.getHeaders().setAuthorization("Bearer " + response.getAccessToken()))
+                    .build();
+
+            // Delete the event from Google Calendar
+            service.events().delete("primary", googleEventId).execute();
+            System.out.println("Successfully deleted Google Calendar event: " + googleEventId);
+            return true;
+            
+        } catch (Exception e) {
+            System.err.println("Failed to delete Google Calendar event " + googleEventId + ": " + e.getMessage());
+            return false;
+        }
     }
 
     public List<Event> getAllGoogleCalendarEvents(User user) throws Exception {

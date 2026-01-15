@@ -26,18 +26,21 @@ public class EventTestService {
     private final ConfirmedEventRepository confirmedEventRepository;
     private final ParticipantAvailabilityRepository participantAvailabilityRepository;
     private final HostAvailabilityRepository hostAvailabilityRepository;
+    private final com.root.meetsync.service.impl.GoogleCalendarServiceImpl googleCalendarService;
 
 
     public EventTestService(EventTestRepository eventTestRepository, 
                            UserService userService,
                            ConfirmedEventRepository confirmedEventRepository,
                            ParticipantAvailabilityRepository participantAvailabilityRepository,
-                           HostAvailabilityRepository hostAvailabilityRepository) {
+                           HostAvailabilityRepository hostAvailabilityRepository,
+                           com.root.meetsync.service.impl.GoogleCalendarServiceImpl googleCalendarService) {
         this.eventTestRepository = eventTestRepository;
         this.userService = userService;
         this.confirmedEventRepository = confirmedEventRepository;
         this.participantAvailabilityRepository = participantAvailabilityRepository;
         this.hostAvailabilityRepository = hostAvailabilityRepository;
+        this.googleCalendarService = googleCalendarService;
     }
 
     //all events
@@ -110,7 +113,22 @@ public class EventTestService {
         Event event = eventTestRepository.findByIdAndHost(eventId, user)
                 .orElseThrow(() -> new RuntimeException("Event not found or you are not authorized to delete it"));
 
-       
+        // 1. Delete from Google Calendar first (if event is synced)
+        if (event.getGoogleCalendarEventId() != null && !event.getGoogleCalendarEventId().isEmpty()) {
+            try {
+                boolean deletedFromGoogle = googleCalendarService.deleteGoogleEvent(user, event.getGoogleCalendarEventId());
+                if (deletedFromGoogle) {
+                    System.out.println("Successfully deleted from Google Calendar: " + event.getGoogleCalendarEventId());
+                } else {
+                    System.err.println("Failed to delete from Google Calendar, but continuing with local deletion");
+                }
+            } catch (Exception e) {
+                System.err.println("Error deleting from Google Calendar: " + e.getMessage());
+                // Continue with local deletion even if Google Calendar delete fails
+            }
+        }
+
+        // 2. Delete local data
         confirmedEventRepository.deleteByEvent_Id(eventId);
         participantAvailabilityRepository.deleteByEventSlot_Event_Id(eventId);
         hostAvailabilityRepository.deleteByEventSlot_Event_Id(eventId);
