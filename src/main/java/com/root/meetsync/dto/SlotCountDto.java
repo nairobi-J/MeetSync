@@ -2,7 +2,6 @@ package com.root.meetsync.dto;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

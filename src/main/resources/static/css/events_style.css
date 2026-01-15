@@ -1,0 +1,115 @@
+/* Events Page Custom Styles */
+
+/* Event Card Hover Effect */
+.event-card {
+    transition: all 0.3s ease;
+}
+
+.event-card:hover {
+    transform: translateY(-4px);
+    border-color: #3b82f6;
+}
+
+/* Status Badge Colors */
+.status-scheduled {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.status-pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-expired {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+/* Filter Dropdown Animation */
+#statusFilterDropdown,
+#userProfileDropdown {
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Search Input Focus */
+#eventSearch:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Button Hover Effects */
+button, a[class*="px-"] {
+    transition: all 0.2s ease;
+}
+
+button:active, a[class*="px-"]:active {
+    transform: scale(0.98);
+}
+
+/* Empty State Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.empty-state {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Card Grid Responsive */
+@media (max-width: 768px) {
+    .event-card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* User Profile Dropdown Styling */
+#userProfileDropdown {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* Smooth Transitions */
+* {
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+/* Loading State for Cards */
+.event-card.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Status Badge Pulse Animation */
+@keyframes badgePulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.status-badge-animated {
+    animation: badgePulse 2s ease-in-out infinite;
+}

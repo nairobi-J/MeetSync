@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <!-- Success Toast Fragment -->
+    <div th:fragment="success(message)" 
+         th:if="${message}"
+         class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-md">
+        <div class="flex items-center">
+            <i class="fas fa-check-circle mr-3 text-xl"></i>
+            <p th:text="${message}">Success message</p>
+        </div>
+    </div>
+
+    <!-- Error Toast Fragment -->
+    <div th:fragment="error(message)" 
+         th:if="${message}"
+         class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md shadow-md">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-circle mr-3 text-xl"></i>
+            <p th:text="${message}">Error message</p>
+        </div>
+    </div>
+
+    <!-- Warning Toast Fragment -->
+    <div th:fragment="warning(message)" 
+         th:if="${message}"
+         class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded-md shadow-md">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-triangle mr-3 text-xl"></i>
+            <p th:text="${message}">Warning message</p>
+        </div>
+    </div>
+
+    <!-- Info Toast Fragment -->
+    <div th:fragment="info(message)" 
+         th:if="${message}"
+         class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6 rounded-md shadow-md">
+        <div class="flex items-center">
+            <i class="fas fa-info-circle mr-3 text-xl"></i>
+            <p th:text="${message}">Info message</p>
+        </div>
+    </div>
+
+    <!-- All Alerts Fragment (Success + Error) - Uses ${success} and ${error} from model -->
+    <div th:fragment="alerts">
+        <div th:if="${success}"
+             class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-md">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle mr-3 text-xl"></i>
+                <p th:text="${success}">Success message</p>
+            </div>
+        </div>
+
+        <div th:if="${error}"
+             class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md shadow-md">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle mr-3 text-xl"></i>
+                <p th:text="${error}">Error message</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
