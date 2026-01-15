@@ -175,6 +175,64 @@ public class GoogleCalendarServiceImpl {
         }
     }
 
+    // --- UPDATE GOOGLE CALENDAR EVENT ---
+    public boolean updateGoogleEvent(User host, String googleEventId, ConfirmedEvent newConfirmed) {
+        try {
+            if (host.getOauthToken() == null || host.getOauthToken().getRefreshToken() == null) {
+                System.out.println("Skip Calendar Update: No Refresh Token found for " + host.getEmail());
+                return false;
+            }
+
+            if (googleEventId == null || googleEventId.isEmpty()) {
+                System.out.println("Skip Calendar Update: No Google Event ID provided");
+                return false;
+            }
+
+            GoogleTokenResponse response = new GoogleRefreshTokenRequest(
+                    new NetHttpTransport(), new GsonFactory(),
+                    host.getOauthToken().getRefreshToken(), clientId, clientSecret
+            ).execute();
+
+            Calendar service = new Calendar.Builder(
+                    GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance(), null
+            )
+                    .setApplicationName("MeetSync")
+                    .setHttpRequestInitializer(req -> req.getHeaders().setAuthorization("Bearer " + response.getAccessToken()))
+                    .build();
+
+            // Get the existing event
+            Event existingEvent = service.events().get("primary", googleEventId).execute();
+            
+            // Update with new time information
+            EventSlot slot = newConfirmed.getSelectedSlots();
+            ZoneId zoneId = ZoneId.of(host.getTimezone() != null ? host.getTimezone() : "UTC");
+            
+            ZonedDateTime startZoned = slot.getSlotDate().atTime(slot.getStartTime()).atZone(zoneId);
+            ZonedDateTime endZoned = slot.getSlotDate().atTime(slot.getEndTime()).atZone(zoneId);
+
+            existingEvent.setStart(new EventDateTime()
+                    .setDateTime(new DateTime(Date.from(startZoned.toInstant())))
+                    .setTimeZone(host.getTimezone()));
+
+            existingEvent.setEnd(new EventDateTime()
+                    .setDateTime(new DateTime(Date.from(endZoned.toInstant())))
+                    .setTimeZone(host.getTimezone()));
+
+            // Update the summary if needed
+            existingEvent.setSummary("MeetSync: " + newConfirmed.getEvent().getTitle());
+            existingEvent.setDescription("Meeting updated via MeetSync Heatmap.");
+
+            // Update the event in Google Calendar
+            service.events().update("primary", googleEventId, existingEvent).execute();
+            System.out.println("Successfully updated Google Calendar event: " + googleEventId);
+            return true;
+            
+        } catch (Exception e) {
+            System.err.println("Failed to update Google Calendar event " + googleEventId + ": " + e.getMessage());
+            return false;
+        }
+    }
+
     public List<Event> getAllGoogleCalendarEvents(User user) throws Exception {
 
     // 1. Validate tokens
