@@ -203,6 +203,19 @@ function renderCalendar() {
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = '';
 
+
+
+
+     if (availableDates.length === 0) {
+        monthLabel.textContent = '';
+        grid.innerHTML = '<div class="  border border-blue-600 font-semibold flex justify-center items-center text-gray-500 py-8 w-full">No dates are available</div>';
+        updateNavigationButtons(); 
+        return;
+    }
+     
+    // add grid cols and rows
+    grid.className = 'grid grid-cols-7 gap-2';
+
     const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
     const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
 

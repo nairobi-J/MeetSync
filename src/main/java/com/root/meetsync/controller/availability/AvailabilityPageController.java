@@ -104,6 +104,7 @@ public class AvailabilityPageController {
             String bookingLink = availabilityService.getUserBookingLink(user.getId());
             redirectAttributes.addFlashAttribute("bookingLink", bookingLink);
             
+            
             return "redirect:/availability/setup";
         } catch (Exception e) {
             log.error("Failed to setup availability for user {}", user.getId(), e);
