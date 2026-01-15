@@ -11,4 +11,6 @@ public interface IBookingService {
     List<BookingResponseDTO> getHostBookings(Long hostId);
     BookingResponseDTO confirmBooking(Long bookingId);
     BookingResponseDTO cancelBooking(Long bookingId);
+    void updateGoogleCalendarEventId(Long bookingId, String googleEventId);
+    void markGoogleCalendarSyncFailed(Long bookingId);
 }

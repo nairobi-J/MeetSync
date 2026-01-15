@@ -2,6 +2,7 @@ package com.root.meetsync.dto.booking;
 
 import com.root.meetsync.entity.User;
 import com.root.meetsync.entity.booking.BookingStatus;
+import com.root.meetsync.entity.booking.GoogleCalendarSyncStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -19,4 +20,7 @@ public class BookingResponseDTO {
     private String timezone;
     private BookingStatus status;
     private LocalDateTime createdAt;
+    private String googleCalendarEventId;
+    private GoogleCalendarSyncStatus googleCalendarSyncStatus;
+    private LocalDateTime googleCalendarSyncTimestamp;
 }

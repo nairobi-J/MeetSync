@@ -7,6 +7,7 @@ import com.root.meetsync.entity.availability.UserDateOverrideAvailability;
 import com.root.meetsync.entity.availability.UserMeetingPreference;
 import com.root.meetsync.entity.booking.Booking;
 import com.root.meetsync.entity.booking.BookingStatus;
+import com.root.meetsync.entity.booking.GoogleCalendarSyncStatus;
 import com.root.meetsync.repository.UserRepository;
 import com.root.meetsync.repository.availability.UserAvailabilityRepository;
 import com.root.meetsync.repository.availability.UserDateOverrideAvailabilityRepository;
@@ -116,6 +117,29 @@ public class BookingServiceImpl implements IBookingService {
         return mapToResponseDTO(saved);
     }
 
+    @Transactional
+    public void updateGoogleCalendarEventId(Long bookingId, String googleEventId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        
+        booking.setGoogleCalendarEventId(googleEventId);
+        booking.setGoogleCalendarSyncStatus(GoogleCalendarSyncStatus.SYNCED);
+        booking.setGoogleCalendarSyncTimestamp(LocalDateTime.now());
+        
+        bookingRepository.save(booking);
+    }
+
+    @Transactional
+    public void markGoogleCalendarSyncFailed(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        
+        booking.setGoogleCalendarSyncStatus(GoogleCalendarSyncStatus.FAILED);
+        booking.setGoogleCalendarSyncTimestamp(LocalDateTime.now());
+        
+        bookingRepository.save(booking);
+    }
+
     private BookingResponseDTO mapToResponseDTO(Booking booking) {
         BookingResponseDTO dto = new BookingResponseDTO();
         dto.setId(booking.getId());
@@ -129,6 +153,9 @@ public class BookingServiceImpl implements IBookingService {
         dto.setTimezone(booking.getTimezone());
         dto.setStatus(booking.getStatus());
         dto.setCreatedAt(booking.getCreatedAt());
+        dto.setGoogleCalendarEventId(booking.getGoogleCalendarEventId());
+        dto.setGoogleCalendarSyncStatus(booking.getGoogleCalendarSyncStatus());
+        dto.setGoogleCalendarSyncTimestamp(booking.getGoogleCalendarSyncTimestamp());
         return dto;
     }
 

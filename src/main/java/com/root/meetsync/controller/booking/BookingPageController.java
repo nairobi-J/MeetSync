@@ -107,9 +107,11 @@ public class BookingPageController {
                     System.out.println("Successfully synced booking to Google Calendar: " + googleEventId);
                 } else {
                     System.err.println("Google Calendar Sync Failed: No event ID returned");
+                    bookingService.markGoogleCalendarSyncFailed(bookingId);
                 }
             } catch (Exception e) {
                 System.err.println("Google Calendar Sync Failed: " + e.getMessage());
+                bookingService.markGoogleCalendarSyncFailed(bookingId);
                 // We don't throw an error here so the DB confirmation still finishes
             }
 
@@ -142,6 +144,18 @@ public class BookingPageController {
             if (response != null) {
                 String prefix = response.getHostEmail().split("@")[0];
                 User host = userService.getUserByEmailPrefix(prefix);
+                
+                // Delete the event from Google Calendar if it exists
+                if (response.getGoogleCalendarEventId() != null) {
+                    try {
+                        googleCalendarServiceImpl.deleteGoogleEvent(host, response.getGoogleCalendarEventId());
+                        System.out.println("Successfully deleted booking from Google Calendar: " + response.getGoogleCalendarEventId());
+                    } catch (Exception e) {
+                        System.err.println("Failed to delete Google Calendar event: " + e.getMessage());
+                        // Continue with the cancellation even if Google Calendar deletion fails
+                    }
+                }
+                
                 //   delete pending notification
                 notificationService.deleteNotification(notificationId);
 
