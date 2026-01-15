@@ -219,7 +219,8 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
                 LocalDateTime slotEnd = currentSlotStart.plusMinutes(slotDuration);
 
                 // Check if slot is in the future with minimum notice
-                if (currentSlotStart.isAfter(minBookingTime)) {
+                boolean isOverride = (override != null);
+                if ((isOverride && !Boolean.TRUE.equals(override.getUnavailable())) || currentSlotStart.isAfter(minBookingTime)) {
                     // Check if slot is not already booked
                     boolean isBooked = false;
                     for (Booking b : existingBookings) {

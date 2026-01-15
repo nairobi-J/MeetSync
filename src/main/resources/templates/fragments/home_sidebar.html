@@ -57,8 +57,8 @@
                 <nav class="space-y-1">
                     <a th:href="@{/dashboard}"
                         class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-home w-5"></i>
-                        <span>Dashboard</span>
+                        <i class="fas fa-calendar w-5"></i>
+                        <span>Calendar</span>
                     </a>
                     <!--                    th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/events') ? 'bg-blue-100 text-blue-600' : ''}"-->
                     <a th:href="@{/events} "
@@ -68,7 +68,7 @@
                     </a>
                     <a th:href="@{/availability/setup}"
                         class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="far fa-calendar w-5"></i>
+                        <i class="fa-solid fa-clock"></i>
                         <span>Availability</span>
                     </a>
                 </nav>

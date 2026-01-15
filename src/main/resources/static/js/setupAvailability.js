@@ -23,6 +23,10 @@ function renderCalendar() {
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = '';
 
+    // Today's date for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     // Add empty cells for days before month starts
     for (let i = 0; i < firstDay; i++) {
         const emptyCell = document.createElement('div');
@@ -37,11 +41,19 @@ function renderCalendar() {
         dayCell.textContent = day;
         dayCell.dataset.date = dateStr;
 
-        if (selectedDates.has(dateStr)) {
-            dayCell.classList.add('selected');
+        // Disable days before today
+        const thisDate = new Date(year, month, day);
+        thisDate.setHours(0, 0, 0, 0);
+        if (thisDate < today) {
+            dayCell.classList.add('disabled', 'text-gray-300','cursor-not-allowed',);
+            dayCell.style.pointerEvents = 'none';
+        } else {
+            if (selectedDates.has(dateStr)) {
+                dayCell.classList.add('selected');
+            }
+            dayCell.onclick = () => toggleDate(dateStr, dayCell);
         }
 
-        dayCell.onclick = () => toggleDate(dateStr, dayCell);
         grid.appendChild(dayCell);
     }
 }
