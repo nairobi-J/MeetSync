@@ -19,13 +19,13 @@
                     
                     <div>
                         <th:block th:if="${currentUser == null}">
-                        <a th:href="@{/signup}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg transition transform hover:scale-105">
+                        <a th:href="@{/signup}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg  transform hover:scale-105">
                             Get Started
                         </a>
                         </th:block>
 
                         <th:block th:if="${currentUser != null}">
-                            <a th:href="@{/dashboard}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg transition transform hover:scale-105">
+                            <a th:href="@{/dashboard}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg  transform hover:scale-105">
                                 Go to Dashboard
                             </a>
                         </th:block>
@@ -33,80 +33,72 @@
                 </div>
                 
                 <!-- Right Content - Demo Calendar -->
-                <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-                    <!-- Calendar Header -->
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-semibold text-gray-900">October 2025</h3>
-                        <div class="flex space-x-2">
-                            <button class="text-gray-600 hover:text-gray-900 transition">
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                            <button class="text-gray-600 hover:text-gray-900 transition">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Calendar Grid -->
-                    <div class="grid grid-cols-7 gap-2 mb-6">
-                        <!-- Day Headers -->
-                        <div class="text-center text-xs font-semibold text-gray-600">S</div>
-                        <div class="text-center text-xs font-semibold text-gray-600">M</div>
-                        <div class="text-center text-xs font-semibold text-gray-600">T</div>
-                        <div class="text-center text-xs font-semibold text-gray-600">W</div>
-                        <div class="text-center text-xs font-semibold text-gray-600">T</div>
-                        <div class="text-center text-xs font-semibold text-gray-600">F</div>
-                        <div class="text-center text-xs font-semibold text-gray-600">S</div>
-                        
-                        <!-- Empty cells for alignment -->
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-400">28</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-400">29</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-400">30</div>
-                        
-                        <!-- October days -->
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">1</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">2</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">3</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">4</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">5</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">6</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">7</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">8</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">9</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">10</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">11</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">12</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">13</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 cursor-pointer transition">14</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">15</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">16</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">17</div>
-                        <div class="demo-calendar-day text-center py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer transition">18</div>
-                    </div>
-                    
-                    <!-- Time Slots -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <button class="demo-time-slot border-2 border-blue-600 text-blue-600 py-3 rounded-lg font-medium hover:bg-blue-50 transition">
-                            09:00 AM
-                        </button>
-                        <button class="demo-time-slot border-2 border-blue-600 text-blue-600 py-3 rounded-lg font-medium hover:bg-blue-50 transition">
-                            09:30 AM
-                        </button>
-                        <button class="demo-time-slot border-2 border-blue-600 text-blue-600 py-3 rounded-lg font-medium hover:bg-blue-50 transition">
-                            10:00 AM
-                        </button>
-                        <button class="demo-time-slot border-2 border-blue-600 text-blue-600 py-3 rounded-lg font-medium hover:bg-blue-50 transition">
-                            01:00 PM
-                        </button>
-                        <button class="demo-time-slot border-2 border-blue-600 text-blue-600 py-3 rounded-lg font-medium hover:bg-blue-50 transition">
-                            02:30 PM
-                        </button>
-                        <button class="demo-time-slot border-2 border-blue-600 text-blue-600 py-3 rounded-lg font-medium hover:bg-blue-50 transition">
-                            04:00 PM
-                        </button>
-                    </div>
-                </div>
-                
+<!--                <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">-->
+<!--                    &lt;!&ndash; Calendar Header &ndash;&gt;-->
+<!--                    <div class="flex items-center justify-between mb-6">-->
+<!--                        <h3 class="text-lg font-semibold text-gray-900">January <span th:text="${currentYear}"> </span> </h3>-->
+<!--                    </div>-->
+
+<!--                    &lt;!&ndash; Calendar Grid &ndash;&gt;-->
+<!--                    <div class="grid grid-cols-7 gap-2 mb-6">-->
+<!--                        &lt;!&ndash; Day Headers &ndash;&gt;-->
+<!--                        <div class="text-center text-xs font-semibold text-gray-600">S</div>-->
+<!--                        <div class="text-center text-xs font-semibold text-gray-600">M</div>-->
+<!--                        <div class="text-center text-xs font-semibold text-gray-600">T</div>-->
+<!--                        <div class="text-center text-xs font-semibold text-gray-600">W</div>-->
+<!--                        <div class="text-center text-xs font-semibold text-gray-600">T</div>-->
+<!--                        <div class="text-center text-xs font-semibold text-gray-600">F</div>-->
+<!--                        <div class="text-center text-xs font-semibold text-gray-600">S</div>-->
+
+<!--                        &lt;!&ndash; Empty cells for alignment &ndash;&gt;-->
+<!--                        <div class="text-center py-2 text-sm text-gray-400">28</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-400">29</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-400">30</div>-->
+
+<!--                        &lt;!&ndash; October days &ndash;&gt;-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">1</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">2</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">3</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">4</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">5</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">6</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">7</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">8</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">9</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">10</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">11</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">12</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">13</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">14</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">15</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">16</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">17</div>-->
+<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">18</div>-->
+<!--                    </div>-->
+
+<!--                    &lt;!&ndash; Time Slots &ndash;&gt;-->
+<!--                    <div class="grid grid-cols-2 gap-3">-->
+<!--                        <button class="border border-blue-300 text-blue-600 py-3 rounded-lg font-medium">-->
+<!--                            09:00 AM-->
+<!--                        </button>-->
+<!--                        <button class="border border-blue-300 text-blue-600 py-3 rounded-lg font-medium">-->
+<!--                            09:30 AM-->
+<!--                        </button>-->
+<!--                        <button class="border border-blue-300 text-blue-600 py-3 rounded-lg font-medium">-->
+<!--                            10:00 AM-->
+<!--                        </button>-->
+<!--                        <button class="border border-blue-300 text-blue-600 py-3 rounded-lg font-medium">-->
+<!--                            01:00 PM-->
+<!--                        </button>-->
+<!--                        <button class="border border-blue-300 text-blue-600 py-3 rounded-lg font-medium">-->
+<!--                            02:30 PM-->
+<!--                        </button>-->
+<!--                        <button class="border border-blue-300 text-blue-600 py-3 rounded-lg font-medium">-->
+<!--                            04:00 PM-->
+<!--                        </button>-->
+<!--                    </div>-->
+<!--                </div>-->
+
             </div>
         </div>
     </section>

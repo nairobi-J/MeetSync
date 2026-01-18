@@ -94,49 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
     sections.forEach(section => {
         observer.observe(section);
     });
-    
-    // Demo calendar interaction (just for show)
-    const calendarDays = document.querySelectorAll('.demo-calendar-day');
-    const timeSlots = document.querySelectorAll('.demo-time-slot');
-    
-    calendarDays.forEach(day => {
-        day.addEventListener('click', function() {
-            // Remove active class from all days
-            calendarDays.forEach(d => {
-                d.classList.remove('bg-blue-600', 'text-white', 'rounded-full', 'font-semibold');
-                d.classList.add('text-gray-700');
-            });
-            
-            // Add active class to clicked day
-            this.classList.add('bg-blue-600', 'text-white', 'rounded-full', 'font-semibold');
-            this.classList.remove('text-gray-700');
-            
-            // Subtle animation for time slots
-            timeSlots.forEach((slot, index) => {
-                setTimeout(() => {
-                    slot.style.animation = 'fadeInUp 0.3s ease-out';
-                }, index * 50);
-            });
-        });
-    });
-    
-    // Time slot click effect
-    timeSlots.forEach(slot => {
-        slot.addEventListener('click', function() {
-            // Remove selected state from all slots
-            timeSlots.forEach(s => {
-                s.classList.remove('bg-blue-600', 'text-white');
-                s.classList.add('border-blue-600', 'text-blue-600');
-            });
-            
-            // Add selected state to clicked slot
-            this.classList.remove('border-blue-600', 'text-blue-600');
-            this.classList.add('bg-blue-600', 'text-white');
-            
-            // Show success message (could be replaced with actual booking)
-            console.log('Time slot selected:', this.textContent);
-        });
-    });
+
     
     // Close mobile menu when clicking outside
     document.addEventListener('click', function(event) {
