@@ -26,19 +26,19 @@ public class AuthController {
         return "redirect:/login?success";
     }
 
-    @PostMapping("/api/users/set-password")
-    public String handleSetPassword(@RequestParam("password") String password,
-                                    Authentication authentication) {
-        String email;
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            email = (String) oauthToken.getPrincipal().getAttributes().get("email");
-        } else {
-            email = authentication.getName();
-        }
+    // @PostMapping("/api/users/set-password")
+    // public String handleSetPassword(@RequestParam("password") String password,
+    //                                 Authentication authentication) {
+    //     String email;
+    //     if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+    //         email = (String) oauthToken.getPrincipal().getAttributes().get("email");
+    //     } else {
+    //         email = authentication.getName();
+    //     }
 
 
-        userService.updatePassword(email, password);
+    //     userService.updatePassword(email, password);
 
-        return "redirect:/dashboard?passwordSet=true";
-    }
+    //     return "redirect:/dashboard?passwordSet=true";
+    // }
 }
