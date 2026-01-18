@@ -13,6 +13,7 @@ public class BookingRequestDTO {
     private LocalDate bookingDate;
     private LocalTime bookingTime;
     private String timezone;
+    private Integer remindersMinutesBefore = 30; 
     
     // Helper method to get full datetime
     public LocalDateTime getStartTime() {

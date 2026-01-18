@@ -11,8 +11,8 @@ import java.util.Optional; // Add this import
 public interface UserService {
     User processOAuthUser(OAuth2AuthenticationToken authentication);
     User registerNewUser(UserRegistrationDto registrationDto);
-    void updateProfile(Long userId, String name, String timezone, String profilePic  );
-    String storeProfileImage(MultipartFile file) throws IOException;
+    void updateProfile(Long userId, String name, String timezone  );
+
 
 
     // Add these two methods

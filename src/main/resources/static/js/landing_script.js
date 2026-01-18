@@ -1,5 +1,31 @@
 document.addEventListener('DOMContentLoaded', function() {
-    
+
+    // --- 1. User Profile Dropdown Logic ---
+    const profileBtn = document.getElementById('userProfileBtn');
+    const profileDropdown = document.getElementById('userProfileDropdown');
+
+    // Only run this if the elements actually exist (User is logged in)
+    if (profileBtn && profileDropdown) {
+
+        // Toggle dropdown on button click
+        profileBtn.addEventListener('click', function(event) {
+            event.stopPropagation();
+            profileDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking anywhere else on the window
+        window.addEventListener('click', function() {
+            if (!profileDropdown.classList.contains('hidden')) {
+                profileDropdown.classList.add('hidden');
+            }
+        });
+
+        // Prevent dropdown from closing if the user clicks inside the dropdown itself
+        profileDropdown.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+    }
+
     // Mobile Menu Toggle
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileMenu = document.getElementById('mobileMenu');

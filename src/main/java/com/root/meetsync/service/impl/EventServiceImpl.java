@@ -46,7 +46,10 @@ public class EventServiceImpl implements EventService {
         event.setTimezone(request.getTimezone());
         event.setEarliestTime(request.getEarliestTime());
         event.setLatestTime(request.getLatestTime());
-        event.setSlotDuration(60);
+
+        // Use default to 60min duration if not provided
+        Integer slotDuration = request.getSlotDuration() != null ? request.getSlotDuration() : 60;
+        event.setSlotDuration(slotDuration);
         event.setShareLink(UUID.randomUUID().toString());
 
         if (request.getSelectedDates() != null) {
@@ -55,22 +58,40 @@ public class EventServiceImpl implements EventService {
             for (LocalDate date : request.getSelectedDates()) {
                 LocalTime timeTracker = request.getEarliestTime();
 
-
                 while (timeTracker.isBefore(request.getLatestTime())) {
                     EventSlot slot = new EventSlot();
                     slot.setEvent(event);
                     slot.setSlotDate(date);
                     slot.setStartTime(timeTracker);
-                    slot.setEndTime(timeTracker.plusHours(1));
+                    
+                    LocalTime endTime = timeTracker.plusMinutes(slotDuration);
+                    slot.setEndTime(endTime);
                     slots.add(slot);
 
-
-                    timeTracker = timeTracker.plusHours(1);
+                    // Move to next slot
+                    timeTracker = timeTracker.plusMinutes(slotDuration);
                 }
             }
             event.setSlots(slots);
         }
 
         return eventRepository.save(event);
+    }
+
+    @Override
+    public boolean eventExistsByTitleAndUser(String title, Authentication auth) {
+        String email;
+
+        // Extract email based on the type of login
+        if (auth instanceof OAuth2AuthenticationToken oauth) {
+            email = (String) oauth.getPrincipal().getAttributes().get("email");
+        } else {
+            email = auth.getName();
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+
+        return eventRepository.existsByTitleAndHost(title, user);
     }
 }

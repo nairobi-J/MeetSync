@@ -153,7 +153,6 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
     }
 
     private List<AvailableSlotDTO> generateAvailableSlots(
-        
             UserMeetingPreference preference,
             List<UserAvailability> weeklyAvailability,
             List<UserDateOverrideAvailability> dateOverrides,
@@ -163,7 +162,6 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
         List<AvailableSlotDTO> slots = new ArrayList<>();
         ZoneId hostTimezone = ZoneId.of(preference.getTimezone());
         ZoneId inviteeTimezone = ZoneId.of(displayTimezone);
-        
         LocalDateTime now = LocalDateTime.now(hostTimezone);
         LocalDateTime minBookingTime = now.plusHours(preference.getMinNoticeHours());
 
@@ -201,37 +199,50 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
                 endTime = dayAvailability.getEndTime();
             }
 
-            // Generate slots for this day
-            LocalTime currentTime = startTime;
+            // Handle time ranges that cross midnight
+            boolean crossesMidnight = endTime.isBefore(startTime) || endTime.equals(startTime);
+            LocalDate endDate = date;
+            if (crossesMidnight) {
+                endDate = date.plusDays(1);
+            }
+
+            LocalDateTime slotStart = LocalDateTime.of(date, startTime);
+            LocalDateTime slotEndBoundary = LocalDateTime.of(endDate, endTime);
             int slotDuration = preference.getMeetingDurationMinutes();
             int bufferTime = preference.getBufferTimeMinutes();
             int totalSlotTime = slotDuration + bufferTime;
-            
-            while (currentTime.plusMinutes(slotDuration).isBefore(endTime)
-                    || currentTime.plusMinutes(slotDuration).equals(endTime)) {
 
-                LocalDateTime slotStart = LocalDateTime.of(date, currentTime);
-                LocalDateTime slotEnd = slotStart.plusMinutes(slotDuration);
+            while (slotStart.plusMinutes(slotDuration).isBefore(slotEndBoundary)
+                    || slotStart.plusMinutes(slotDuration).equals(slotEndBoundary)) {
+
+                final LocalDateTime currentSlotStart = slotStart;
+                LocalDateTime slotEnd = currentSlotStart.plusMinutes(slotDuration);
 
                 // Check if slot is in the future with minimum notice
-                if (slotStart.isAfter(minBookingTime)) {
+                boolean isOverride = (override != null);
+                if ((isOverride && !Boolean.TRUE.equals(override.getUnavailable())) || currentSlotStart.isAfter(minBookingTime)) {
                     // Check if slot is not already booked
-                    boolean isBooked = existingBookings.stream()
-                            .anyMatch(b -> b.getStatus() != BookingStatus.CANCELLED &&
-                                    ((slotStart.isBefore(b.getEndTime()) && slotEnd.isAfter(b.getStartTime()))));
+                    boolean isBooked = false;
+                    for (Booking b : existingBookings) {
+                        if (b.getStatus() != BookingStatus.CANCELLED &&
+                                (currentSlotStart.isBefore(b.getEndTime()) && slotEnd.isAfter(b.getStartTime()))) {
+                            isBooked = true;
+                            break;
+                        }
+                    }
 
                     if (!isBooked) {
                         // Convert to invitee's timezone if different
-                        LocalDateTime displayStart = slotStart;
+                        LocalDateTime displayStart = currentSlotStart;
                         LocalDateTime displayEnd = slotEnd;
-                        
+
                         if (!hostTimezone.equals(inviteeTimezone)) {
-                            ZonedDateTime zonedStart = slotStart.atZone(hostTimezone);
+                            ZonedDateTime zonedStart = currentSlotStart.atZone(hostTimezone);
                             ZonedDateTime zonedEnd = slotEnd.atZone(hostTimezone);
                             displayStart = zonedStart.withZoneSameInstant(inviteeTimezone).toLocalDateTime();
                             displayEnd = zonedEnd.withZoneSameInstant(inviteeTimezone).toLocalDateTime();
                         }
-                        
+
                         AvailableSlotDTO slot = new AvailableSlotDTO();
                         slot.setStartTime(displayStart);
                         slot.setEndTime(displayEnd);
@@ -240,7 +251,7 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
                     }
                 }
 
-                currentTime = currentTime.plusMinutes(totalSlotTime);
+                slotStart = slotStart.plusMinutes(totalSlotTime);
             }
         }
 

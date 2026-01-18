@@ -11,17 +11,11 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
+
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -90,6 +84,10 @@ public class UserServiceImpl implements UserService {
                 authentication.getName()
         );
 
+        if (client == null) {
+            throw new RuntimeException("OAuth2AuthorizedClient is null. User may need to re-authenticate.");
+        }
+
         String accessToken = client.getAccessToken().getTokenValue();
         String refreshToken = (client.getRefreshToken() != null) ? client.getRefreshToken().getTokenValue() : null;
         LocalDateTime expiresAt = LocalDateTime.ofInstant(client.getAccessToken().getExpiresAt(), ZoneId.systemDefault());
@@ -120,32 +118,13 @@ public class UserServiceImpl implements UserService {
         // Saving the user will save the token because of CascadeType.ALL
         return userRepository.save(user);
     }
-    public String storeProfileImage(MultipartFile file) throws IOException {
-        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        Path uploadDir = Paths.get("uploads/profile");
-
-        if (!Files.exists(uploadDir)) {
-            Files.createDirectories(uploadDir);
-        }
-
-        Path filePath = uploadDir.resolve(filename);
-        Files.write(filePath, file.getBytes());
-
-        return "/uploads/profile/" + filename;
-    }
-
 
     @Transactional
-    public void updateProfile(Long userId, String name, String timezone, String profilePic)  {
+    public void updateProfile(Long userId, String name, String timezone)  {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setName(name);
         user.setTimezone(timezone);
-
-        if (profilePic != null && !profilePic.isEmpty()) {
-            user.setProfilePic(profilePic);
-        }
-
         userRepository.save(user);
     }
 

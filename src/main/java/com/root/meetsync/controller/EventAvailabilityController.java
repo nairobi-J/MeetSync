@@ -16,11 +16,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.root.meetsync.entity.Event;
 import com.root.meetsync.entity.EventSlot;
 import com.root.meetsync.repository.EventRepository;
 import com.root.meetsync.repository.EventSlotRepository;
+import com.root.meetsync.repository.ParticipantAvailabilityRepository;
 import com.root.meetsync.repository.UserRepository;
 import com.root.meetsync.service.AvailabilityService;
 
@@ -39,96 +42,19 @@ public class EventAvailabilityController {
     @Autowired
     EventRepository eventRepository;
 
-    // @PostMapping("/availability/submit")
-    // public String submitAvailability(@RequestParam String participantName, @RequestParam List<Long> slotIds) {
+    @Autowired
+    ParticipantAvailabilityRepository participantAvailabilityRepository;
 
-    //     availabilityService.saveAvailability(participantName, slotIds);
-
-    //    return "redirect:/guest-view";
-    // } 
-
-//    @GetMapping("/availability/test/{userId}/{eventId}")
-//    public String showActualForm(@PathVariable UUID userId, @PathVariable UUID eventId, Model model) {
-
-//       User user = userRepository.findById(userId).get();
-//       List<EventSlot> slots = eventSlotRepository.findByEventId(eventId);
-    
-    
-//       model.addAttribute("user", user);
-//       model.addAttribute("slots", slots);
-    
-//       return "demo_submit";
-//     }
-
-//     @GetMapping("/event/{eventId}/heatmap")
-//      public String showHeatmap(@PathVariable UUID eventId, Model model) {
-//        Map<LocalDate, List<SlotCountDto>> stats = availabilityService.getHeatmapStat(eventId);
-
-//         Event event = eventRepository.findById(eventId).orElse(null);
-
-//         model.addAttribute("stats", stats);
-//         model.addAttribute("event", event);
-    
-//     return "demo_success"; 
-//     }
-
-  @GetMapping("/event/{eventId}/guest-view")
-public String showGuestView(@PathVariable Long eventId, Model model) {
-    Event event = eventRepository.findById(eventId)
-        .orElseThrow(() -> new RuntimeException("Event not found"));
-    
-    // time slots based on event's earliest and latest times
-    List<LocalTime> hours = generateTimeSlots(event.getEarliestTime(), event.getLatestTime());
-    
-    // unique dates from event slots
-    List<LocalDate> dates = event.getSlots().stream()
-            .map(slot -> slot.getSlotDate())
-            .distinct()
-            .sorted()
-            .collect(Collectors.toList());
-    
-    //  map "date_time" -> slot
-    Map<String, EventSlot> slotMap = event.getSlots().stream()
-            .collect(Collectors.toMap(
-                slot -> slot.getSlotDate().toString() + "_" + slot.getStartTime().toString(),
-                slot -> slot
-            ));
-  
-    System.out.println("=== DEBUG: Slot Map Keys ===");
-    System.out.println("Total slots in event: " + event.getSlots().size());
-    event.getSlots().forEach(slot -> 
-        System.out.println("Slot ID: " + slot.getId() + 
-                          ", Date: " + slot.getSlotDate() + 
-                          ", Time: " + slot.getStartTime() + 
-                          ", Key would be: " + slot.getSlotDate().toString() + "_" + slot.getStartTime().toString())
-    );
-    
-    slotMap.keySet().forEach(key -> System.out.println("Slot Map Key: " + key + " -> Slot ID: " + slotMap.get(key).getId()));
-    System.out.println("Event earliest time: " + event.getEarliestTime());
-    System.out.println("Event latest time: " + event.getLatestTime());
-    System.out.println("Generated hours: " + hours);
-    System.out.println("Unique dates: " + dates);
-    System.out.println("=== END DEBUG ===");
-
-    model.addAttribute("event", event);
-    model.addAttribute("hours", hours);
-    model.addAttribute("dates", dates);
-    model.addAttribute("slotMap", slotMap);
-    model.addAttribute("heatmapData", availabilityService.getHeatmapDataForGuestView(eventId)); 
-
-    return "guest-view";
-}
-
-public List<LocalTime> generateTimeSlots(LocalTime earliest, LocalTime latest) {
+public List<LocalTime> generateTimeSlots(LocalTime earliest, LocalTime latest, int slotDuration) {
     List<LocalTime> slots = new ArrayList<>();
     LocalTime current = earliest;
     
-    System.out.println("Generating time slots from " + earliest + " to " + latest);
+    System.out.println("Generating time slots from " + earliest + " to " + latest + " with duration " + slotDuration + " minutes");
     
     while (current.isBefore(latest)) {
         slots.add(current);
         System.out.println("Added time slot: " + current);
-        current = current.plusHours(1);
+        current = current.plusMinutes(slotDuration);
     }
     
     System.out.println("Generated " + slots.size() + " time slots total");
@@ -139,7 +65,8 @@ public List<LocalTime> generateTimeSlots(LocalTime earliest, LocalTime latest) {
 public String submitAvailability(
         @RequestParam String participantName, 
         @RequestParam String slotIds,
-        @RequestParam Long eventId) {
+        @RequestParam Long eventId,
+         RedirectAttributes redirectAttributes) {
 
    
     List<Long> slotIdList = java.util.Arrays.stream(slotIds.split(","))
@@ -148,15 +75,48 @@ public String submitAvailability(
             .map(Long::parseLong)
             .collect(Collectors.toList());
 
-    availabilityService.saveAvailability(participantName, slotIdList);
-
-    return "redirect:/event/" + eventId + "/guest-view";
+    try {
+        // Check if this is an update
+        boolean isUpdate = participantAvailabilityRepository.existsByParticipantNameAndEventSlot_Event_Id(participantName, eventId);
+        
+        availabilityService.saveAvailability(participantName, slotIdList, eventId);
+        
+    
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        
+       
+        String successMessage = isUpdate ? 
+            "Your availability has been updated successfully!" : 
+            "Your availability has been saved successfully!";
+        redirectAttributes.addFlashAttribute("successMessage", successMessage);
+        redirectAttributes.addFlashAttribute("participantName", participantName);
+        redirectAttributes.addFlashAttribute("submittedSlots", slotIds);
+        
+        return "redirect:/event/participant/" + event.getShareLink() + "?submitted=true";
+    } catch (Exception e) {
+        
+        Event event = eventRepository.findById(eventId)
+                .orElse(null);
+        
+        redirectAttributes.addFlashAttribute("errorMessage", "Failed to save availability: " + e.getMessage());
+        
+        if (event != null) {
+            return "redirect:/event/participant/" + event.getShareLink();
+        } else {
+            return "redirect:/";
+        }
+    }
 }
 
 
-private void populateGuestModel(Model model, Event event) {
+// private void populateGuestModel(Model model, Event event) {
+//     populateGuestModel(model, event, false);
+// }
+
+private void populateGuestModel(Model model, Event event, boolean isHost) {
     // time slots based on event's earliest and latest times
-    List<LocalTime> hours = generateTimeSlots(event.getEarliestTime(), event.getLatestTime());
+    List<LocalTime> hours = generateTimeSlots(event.getEarliestTime(), event.getLatestTime(), event.getSlotDuration());
     
     // unique dates from event slots
     List<LocalDate> dates = event.getSlots().stream()
@@ -176,8 +136,15 @@ private void populateGuestModel(Model model, Event event) {
     model.addAttribute("hours", hours);
     model.addAttribute("dates", dates);
     model.addAttribute("slotMap", slotMap);
-    model.addAttribute("heatmapData", availabilityService.getHeatmapDataForGuestView(event.getId()));
-
+    model.addAttribute("isHost", isHost);
+    
+    if (isHost) {
+        
+        model.addAttribute("heatmapData", availabilityService.getHeatmapDataForHostView(event.getId()));
+    } else {
+       
+        model.addAttribute("heatmapData", availabilityService.getHeatmapDataForParticipant(event.getId()));
+    }
 }
 
  @GetMapping("/event/participant/{shareLink}")
@@ -185,32 +152,92 @@ private void populateGuestModel(Model model, Event event) {
         Event event = eventRepository.findByShareLink(shareLink)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
-        
         boolean isHost = false;
+        
+     
         if (auth != null && auth.isAuthenticated()) {
-            String currentUserEmail;
-            if (auth instanceof OAuth2AuthenticationToken oauth) {
-                currentUserEmail = (String) oauth.getPrincipal().getAttributes().get("email");
-            } else {
-                currentUserEmail = auth.getName();
-            }
-
-            if (event.getHost().getEmail().equals(currentUserEmail)) {
-                isHost = true;
+            try {
+                String currentUserEmail = null;
+                if (auth instanceof OAuth2AuthenticationToken oauth) {
+                    currentUserEmail = (String) oauth.getPrincipal().getAttributes().get("email");
+                } else {
+                    currentUserEmail = auth.getName();
+                }
+                
+                if (currentUserEmail != null && event.getHost().getEmail().equals(currentUserEmail)) {
+                    isHost = true;
+                }
+            } catch (Exception e) {
+    
+                System.err.println("Error checking host status: " + e.getMessage());
             }
         }
     
-        populateGuestModel(model, event);
+        populateGuestModel(model, event, isHost);
 
         if (isHost) {
-            // Add the full URL for the copy-link feature
-            String fullUrl = "http://localhost:8080/event/participant/" + shareLink;
-            model.addAttribute("fullUrl", fullUrl);
-            return "host-view"; // Return host-view.html
+            
+            return "redirect:/event/" + shareLink;
         } else {
-            return "guest-view"; // Return guest-view.html
+            return "guest-view"; 
         }
     }
 
+    @GetMapping("/event/participant/{shareLink}/edit/{participantName}")
+    public String showEditAvailabilityPage(@PathVariable String shareLink, 
+                                          @PathVariable String participantName, 
+                                          Model model, 
+                                          Authentication auth) {
+        Event event = eventRepository.findByShareLink(shareLink)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
 
+        // Check if participant has previously submitted
+        if (!availabilityService.hasUserSubmitted(participantName, event.getId())) {
+            // If user hasn't submitted before, redirect to normal submission page
+            return "redirect:/event/participant/" + shareLink;
+        }
+
+        // Check if user is the host (redirect to host view)
+        boolean isHost = false;
+        if (auth != null && auth.isAuthenticated()) {
+            try {
+                String currentUserEmail = null;
+                if (auth instanceof OAuth2AuthenticationToken oauth) {
+                    currentUserEmail = (String) oauth.getPrincipal().getAttributes().get("email");
+                } else {
+                    currentUserEmail = auth.getName();
+                }
+                
+                if (currentUserEmail != null && event.getHost().getEmail().equals(currentUserEmail)) {
+                    isHost = true;
+                }
+            } catch (Exception e) {
+                System.err.println("Error checking host status: " + e.getMessage());
+            }
+        }
+
+        if (isHost) {
+            return "redirect:/event/" + shareLink;
+        }
+
+        // Get user's existing selections
+        List<Long> existingSelections = availabilityService.getUserAvailability(participantName, event.getId());
+        
+        // Populate the model with event data and edit-specific data
+        populateGuestModel(model, event, false); 
+        model.addAttribute("editMode", true);
+        model.addAttribute("participantName", participantName);
+        model.addAttribute("existingSelections", existingSelections);
+        
+        return "guest-view";
+    }
+
+    @GetMapping("/event/participant/{shareLink}/availability/{participantName}")
+    @ResponseBody
+    public List<Long> getUserAvailability(@PathVariable String shareLink, @PathVariable String participantName) {
+        Event event = eventRepository.findByShareLink(shareLink)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        
+        return availabilityService.getUserAvailability(participantName, event.getId());
+    }
 }

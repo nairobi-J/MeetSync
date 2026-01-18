@@ -4,56 +4,31 @@
     <meta charset="UTF-8">
     <title>Interactive Heatmap | MeetSync</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Personal Selection (Left Grid) */
-        .personal-cell.selected { background-color: #3b82f6 !important; border: 1px solid #1d4ed8; }
-
-        /* Heatmap Colors (Right Grid) */
-        .heat-0 { background-color: #ffffff; }
-        .heat-1 { background-color: #dcfce7; border: 1px solid #bbf7d0; }
-        .heat-2 { background-color: #86efac; border: 1px solid #4ade80; } 
-        .heat-3 { background-color: #22c55e; border: 1px solid #16a34a; } 
-
-        .tooltip {
-            visibility: hidden; position: absolute; z-index: 50;
-            background: #1e293b; color: white; padding: 6px 10px;
-            border-radius: 6px; font-size: 11px; pointer-events: none;
-            white-space: pre-line;
-        }
-        .has-tooltip:hover .tooltip { visibility: visible; }
-        
-        /* Smooth scrolling for the viewports */
-        .viewport-scroll {
-            scroll-behavior: smooth;
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        .viewport-scroll::-webkit-scrollbar { display: none; }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/guest-view-styles.css}">
 </head>
 <body class="bg-slate-50 min-h-screen">
 
+<!-- Login Section -->
 <div id="loginSection" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
     <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
         <h2 class="text-2xl font-bold mb-4">Join Event</h2>
+        <h3 class="text-lg font-semibold mb-4" th:text="${event.title}">Event Name</h3>
         <input type="text" id="guestName" class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your name">
         <button onclick="enterEvent()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700">View Heatmap</button>
     </div>
 </div>
 
 <div id="mainContent" class="hidden max-w-[1600px] mx-auto p-6">
-    <div class="flex justify-between items-center mb-8">
-        <div>
-            <h1 class="text-3xl font-black text-slate-800" th:text="${event.title}">Event Title</h1>
-            <!-- <p class="text-slate-500" th:text="${event.description}">Event Description</p> -->
-        </div>
-        <div class="text-right">
-            <p class="text-sm font-bold text-slate-500">Responding as: <span id="currentUserName" class="text-blue-600"></span></p>
-        </div>
-    </div>
+    <!-- Success/Error Messages -->
+    <th:block th:replace="~{fragments/guest-view-fragments :: successMessage}"></th:block>
+    <th:block th:replace="~{fragments/guest-view-fragments :: errorMessage}"></th:block>
+
+    <!-- Page Header -->
+    <th:block th:replace="~{fragments/guest-view-fragments :: pageHeader}"></th:block>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+        <!-- Left Panel: Personal Selection (hidden after submission) -->
+        <div th:if="${successMessage == null}" class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-blue-700 font-bold uppercase text-xs tracking-widest">1. Select Your Availability</h3>
                 <div class="flex gap-2">
@@ -69,7 +44,7 @@
             <div class="flex border rounded-xl overflow-hidden shadow-inner">
                 <div class="w-20 bg-slate-50 border-r border-slate-200 flex-shrink-0">
                     <div class="h-12 border-b bg-slate-100/50"></div>
-                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h a')}"></div>
+                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h:mm a')}"></div>
                 </div>
                 <div id="personal-viewport" class="flex-1 overflow-x-auto bg-white viewport-scroll">
                     <div class="flex">
@@ -102,16 +77,23 @@
     <input type="hidden" id="selectedSlotsInput" name="slotIds">
 
     <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
-        <button type="button" onclick="handleFormSubmit()" class="w-full mt-6 bg-blue-600 ...">
-            Save My Availability
+        <div id="selectionSummary" class="mb-4 text-sm text-slate-600 hidden">
+            <span id="selectionCount">0</span> time slots selected
+        </div>
+        <button type="button" id="submitButton" onclick="handleFormSubmit()" 
+                class="w-full bg-gray-400 text-white font-bold py-3 rounded-xl transition-all duration-300 cursor-not-allowed" 
+                disabled>
+            Select at least one slot to continue
         </button>
     </div>
 </form>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+        <!-- Right Panel: Heatmap (full width after submission) -->
+        <div th:class="${successMessage != null} ? 'col-span-full bg-white p-6 rounded-2xl shadow-lg border border-slate-200' : 'bg-white p-6 rounded-2xl shadow-lg border border-slate-200'">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-green-700 font-bold uppercase text-xs tracking-widest">2. Group Availability Heatmap</h3>
+                <h3 th:class="${successMessage != null} ? 'text-green-700 font-bold uppercase text-xs tracking-widest' : 'text-green-700 font-bold uppercase text-xs tracking-widest'" 
+                    th:text="${successMessage != null} ? 'Group Availability Heatmap - Your Response Recorded!' : '2. Group Availability Heatmap'"></h3>
                 <div class="flex gap-2">
                     <button onclick="scrollGrid('left', 'heatmap')" class="p-2 hover:bg-slate-100 rounded-full border">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg>
@@ -125,11 +107,11 @@
             <div class="flex border rounded-xl overflow-hidden shadow-inner">
                 <div class="w-20 bg-slate-50 border-r border-slate-200 flex-shrink-0">
                     <div class="h-12 border-b bg-slate-100/50"></div>
-                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h a')}"></div>
+                    <div th:each="time : ${hours}" class="h-12 border-b flex items-center justify-center text-[10px] font-bold text-slate-400" th:text="${#temporals.format(time, 'h:mm a')}"></div>
                 </div>
                 <div id="heatmap-viewport" class="flex-1 overflow-x-auto bg-white viewport-scroll">
                     <div class="flex">
-                        <!-- Create one column for each date -->
+                        <!--one column for each date -->
                         <div th:each="date : ${dates}" class="flex-shrink-0 min-w-[100px] border-r border-slate-100">
                             <!-- Date header -->
                             <div class="h-12 border-b bg-slate-50 flex flex-col items-center justify-center text-[10px] font-bold text-slate-600">
@@ -172,23 +154,98 @@
 
     const globalData = /*[[${heatmapData}]]*/ {}; 
     const eventId = /*[[${event.id}]]*/ 0;
+    const shareLink = /*[[${event.shareLink}]]*/ '';
+    const isHost = /*[[${isHost}]]*/ false; // Whether current viewer is the host
+    
+    // Post-submission data from flash attributes
+    const successMessage = /*[[${successMessage}]]*/ null;
+    const submittedParticipantName = /*[[${participantName}]]*/ null;
+    const submittedSlots = /*[[${submittedSlots}]]*/ null;
+    
+    // Edit mode data
+    const editMode = /*[[${editMode}]]*/ false;
+    const editParticipantName = /*[[${participantName}]]*/ null;
+    const existingSelections = /*[[${existingSelections}]]*/ [];
     
     // 2. Variables
     let currentUser = "";
     let isMouseDown = false;
     let mySelections = new Set();
+    let isEditingExistingUser = false; 
+    
+    // Preview mode variables
+    let previewData = {};
+    let isPreviewMode = false;
 
-    // 3. Functions - Explicitly attached to window to prevent ReferenceErrors
+    // 3. Functions 
     window.enterEvent = function() {
         const input = document.getElementById('guestName');
-        if (!input.value.trim()) {
+        const enteredName = input.value.trim();
+        
+        if (!enteredName) {
             alert("Please enter a name");
             return;
         }
-        currentUser = input.value.trim();
+        
+        // Check if user is an existing participant
+        // For hosts, globalData contains names; for participants, it's just counts
+        // We need to fetch from server to check if user exists
+        let isExistingUser = false;
+        
+        if (isHost) {
+            // For hosts, we can check directly from the data
+            const existingNames = new Set();
+            Object.values(globalData).forEach(participants => {
+                if (Array.isArray(participants)) {
+                    participants.forEach(name => existingNames.add(name));
+                }
+            });
+            isExistingUser = existingNames.has(enteredName);
+        }
+        // For non-hosts, we'll check after entering by trying to load selections
+        
+        currentUser = enteredName;
         document.getElementById('currentUserName').innerText = currentUser;
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');
+        
+        if (isHost && isExistingUser) {
+            isEditingExistingUser = true;
+            loadExistingSelections(enteredName);
+            showEditingMessage(enteredName);
+        } else if (!isHost) {
+            // For participants, try to load existing selections
+            // If they exist, we'll show the editing message
+            fetch(`/event/participant/${shareLink}/availability/${enteredName}`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    return null;
+                })
+                .then(slotIds => {
+                    if (slotIds && slotIds.length > 0) {
+                        isEditingExistingUser = true;
+                        // Load the selections
+                        mySelections.clear();
+                        slotIds.forEach(slotId => {
+                            mySelections.add(slotId.toString());
+                            const cell = document.querySelector(`[data-slot-id="${slotId}"]`);
+                            if (cell) {
+                                cell.classList.add('selected');
+                            }
+                        });
+                        updateSubmitButton();
+                        refreshHeatmapWithPreview();
+                        showEditingMessage(enteredName);
+                    }
+                })
+                .catch(err => {
+                    console.log("No existing selections found or error:", err);
+                });
+        }
+        
+        updateSubmitButton();
         refreshHeatmap();
     };
 
@@ -209,6 +266,216 @@
             cell.classList.add('selected');
         }
         console.log(`Toggled slot ${slotId}. Current selections:`, Array.from(mySelections));
+        
+       
+        updateLivePreview();
+    }
+    
+    // --- LIVE PREVIEW MODE ---
+    function updateLivePreview() {
+        if (!currentUser) return;
+        
+        
+        updateSubmitButton();
+        
+       
+        isPreviewMode = true;
+        
+        // Calculate preview data by adding current user's selections to global data
+        previewData = {};
+        
+        if (isHost) {
+            // Host sees names - work with arrays of names
+            Object.keys(globalData).forEach(slotId => {
+                previewData[slotId] = [...globalData[slotId]]; // Copy existing participants
+            });
+            
+            // Add current user's selections to preview
+            mySelections.forEach(slotId => {
+                if (!previewData[slotId]) {
+                    previewData[slotId] = [];
+                }
+                if (!previewData[slotId].includes(currentUser)) {
+                    previewData[slotId].push(currentUser);
+                }
+            });
+            
+            // Remove current user from slots they deselected
+            Object.keys(previewData).forEach(slotId => {
+                if (!mySelections.has(slotId)) {
+                    previewData[slotId] = previewData[slotId].filter(name => name !== currentUser);
+                }
+            });
+        } else {
+            // Participant sees only counts - work with numbers
+            Object.keys(globalData).forEach(slotId => {
+                previewData[slotId] = globalData[slotId]; // Copy existing count
+            });
+            
+            // Adjust counts based on user's selections
+            mySelections.forEach(slotId => {
+                if (previewData[slotId] === undefined) {
+                    previewData[slotId] = 1; // User is the first
+                } else {
+                    // Check if user was already counted in the original data
+                    // Since we can't tell from count alone, assume they weren't and increment
+                    previewData[slotId] = (previewData[slotId] || 0) + 1;
+                }
+            });
+            
+            // For existing users editing, we need to handle removal
+            // This is approximate since we can't tell from counts alone
+            // The actual count will be corrected on the server after submission
+        }
+        
+        // Refresh heatmap with preview data
+        refreshHeatmapWithPreview();
+        
+        // Show preview indicator if user has selections
+        if (mySelections.size > 0) {
+            showPreviewIndicator();
+        } else {
+            hidePreviewIndicator();
+        }
+    }
+    
+    function updateSubmitButton() {
+        const submitButton = document.getElementById('submitButton');
+        if (!submitButton) return; // Button doesn't exist in post-submission view
+        
+        const selectionSummary = document.getElementById('selectionSummary');
+        const selectionCount = document.getElementById('selectionCount');
+        
+        if (mySelections.size > 0) {
+            submitButton.disabled = false;
+            submitButton.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all duration-300 transform hover:scale-[1.02]';
+            
+            // Different text based on edit mode
+            if (editMode || isEditingExistingUser) {
+                submitButton.textContent = `Update My Availability (${mySelections.size} slots)`;
+            } else {
+                submitButton.textContent = `Submit My Availability (${mySelections.size} slots)`;
+            }
+            
+            if (selectionSummary) selectionSummary.classList.remove('hidden');
+            if (selectionCount) selectionCount.textContent = mySelections.size;
+        } else {
+            submitButton.disabled = true;
+            submitButton.className = 'w-full bg-gray-400 text-white font-bold py-3 rounded-xl transition-all duration-300 cursor-not-allowed';
+            
+            if (editMode || isEditingExistingUser) {
+                submitButton.textContent = 'Select at least one slot to update';
+            } else {
+                submitButton.textContent = 'Select at least one slot to continue';
+            }
+            
+            if (selectionSummary) selectionSummary.classList.add('hidden');
+        }
+    }
+    
+    function showPreviewIndicator() {
+        let indicator = document.getElementById('previewIndicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'previewIndicator';
+            indicator.className = 'fixed top-4 right-4 z-40 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2';
+            indicator.innerHTML = `
+                <div class="w-2 h-2 bg-blue-300 rounded-full animate-pulse"></div>
+                Live Preview Mode
+                <button onclick="clearPreview()" class="ml-2 bg-blue-500 hover:bg-blue-400 px-2 py-1 rounded text-xs">
+                    Clear
+                </button>
+            `;
+            document.body.appendChild(indicator);
+        }
+    }
+    
+    function hidePreviewIndicator() {
+        const indicator = document.getElementById('previewIndicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+    
+    window.clearPreview = function() {
+        mySelections.clear();
+        isPreviewMode = false;
+        
+        
+        document.querySelectorAll('.personal-cell.selected').forEach(cell => {
+            cell.classList.remove('selected');
+        });
+    
+        updateSubmitButton();
+        
+        refreshHeatmap();
+        hidePreviewIndicator();
+    };
+    
+    function refreshHeatmapWithPreview() {
+        const dataToUse = isPreviewMode ? previewData : globalData;
+        
+        document.querySelectorAll('.heat-cell').forEach(cell => {
+            const slotId = cell.dataset.slotId;
+            const tooltip = cell.querySelector('.tooltip');
+            
+            let count = 0;
+            let tooltipText = "";
+            
+            if (isHost) {
+                // Host sees participant names
+                const participants = dataToUse[slotId] || [];
+                count = participants.length;
+                
+                cell.classList.remove('heat-0', 'heat-1', 'heat-2', 'heat-3');
+                if (count >= 3) cell.classList.add('heat-3');
+                else if (count === 2) cell.classList.add('heat-2');
+                else if (count === 1) cell.classList.add('heat-1');
+                else cell.classList.add('heat-0');
+                
+                if (isPreviewMode) {
+                    const originalParticipants = globalData[slotId] || [];
+                    const isUserSelected = mySelections.has(slotId);
+                    const previewText = count > 0 
+                        ? `${count} available:\n${participants.join('\n')}` 
+                        : "No one available";
+                    
+                    if (isUserSelected && !originalParticipants.includes(currentUser)) {
+                        tooltip.innerHTML = `<strong style="color: #60a5fa;">PREVIEW</strong><br>${previewText}`;
+                    } else {
+                        tooltip.innerText = previewText;
+                    }
+                } else {
+                    tooltipText = count > 0 
+                        ? `${count} available:\n${participants.join('\n')}` 
+                        : "No one available";
+                    tooltip.innerText = tooltipText;
+                }
+            } else {
+                // Participant sees only counts (privacy mode)
+                const dataValue = dataToUse[slotId];
+                count = typeof dataValue === 'number' ? dataValue : (dataValue ? dataValue.length : 0);
+                
+                cell.classList.remove('heat-0', 'heat-1', 'heat-2', 'heat-3');
+                if (count >= 3) cell.classList.add('heat-3');
+                else if (count === 2) cell.classList.add('heat-2');
+                else if (count === 1) cell.classList.add('heat-1');
+                else cell.classList.add('heat-0');
+                
+                if (isPreviewMode && mySelections.has(slotId)) {
+                    // Show preview indicator for participant's selections
+                    tooltipText = count > 0 
+                        ? `PREVIEW: ${count} available` 
+                        : "PREVIEW: No one available";
+                    tooltip.innerHTML = `<strong style="color: #60a5fa;">${tooltipText}</strong>`;
+                } else {
+                    tooltipText = count > 0 
+                        ? `${count} available` 
+                        : "No one available";
+                    tooltip.innerText = tooltipText;
+                }
+            }
+        });
     }
 
    
@@ -235,22 +502,7 @@
 
     // --- HEATMAP RENDERING ---
     function refreshHeatmap() {
-        document.querySelectorAll('.heat-cell').forEach(cell => {
-            const slotId = cell.dataset.slotId;
-            const participants = globalData[slotId] || [];
-            const count = participants.length;
-
-            cell.classList.remove('heat-0', 'heat-1', 'heat-2', 'heat-3');
-            if (count >= 3) cell.classList.add('heat-3');
-            else if (count === 2) cell.classList.add('heat-2');
-            else if (count === 1) cell.classList.add('heat-1');
-            else cell.classList.add('heat-0');
-
-            const tooltip = cell.querySelector('.tooltip');
-            tooltip.innerText = count > 0 
-                ? `${count} available:\n${participants.join('\n')}` 
-                : "No one available";
-        });
+        refreshHeatmapWithPreview();
     }
 
     // --- SUBMISSION ---
@@ -281,7 +533,80 @@
     document.addEventListener('DOMContentLoaded', () => {
         console.log("DOM loaded, attaching event listeners...");
         
-       
+        // Check if this is edit mode
+        if (editMode && editParticipantName) {
+            console.log("Edit mode detected for:", editParticipantName);
+            console.log("Existing selections:", existingSelections);
+            
+            // Auto-fill the participant name and enter the event
+            document.getElementById('guestName').value = editParticipantName;
+            currentUser = editParticipantName;
+            
+            // Skip the login section and show main content directly
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('mainContent').classList.remove('hidden');
+            document.getElementById('currentUserName').textContent = currentUser;
+            
+            // Pre-populate existing selections
+            if (existingSelections && existingSelections.length > 0) {
+                mySelections = new Set(existingSelections.map(id => id.toString()));
+                console.log("Pre-populated selections:", mySelections);
+                
+                // Mark the cells as selected
+                setTimeout(() => {
+                    mySelections.forEach(slotId => {
+                        const cell = document.querySelector(`[data-slot-id="${slotId}"]`);
+                        if (cell) {
+                            cell.classList.add('selected');
+                        }
+                    });
+                    updateSubmitButton();
+                    refreshHeatmap();
+                }, 100);
+            }
+        }
+        // Check if this is a post-submission page load (but not edit mode)
+        else if (!editMode) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isPostSubmission = urlParams.get('submitted') === 'true' || successMessage !== null;
+            
+            if ((isPostSubmission && submittedParticipantName) || successMessage !== null) {
+                console.log("Post-submission page detected for:", submittedParticipantName || 'unknown participant');
+                
+                // Auto-fill the participant name and enter the event
+                const participantName = submittedParticipantName || 'Guest';
+                document.getElementById('guestName').value = participantName;
+                currentUser = participantName;
+                
+                // Skip the login section and show main content directly
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('mainContent').classList.remove('hidden');
+                document.getElementById('currentUserName').textContent = currentUser;
+            
+                // Scroll to success message if it exists
+                setTimeout(() => {
+                    const successDiv = document.querySelector('.bg-green-100');
+                    if (successDiv) {
+                        successDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    
+                    
+                    refreshHeatmap();
+                    
+                    // Clean up the URL by removing the submitted parameter
+                    const url = new URL(window.location);
+                    url.searchParams.delete('submitted');
+                    window.history.replaceState({}, '', url.toString());
+                }, 100);
+                
+                // Don't attach selection event listeners for post-submission view
+                return;
+            } else if (isPostSubmission) {
+                console.log("Post-submission page detected but no participant name in flash attributes");
+            }
+        }
+        
+        // Only attach selection event listeners if this is NOT a post-submission view
         const personalCells = document.querySelectorAll('.personal-cell');
         const clickableSlots = document.querySelectorAll('.clickable-slot');
         console.log(`Found ${personalCells.length} personal cells`);
@@ -331,7 +656,73 @@
             });
         }, 1000);
     });
-
+    
+    // Function to load existing selections for a returning user
+    function loadExistingSelections(participantName) {
+        console.log("Loading existing selections for:", participantName);
+        
+        // Fetch existing selections from the backend
+        fetch(`/event/participant/${shareLink}/availability/${participantName}`)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Failed to fetch existing selections');
+            })
+            .then(slotIds => {
+                console.log("Existing selections:", slotIds);
+                
+                
+                mySelections.clear();
+                
+            
+                slotIds.forEach(slotId => {
+                    mySelections.add(slotId.toString());
+                    
+                    // Mark the cells as selected
+                    const cell = document.querySelector(`[data-slot-id="${slotId}"]`);
+                    if (cell) {
+                        cell.classList.add('selected');
+                    }
+                });
+                
+                updateSubmitButton();
+                
+                refreshHeatmapWithPreview();
+            })
+            .catch(err => {
+                console.error("Error loading existing selections:", err);
+            });
+    }
+    
+    function showEditingMessage(participantName) {
+        // Create and show an info banner
+        const existingBanner = document.querySelector('.editing-info-banner');
+        if (existingBanner) {
+            existingBanner.remove();
+        }
+        
+        const banner = document.createElement('div');
+        banner.className = 'editing-info-banner mb-6 bg-blue-100 border-l-4 border-blue-500 p-4 rounded-xl shadow-md';
+        banner.innerHTML = `
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-blue-700 font-medium">Welcome back, ${participantName}!</p>
+                    <p class="text-blue-600 text-sm">Your previous selections are being loaded. You can modify them and submit to update your availability.</p>
+                </div>
+            </div>
+        `;
+        
+        // Insert after the main content div starts
+        const mainContent = document.getElementById('mainContent');
+        const firstChild = mainContent.firstElementChild;
+        mainContent.insertBefore(banner, firstChild);
+    }
 </script>
 </body>
 </html>

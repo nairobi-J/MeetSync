@@ -2,6 +2,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <title>Year Calender</title>
 <style>
 body {
@@ -124,6 +126,31 @@ bdHolidays.put("12-25", "Christmas Day");
      //int day = 1;
      int year;
   
+=======
+=======
+>>>>>>> Stashed changes
+<title>Basic Month calendar</title>
+</head>
+<body>
+
+<%
+     Calendar cal = Calendar.getInstance();
+     int day = 1;
+     int year;
+     int hour = cal.get(Calendar.HOUR_OF_DAY);
+     int minute = cal.get(Calendar.MINUTE);
+     int month = cal.get(Calendar.MONTH);
+     
+     
+     String dayParam = request.getParameter("day");
+     if (dayParam != null) {
+         day = Integer.parseInt(dayParam);
+     }
+
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
     
    
      String[] months = {
@@ -138,13 +165,41 @@ bdHolidays.put("12-25", "Christmas Day");
      
      String yearValue = request.getParameter("yearValue");
      if(yearValue != null) year = Integer.parseInt(yearValue);
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
      else year = today.get(Calendar.YEAR);
+=======
+     else year = cal.get(Calendar.YEAR);
+>>>>>>> Stashed changes
+=======
+     else year = cal.get(Calendar.YEAR);
+>>>>>>> Stashed changes
      
      String hourParam = request.getParameter("hour");
      String minParam = request.getParameter("minute");
      String monthParam = request.getParameter("month");
      
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
    
+=======
+=======
+>>>>>>> Stashed changes
+     if(hourParam != null){
+    	 hour = Integer.parseInt(hourParam);
+     }
+     if(minParam != null){
+    	 minute = Integer.parseInt(minParam);
+     }
+
+     if (monthParam != null) {
+         month = Integer.parseInt(monthParam);
+         
+     }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
     
      String yearAction = request.getParameter("yearAction");
      if ("add".equals(yearAction)) {
@@ -153,13 +208,39 @@ bdHolidays.put("12-25", "Christmas Day");
          year--;
      }
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
      
+=======
+=======
+>>>>>>> Stashed changes
+      
+     cal.set(year, month, day, hour, minute, 0);
+
+     
+     int firstDayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1;
+     int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+     
+
+     //cal.set(year + 1, month - 1, 1);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
      
 %>
 
 
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <form method="post" class="year-header">
+=======
+<form method="post" style="display:flex; gap:10px;">
+>>>>>>> Stashed changes
+=======
+<form method="post" style="display:flex; gap:10px;">
+>>>>>>> Stashed changes
     <button type="submit" name="yearAction" value="sub">-</button>
 
     <strong><%= year %></strong>
@@ -168,13 +249,27 @@ bdHolidays.put("12-25", "Christmas Day");
 
     <!-- persist state -->
     <input type="hidden" name="yearValue" value="<%= year %>">
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
     <%-- <input type="hidden" name="month" value="<%= month %>">
     <input type="hidden" name="hour" value="<%= hour %>">
 <input type="hidden" name="minute" value="<%= minute %>"> --%>
+=======
+    <input type="hidden" name="month" value="<%= month %>">
+    <input type="hidden" name="hour" value="<%= hour %>">
+<input type="hidden" name="minute" value="<%= minute %>">
+>>>>>>> Stashed changes
+=======
+    <input type="hidden" name="month" value="<%= month %>">
+    <input type="hidden" name="hour" value="<%= hour %>">
+<input type="hidden" name="minute" value="<%= minute %>">
+>>>>>>> Stashed changes
     
 </form>
 
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 
 <div class="calendar-grid">
@@ -279,6 +374,84 @@ boolean isHoliday = holidayName != null;
 
 </div>
 
+=======
+=======
+>>>>>>> Stashed changes
+<form method="post" style="display:flex; gap:10px;">
+<%
+    for (int i = 0; i < 12; i++) {
+%>
+    <button type="submit" name="month" value="<%= i %>">
+        <%= months[i] %>
+      
+    </button>
+    <input type="hidden" name="yearValue" value="<%= year %>">
+    <input type="hidden" name="hour" value="<%= hour %>">
+<input type="hidden" name="minute" value="<%= minute %>">
+    
+   
+<%
+    }
+%>
+</form>
+
+
+<table>
+      <tr>
+          <th>Sun</th>
+          <th>Mon</th>
+          <th>Tue</th>
+          <th>Wed</th>
+          <th>Thu</th>
+          <th>Fri</th>
+          <th>Sat</th>  
+      </tr>
+      <tr>
+      <%for(int i = 0; i < firstDayOfWeek; i++) {%>
+      <td></td>
+      <% } 
+      
+      for(day = 1; day <= 7 - firstDayOfWeek; day++)
+      {
+    	 %>
+    	 <td>
+        <form action="timechart.jsp" method="post" style="margin:0;">
+            <input type="hidden" name="year" value="<%= year %>">
+            <input type="hidden" name="month" value="<%= month %>">
+            <button type="submit" name="day" value="<%= day %>">
+                <%= day %>
+            </button>
+        </form>
+    </td>
+      <%} %>
+    	  
+      
+     
+      </tr>
+      
+      <%for(int i = day; i <= daysInMonth ;) {%>
+    	  <tr>
+    	  <% for(int j = 0; j < 7 && i <= daysInMonth; i++, j++){ %>
+    	  <td>
+        <form action="timechart.jsp" method="post" style="margin:0;">
+            <input type="hidden" name="year" value="<%= year %>">
+            <input type="hidden" name="month" value="<%= month %>">
+            <button type="submit" name="day" value="<%= i %>">
+                <%= i %>
+            </button>
+        </form>
+    </td>
+    		  
+    	 <%}
+      } %> 
+      </tr>
+      
+      
+</table>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 
 
 

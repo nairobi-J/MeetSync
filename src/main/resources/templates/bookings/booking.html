@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Meeting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day.available {
+            cursor: pointer;
+            font-weight: 500;
+            background: rgba(37, 99, 235, 0.2);
+            color: #2563eb;
+            border-radius: 50%;
+
+        }
+
+        .calendar-day.available:hover {
+            transform: scale(1.05);
+            background-color: #f3f4f6;
+            border-radius: 50%;
+        }
+
+        .calendar-day.selected {
+            background: #2563eb !important;
+            color: white !important;
+            border-radius: 50% !important;
+        }
+
+        .calendar-day.disabled {
+            cursor: not-allowed;
+            font-weight: 500;
+        }
+
+        .time-slot {
+            transition: all 0.15s ease;
+        }
+
+        .time-slot:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gray-50 text-gray-900">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a th:href="@{/}" class="text-2xl font-bold text-blue-600">MeetSync</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Success/Error Messages -->
+        <div th:if="${success}" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-md">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <p th:text="${message}">Success message</p>
+            </div>
+        </div>
+        <div th:if="${error}" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md shadow-md">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                <p th:text="${message}">Error message</p>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Schedule a Meeting</h2>
+            <p class="text-sm text-gray-500" id="timezoneDisplay"></p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Host Info -->
+            <div th:object="${user}" class="lg:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center overflow-hidden"
+                        th:classappend="*{profilePic == null} ? ' bg-blue-100' : ''">
+                        <img th:if="*{profilePic}" th:src="*{profilePic}"
+                            class="w-full h-full object-cover"
+                            referrerpolicy="no-referrer" 
+                            alt="Profile Picture"
+                        >
+                        <span th:if="*{profilePic == null}"
+                            class="text-2xl font-bold text-blue-600"
+                            th:text="${name != null ? name.substring(0,1).toUpperCase() : 'U'}">
+                            U
+                        </span>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1" th:text="*{name}">Host Name</h3>
+                    <p class="text-sm text-gray-500 mb-4" th:text="*{email}">host@example.com</p>
+                    <div class="border-t border-gray-100 pt-4">
+                        <div class="text-left space-y-3">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-400 mt-0.5 mr-2" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-700">Duration</p>
+                                    <p th:text="${Preferences.meetingDurationMinutes} + ' minutes'" class="text-sm text-gray-900">30 minutes</p>
+                                </div>
+                            </div>
+            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar -->
+            <div class="lg:col-span-5 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <button type="button" id="prevMonth" class="px-3 py-2 rounded-lg text-sm font-medium transition">
+                        ← Prev
+                    </button>
+                    <h2 class="text-lg font-semibold text-gray-900" id="monthLabel"></h2>
+                    <button type="button" id="nextMonth" class="px-3 py-2 rounded-lg text-sm font-medium transition">
+                        Next →
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-7 gap-2 mb-3">
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Sun</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Mon</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Tue</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Wed</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Thu</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Fri</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">Sat</div>
+                </div>
+
+                <div id="calendarGrid" class=" gap-2"></div>
+            </div>
+
+            <!-- Times + booking form -->
+            <div class="lg:col-span-4 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="mb-4">
+                    <p class="text-xs text-gray-500 mb-1">Selected date</p>
+                    <p class="text-base font-semibold text-gray-900" id="selectedDateLabel">Choose a date</p>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-xs font-medium text-gray-700 mb-3">Available times</p>
+                    <div id="timesContainer" class="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto"></div>
+                    <p id="noTimes" class="text-sm text-gray-400 text-center py-4 hidden">No times available</p>
+                </div>
+
+                <form th:action="@{/u/{emailPrefix}(emailPrefix=${emailPrefix})}" method="post" id="bookingForm">
+                    <div class="border-t border-gray-100 pt-4 space-y-3">
+                        
+                        <div class=" p-3 mb-4">
+                            <p class="text-sm text-blue-900 font-medium">Request a time slot</p>
+                            <p class="text-xs text-blue-700 mt-1">Select your preferred date and time above</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Your Name</label>
+                            <input name="inviteeName" id="inviteeName" type="text" required
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Your Email</label>
+                            <input name="inviteeEmail" id="inviteeEmail" type="email" required
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Timezone</label>
+                            <input name="timezone" id="timezoneInput" type="text" readonly
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                                placeholder="Timezone">
+                        </div>
+                        <input type="hidden" name="bookingDate" id="bookingDateInput">
+                        <input type="hidden" name="bookingTime" id="bookingTimeInput">
+                        <button type="submit" id="bookBtn"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex items-center justify-center">
+                            <svg id="loadingSpinner" class="hidden animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span id="btnText">Confirm Schedule</span>
+                        </button>
+                        <p id="status" class="text-xs text-center"></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load external JavaScript file -->
+    <script th:src="@{/js/BookingSchedule.js}"></script>
+
+    <!-- Initialize booking schedule with Thymeleaf data -->
+    <script th:inline="javascript">
+      
+        const emailPrefixData = /*[[${emailPrefix}]]*/ '';
+        const availableSlotsData = /*[[${availableSlots}]]*/[];
+
+        // Initialize the booking schedule
+        initializeBookingSchedule(emailPrefixData, availableSlotsData);
+        /*]]>*/
+    </script>
+</body>
+
+</html>

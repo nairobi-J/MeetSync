@@ -35,6 +35,9 @@ public class Booking {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
+    @Column(name = "reminders_minutes_before")
+    private Integer remindersMinutesBefore = 30; // Default 30 minutes
+
     @Column(name = "timezone")
     private String timezone;
 
@@ -44,4 +47,14 @@ public class Booking {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "google_calendar_event_id")
+    private String googleCalendarEventId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "google_calendar_sync_status")
+    private GoogleCalendarSyncStatus googleCalendarSyncStatus = GoogleCalendarSyncStatus.PENDING;
+
+    @Column(name = "google_calendar_sync_timestamp")
+    private LocalDateTime googleCalendarSyncTimestamp;
 }

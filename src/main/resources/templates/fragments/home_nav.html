@@ -1,51 +1,70 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <script th:src="@{/js/sidebar_toggle.js}" defer></script>
 </head>
 <body onclick="document.getElementById('userProfileDropdown').classList.add('hidden')">
 
-<nav th:fragment="navbar" class="bg-white border-b border-gray-200 px-6 py-4 fixed w-full top-0 z-50">
+<nav th:fragment="navbar" class="bg-white z-50 border-b border-gray-200 px-4 sm:px-6 py-4 fixed w-full top-0">
     <div class="flex items-center justify-between">
-
-        <div class="flex items-center">
-            <a th:href="@{/dashboard}" class=" px-10 text-2xl font-bold text-blue-600">MeetSync</a>
-        </div>
-
-        <div class="flex-1 max-w-xl mx-8">
-            <div class="relative">
-                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                <input
-                        type="text"
-                        placeholder="Search"
-                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
+        <div class="flex items-center space-x-3">
+            <!-- Hamburger menu for mobile -->
+            <div class="relative lg:hidden">
+                <button id="navbarHamburger" onclick="document.getElementById('navbarSidebarDropdown').classList.toggle('hidden')" class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <!-- Dropdown menu -->
+                <div id="navbarSidebarDropdown" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                    <nav class="py-2">
+                        <a th:href="@{/dashboard}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-home w-5 mr-2"></i> Dashboard
+                        </a>
+                        <a th:href="@{/events}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="far fa-calendar-alt w-5 mr-2"></i> Events
+                        </a>
+                        <a th:href="@{/availability/setup}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="far fa-calendar w-5 mr-2"></i> Availability
+                        </a>
+                        <a th:href="@{/notifications}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="far fa-bell w-5 mr-2"></i> Notifications
+                        </a>
+                        <a th:href="@{/profile}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="far fa-user w-5 mr-2"></i> Profile
+                        </a>
+                    </nav>
+                </div>
             </div>
+            <a th:href="@{/dashboard}" class="px-2 sm:px-10 text-xl sm:text-2xl font-bold text-blue-600">MeetSync</a>
         </div>
 
+   
 
-    <div class="relative flex items-center space-x-6">
+
+    <div class="relative flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
         <div class="relative">
             <button id="userProfileBtn"
                     onclick="event.stopPropagation(); document.getElementById('userProfileDropdown').classList.toggle('hidden')"
-                    class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition">
+                    class="flex items-center space-x-1 sm:space-x-2 text-gray-700 hover:text-blue-600 transition">
                 <!-- GOOGLE PHOTO: Show if exists -->
                 <img th:if="${currentUser.profilePic}"
                      th:src="${currentUser.profilePic}"
-                     class="w-12 h-12 rounded-full border border-blue-500 object-cover"
+                     class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full border border-blue-500 object-cover"
                      referrerpolicy="no-referrer"
                      alt="">
 
                 <!-- FALLBACK ICON: Show if no photo (manual login) -->
                 <i th:unless="${currentUser.profilePic}"
-                   class="far fa-user-circle text-2xl text-blue-600"></i>
+                   class="far fa-user-circle text-xl sm:text-2xl text-blue-600"></i>
 
-                <span class="hidden md:block font-medium" th:text="${currentUser.name}">User Name</span>
-                <i class="fas fa-chevron-down text-xs opacity-50"></i>
+                <span class="hidden md:block font-medium text-sm lg:text-base" th:text="${currentUser.name}">User Name</span>
+                <i class="fas fa-chevron-down text-xs opacity-50 hidden sm:inline"></i>
             </button>
 
             <div id="userProfileDropdown"
                  onclick="event.stopPropagation()"
-                 class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                 class="hidden absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
 
                 <div class="p-6 border-b border-gray-200">
                     <h3 class="text-xl font-bold text-gray-900" th:text="${currentUser.name}">User Name</h3>
@@ -73,5 +92,7 @@
 
     </div>
 </nav>
+
+
 </body>
 </html>

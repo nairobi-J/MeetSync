@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Events Grid Fragment -->
+<div th:fragment="events_grid">
+
+    <!-- No Events Message -->
+    <div th:if="${!hasEvents}" class="text-center py-16">
+<!--    <div class="text-center py-16">-->
+        <div class="inline-block bg-gray-100 rounded-full p-6 mb-4">
+            <i class="fas fa-calendar-times text-gray-400 text-5xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">No events found</h3>
+        <p class="text-gray-600 mb-6">Create your first event to get started with scheduling.</p>
+        <a th:href="@{/event-create}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition">
+            <i class="fas fa-plus mr-2"></i>
+            Create Event
+        </a>
+    </div>
+
+    <!-- Events Grid -->
+<!--    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">-->
+    <div th:if="${hasEvents}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Event Card -->
+        <div th:each="event : ${events}" th:insert="~{fragments/events/events_card :: event_card(event=${event})}"></div>
+    </div>
+
+</div>
+</body>
+</html>
