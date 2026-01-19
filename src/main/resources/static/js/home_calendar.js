@@ -45,9 +45,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         changeMonthFromMini();
     });
 
-    document.getElementById('closeModal')?.addEventListener('click', () => {
-        document.getElementById('eventModal').classList.add('hidden');
-    });
+    // card data on click
 
     async function changeMonth(delta) {
         currentMonth += delta;
@@ -139,11 +137,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const container = document.createElement('div');
                 container.className = 'mt-1 space-y-1 max-h-20 overflow-y-auto';
 
+                // append badges (each badge will have its own click handler)
                 dayEvents.forEach(ev => container.appendChild(createEventBadge(ev)));
 
                 cell.appendChild(container);
-                cell.addEventListener('click', () => showEventModal(dayEvents, day));
-                cell.classList.add('cursor-pointer');
             }
 
             grid.appendChild(cell);
@@ -177,12 +174,18 @@ document.addEventListener('DOMContentLoaded', async function () {
         };
 
         const badge = document.createElement('div');
-        badge.className = `text-xs px-2 py-0.5 rounded border ${colors[event.color] || colors.blue} truncate`;
-        
+        badge.className = `text-xs px-2 py-0.5 rounded border ${colors[event.color] || colors.blue} truncate cursor-pointer`;
+
         // Show start time + title
         const startTime = event.startTime ? event.startTime.substring(0, 5) : '';
         badge.textContent = startTime ? `${startTime} ${event.title}` : `${event.title}`;
-        
+
+        // Open dynamic modal for this single event
+        badge.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showEventModalForEvent(event);
+        });
+
         return badge;
     }
 
@@ -194,51 +197,94 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
-    function showEventModal(dayEvents, day) {
-        if (dayEvents.length === 0) return;
+    // Create and show a dynamic modal for a single event
+function showEventModalForEvent(ev) {
+    // Remove any previous modal content
+    const modal = document.getElementById('eventDetailModal');
+    if (!modal) return;
+    
+    const contentArea = document.getElementById('modalEventContent');
+    contentArea.innerHTML = ''; // clear previous
 
-        const modal = document.getElementById('eventModal');
-        const modalContent = modal.querySelector('[id^="modal"]')?.parentElement;
-        
-        // Clear previous content
-        let container = document.getElementById('eventsList');
-        if (!container) {
-            // Create container if it doesn't exist
-            container = document.createElement('div');
-            container.id = 'eventsList';
-            container.className = 'max-h-96 overflow-y-auto';
-            modal.querySelector('.modal-body')?.appendChild(container) || modal.appendChild(container);
+    // ── Header section ────────────────────────────────────────
+    const header = document.createElement('div');
+    header.className = 'p-6 border-b border-gray-200';
+
+    const titleRow = document.createElement('div');
+    titleRow.className = 'flex items-start justify-between mb-4';
+
+    const title = document.createElement('h3');
+    title.className = 'text-lg font-bold text-gray-900 flex-1';
+    title.textContent = ev.title || 'Untitled Event';
+
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-video text-blue-500 text-xl';
+
+    titleRow.appendChild(title);
+    titleRow.appendChild(icon);
+    header.appendChild(titleRow);
+
+    // Date & Time info
+    const info = document.createElement('div');
+    info.className = 'space-y-2 text-sm text-gray-600';
+
+    // Date line
+    const dateDiv = document.createElement('div');
+    dateDiv.className = 'flex items-center space-x-2';
+    dateDiv.innerHTML = `
+        <i class="far fa-calendar w-4"></i>
+        <span>${formatDate(ev.date)}</span>
+    `;
+    info.appendChild(dateDiv);
+
+    // Time line
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'flex items-center space-x-2';
+    const timeText = ev.startTime && ev.endTime 
+        ? `${ev.startTime.substring(0,5)} - ${ev.endTime.substring(0,5)}`
+        : 'Time not set';
+    timeDiv.innerHTML = `
+        <i class="far fa-clock w-4"></i>
+        <span>${timeText}</span>
+    `;
+    info.appendChild(timeDiv);
+
+    header.appendChild(info);
+
+    contentArea.appendChild(header);
+
+    // Show modal
+    modal.classList.remove('hidden');
+
+    // Close handlers
+    document.getElementById('closeEventModal').onclick = () => {
+        modal.classList.add('hidden');
+    };
+
+    // Close on outside click
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
         }
-        container.innerHTML = '';
+    };
+}
 
-        // Show all events for the day
-        dayEvents.forEach((ev, index) => {
-            const eventDiv = document.createElement('div');
-            eventDiv.className = 'p-4 mb-3 border border-gray-200 rounded-lg bg-gray-50';
-            
-            const startTime = ev.startTime ? ev.startTime.substring(0, 5) : 'N/A';
-            const endTime = ev.endTime ? ev.endTime.substring(0, 5) : 'N/A';
-            
-            eventDiv.innerHTML = `
-                <div class="flex items-center space-x-2 mb-2">
-                    <h4 class="font-bold text-gray-900">${ev.title}</h4>
-                </div>
-                <div class="text-sm text-gray-600 space-y-1">
-                    <div><i class="far fa-calendar w-4"></i> ${ev.date}</div>
-                    <div><i class="far fa-clock w-4"></i> ${startTime} - ${endTime}</div>
-                    ${ev.description ? `<div class="text-gray-500 italic mt-2">${ev.description}</div>` : ''}
-                </div>
-            `;
-            
-            container.appendChild(eventDiv);
+// Simple helper — adapt format to your needs
+function formatDate(dateStr) {
+    if (!dateStr) return 'Date TBD';
+    try {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const date = new Date(y, m-1, d);
+        return date.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
         });
-
-        // Update modal title with day info
-        document.getElementById('modalTitle').textContent = `Events on ${day}`;
-        document.getElementById('modalDate').textContent = `Total: ${dayEvents.length} event${dayEvents.length > 1 ? 's' : ''}`;
-        
-        modal.classList.remove('hidden');
+    } catch (e) {
+        return dateStr;
     }
+}
 
     // Mini calendar functions (keep your original ones, just ensure sync)
     function initMiniCalendar() {
