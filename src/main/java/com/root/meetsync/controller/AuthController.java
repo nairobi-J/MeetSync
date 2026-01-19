@@ -19,26 +19,26 @@ public class AuthController {
         this.userService = userService;
     }
 
-    @PostMapping("/api/register")
-    public String registerUser(@ModelAttribute UserRegistrationDto registrationDto) {
-        userService.registerNewUser(registrationDto);
-        // After successful signup, redirect to login page
-        return "redirect:/login?success";
-    }
+    // @PostMapping("/api/register")
+    // public String registerUser(@ModelAttribute UserRegistrationDto registrationDto) {
+    //     userService.registerNewUser(registrationDto);
+    //     // After successful signup, redirect to login page
+    //     return "redirect:/login?success";
+    // }
 
-    @PostMapping("/api/users/set-password")
-    public String handleSetPassword(@RequestParam("password") String password,
-                                    Authentication authentication) {
-        String email;
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            email = (String) oauthToken.getPrincipal().getAttributes().get("email");
-        } else {
-            email = authentication.getName();
-        }
+    // @PostMapping("/api/users/set-password")
+    // public String handleSetPassword(@RequestParam("password") String password,
+    //                                 Authentication authentication) {
+    //     String email;
+    //     if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+    //         email = (String) oauthToken.getPrincipal().getAttributes().get("email");
+    //     } else {
+    //         email = authentication.getName();
+    //     }
 
 
-        userService.updatePassword(email, password);
+    //     userService.updatePassword(email, password);
 
-        return "redirect:/dashboard?passwordSet=true";
-    }
+    //     return "redirect:/dashboard?passwordSet=true";
+    // }
 }

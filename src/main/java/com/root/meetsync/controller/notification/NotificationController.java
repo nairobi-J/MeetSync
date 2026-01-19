@@ -31,12 +31,12 @@ public class NotificationController {
                                    @RequestParam(defaultValue = "20") int size,
                                    @RequestParam(required = false) String filter) {
         if (authentication == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
         
         User user = getCurrentUser(authentication);
         if (user == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
         
         Pageable pageable = PageRequest.of(page, size);
@@ -70,12 +70,12 @@ public class NotificationController {
     @PostMapping("/mark-all-read")
     public String markAllAsRead(Authentication authentication, RedirectAttributes redirectAttributes) {
         if (authentication == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
         
         User user = getCurrentUser(authentication);
         if (user == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
         
         int count = notificationService.markAllAsRead(user);
@@ -95,12 +95,12 @@ public class NotificationController {
     @PostMapping("/delete-all")
     public String deleteAllNotifications(Authentication authentication, RedirectAttributes redirectAttributes) {
         if (authentication == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
         
         User user = getCurrentUser(authentication);
         if (user == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
         
         notificationService.deleteAllNotifications(user);
