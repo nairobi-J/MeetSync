@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Users - MeetSync Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/home_style.css}">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white z-50 border-b border-gray-200 px-4 sm:px-6 py-4 fixed w-full top-0">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a th:href="@{/dashboard}" class="px-2 sm:px-10 text-xl sm:text-2xl font-bold text-blue-600">MeetSync</a>
+                <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">Admin Panel</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-700">Welcome, <span th:text="${currentUser.name}">Admin</span></span>
+                <a href="/dashboard" class="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to App
+                </a>
+                <a href="/logout" class="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 fixed left-0 top-16 bottom-0 overflow-y-auto">
+        <div class="p-4">
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                    <i class="fas fa-shield-alt text-blue-600 mr-2"></i> Admin Tools
+                </h3>
+                <nav class="space-y-2">
+                    <a href="/admin/dashboard" class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
+                        <i class="fas fa-home mr-3"></i> Dashboard
+                    </a>
+                    <a href="/admin/pending-users" class="flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md">
+                        <i class="fas fa-users mr-3"></i> Pending Users
+                        <span th:if="${pendingUsers.totalElements > 0}" class="ml-auto bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full" th:text="${pendingUsers.totalElements}">0</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 mt-16 p-8">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">
+                    <i class="fas fa-user-clock text-blue-600 mr-3"></i> Pending User Approvals
+                </h1>
+                <p class="text-gray-600 mt-2">Review and approve new user registrations</p>
+            </div>
+            <a href="/admin/dashboard" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div th:if="${param.success}" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle mr-2"></i>
+                <span th:text="${param.success}">User approved successfully!</span>
+            </div>
+        </div>
+
+        <div th:if="${param.error}" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <span th:text="${param.error}">An error occurred.</span>
+            </div>
+        </div>
+
+        <!-- Pending Users Card -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 class="text-xl font-bold text-gray-900">
+                    <i class="fas fa-clock text-yellow-600 mr-2"></i> Users Awaiting Approval
+                </h2>
+                <span class="bg-yellow-100 text-yellow-800 text-sm font-medium px-3 py-1 rounded-full" th:text="${pendingUsers.totalElements + ' pending'}">0 pending</span>
+            </div>
+
+            <div class="p-6">
+                <!-- Empty State -->
+                <div th:if="${pendingUsers.totalElements == 0}" class="text-center py-12">
+                    <i class="fas fa-check-circle text-green-500 text-6xl mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">No Pending Users</h3>
+                    <p class="text-gray-600">All users have been processed. Great job!</p>
+                    <a href="/admin/dashboard" class="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+                    </a>
+                </div>
+
+                <!-- Users List -->
+                <div th:if="${pendingUsers.totalElements > 0}">
+                    <div class="space-y-4">
+                        <div th:each="user : ${pendingUsers.content}" class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center flex-1">
+                                    <!-- User Icon -->
+                                    <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mr-4">
+                                        <i class="fas fa-user text-gray-600"></i>
+                                    </div>
+                                    
+                                    <!-- User Info -->
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-4">
+                                            <div>
+                                                <h3 class="font-semibold text-gray-900" th:text="${user.name}">User Name</h3>
+                                                <p class="text-sm text-gray-600" th:text="${user.email}">user@example.com</p>
+                                                <div class="flex items-center mt-1 space-x-3">
+                                                    <span class="text-xs text-gray-500">
+                                                        <i class="fas fa-calendar mr-1"></i>
+                                                        <span th:text="${#temporals.format(user.createdAt, 'MMM dd, yyyy HH:mm')}">Jan 15, 2024 10:30</span>
+                                                    </span>
+                                                    <span class="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded" th:text="${user.email.split('@')[1]}">domain.com</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Action Buttons -->
+                                <div class="flex space-x-2">
+                                    <!-- Approve Button -->
+                                    <form method="post" th:action="@{/admin/users/{id}/approve(id=${user.id})}" class="inline">
+                                        <button type="submit" 
+                                                class="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition"
+                                                onclick="return confirm('Approve this user?')">
+                                            <i class="fas fa-check mr-1"></i> Approve
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Reject Button -->
+                                    <button type="button" 
+                                            class="px-4 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition"
+                                            onclick="openRejectModal(this)"
+                                            th:data-user-id="${user.id}"
+                                            th:data-user-name="${user.name}"
+                                            th:data-user-email="${user.email}">
+                                        <i class="fas fa-times mr-1"></i> Reject
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div th:if="${pendingUsers.totalPages > 1}" class="flex justify-center mt-8">
+                        <nav class="flex space-x-1">
+                            <a th:if="${!pendingUsers.first}" 
+                               th:href="@{/admin/pending-users(page=${pendingUsers.number - 1})}"
+                               class="px-3 py-2 text-sm bg-white border border-gray-300 text-gray-700 rounded-l hover:bg-gray-50">
+                                Previous
+                            </a>
+                            
+                            <span th:each="pageNum : ${#numbers.sequence(0, pendingUsers.totalPages - 1)}" 
+                                  th:if="${pageNum >= pendingUsers.number - 2 and pageNum <= pendingUsers.number + 2}">
+                                <a th:href="@{/admin/pending-users(page=${pageNum})}" 
+                                   th:text="${pageNum + 1}"
+                                   class="px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50"
+                                   th:class="${pageNum == pendingUsers.number} ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700'">1</a>
+                            </span>
+                            
+                            <a th:if="${!pendingUsers.last}" 
+                               th:href="@{/admin/pending-users(page=${pendingUsers.number + 1})}"
+                               class="px-3 py-2 text-sm bg-white border border-gray-300 text-gray-700 rounded-r hover:bg-gray-50">
+                                Next
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <form id="rejectForm" method="post">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-exclamation-triangle text-red-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Reject User</h3>
+                            <p class="text-sm text-gray-600">This action cannot be undone</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-gray-700">Are you sure you want to reject <strong id="modalUserName">this user</strong>?</p>
+                        <p class="text-sm text-gray-600 mt-1">Email: <span id="modalUserEmail">user@example.com</span></p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">Reason for rejection (optional):</label>
+                        <textarea name="reason" id="reason" rows="3" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="e.g., Invalid domain, spam account, etc."></textarea>
+                    </div>
+                    
+                    <div class="bg-red-50 border border-red-200 rounded-md p-3 mb-6">
+                        <div class="flex">
+                            <i class="fas fa-exclamation-triangle text-red-600 mr-2 mt-0.5"></i>
+                            <div>
+                                <p class="text-sm text-red-800">
+                                    <strong>Warning:</strong> This action will permanently delete the user account.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 px-6 py-3 flex justify-end space-x-3 rounded-b-lg">
+                    <button type="button" onclick="closeRejectModal()" 
+                            class="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700">
+                        <i class="fas fa-times mr-1"></i> Reject User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openRejectModal(button) {
+            const userId = button.getAttribute('data-user-id');
+            const userName = button.getAttribute('data-user-name');
+            const userEmail = button.getAttribute('data-user-email');
+            
+            document.getElementById('modalUserName').textContent = userName;
+            document.getElementById('modalUserEmail').textContent = userEmail;
+            document.getElementById('rejectForm').action = `/admin/users/${userId}/reject`;
+            document.getElementById('rejectModal').classList.remove('hidden');
+        }
+        
+        function closeRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
+            document.getElementById('reason').value = '';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('rejectModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRejectModal();
+            }
+        });
+        
+        // Close modal with escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeRejectModal();
+            }
+        });
+    </script>
+</body>
+</html>

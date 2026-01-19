@@ -34,17 +34,11 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login/**", "/u/**","/signup","/css/**", "/js/**", "/create-event", "/api/events/create", "/event/**","/event/participant/**").permitAll()
+                        .requestMatchers("/", "/login/**", "/u/**","/signup","/css/**", "/js/**", "/create-event", "/api/events/create", "/event/**","/event/participant/**", "/pending-approval").permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/dashboard", true)
-                        .permitAll()
-                )
                 .oauth2Login(oauth -> oauth
-                        .loginPage("/login")
+                        .loginPage("/oauth2/authorization/google")
                         // for Refresh token surity
                         .authorizationEndpoint(authorization -> authorization
                                 .authorizationRequestResolver(authorizationRequestResolver(this.clientRegistrationRepository))
