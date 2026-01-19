@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - MeetSync</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/home_style.css}">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white z-50 border-b border-gray-200 px-4 sm:px-6 py-4 fixed w-full top-0">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a th:href="@{/dashboard}" class="px-2 sm:px-10 text-xl sm:text-2xl font-bold text-blue-600">MeetSync</a>
+                <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">Admin Panel</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-700">Welcome, <span th:text="${currentUser.name}">Admin</span></span>
+                <a href="/dashboard" class="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to App
+                </a>
+                <a href="/logout" class="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 fixed left-0 top-16 bottom-0 overflow-y-auto">
+        <div class="p-4">
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                    <i class="fas fa-shield-alt text-blue-600 mr-2"></i> Admin Tools
+                </h3>
+                <nav class="space-y-2">
+                    <a href="/admin/dashboard" class="flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md">
+                        <i class="fas fa-home mr-3"></i> Dashboard
+                    </a>
+                    <a href="/admin/pending-users" class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
+                        <i class="fas fa-users mr-3"></i> Pending Users
+                        <span th:if="${pendingCount > 0}" class="ml-auto bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full" th:text="${pendingCount}">0</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 mt-16 p-8">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">
+                <i class="fas fa-tachometer-alt text-blue-600 mr-3"></i> Admin Dashboard
+            </h1>
+            <p class="text-gray-600 mt-2">Manage user access and monitor system activity</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 rounded-lg">
+                        <i class="fas fa-users text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-2xl font-bold text-gray-900" th:text="${totalUsers}">0</h3>
+                        <p class="text-gray-600">Total Users</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 rounded-lg">
+                        <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-2xl font-bold text-gray-900" th:text="${activeUsers}">0</h3>
+                        <p class="text-gray-600">Active Users</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-2xl font-bold text-gray-900" th:text="${pendingUsers}">0</h3>
+                        <p class="text-gray-600">Pending Approval</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">
+                <i class="fas fa-bolt text-blue-600 mr-2"></i> Quick Actions
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="/admin/pending-users" class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                    <div class="flex items-center">
+                        <i class="fas fa-user-clock text-yellow-600 text-xl mr-3"></i>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Review Pending Users</h3>
+                            <p class="text-sm text-gray-600">Approve or reject new registrations</p>
+                        </div>
+                    </div>
+                    <span th:if="${pendingUsers > 0}" class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full" th:text="${pendingUsers}">0</span>
+                </a>
+
+                <a href="/dashboard" class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                    <div class="flex items-center">
+                        <i class="fas fa-calendar-alt text-blue-600 text-xl mr-3"></i>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Back to MeetSync</h3>
+                            <p class="text-sm text-gray-600">Return to main application</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div th:if="${recentUsers != null and !recentUsers.isEmpty()}" class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">
+                    <i class="fas fa-history text-blue-600 mr-2"></i> Recent Registrations
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="overflow-hidden">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">User</th>
+                                <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Email</th>
+                                <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Status</th>
+                                <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Registered</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user : ${recentUsers}" class="border-b border-gray-100">
+                                <td class="py-3 px-4">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                                            <i class="fas fa-user text-gray-600 text-sm"></i>
+                                        </div>
+                                        <span class="font-medium text-gray-900" th:text="${user.name}">User Name</span>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4 text-gray-600" th:text="${user.email}">user@example.com</td>
+                                <td class="py-3 px-4">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                                          th:class="${user.status.name() == 'ACTIVE'} ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+                                          th:text="${user.status.name()}">ACTIVE</span>
+                                </td>
+                                <td class="py-3 px-4 text-gray-600" th:text="${#temporals.format(user.createdAt, 'MMM dd, yyyy')}">Jan 15, 2024</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

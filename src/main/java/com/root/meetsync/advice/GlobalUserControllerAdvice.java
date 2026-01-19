@@ -2,6 +2,7 @@ package com.root.meetsync.advice;
 
 import com.root.meetsync.dto.CurrentUserDTO;
 import com.root.meetsync.entity.User;
+import com.root.meetsync.entity.UserStatus;
 import com.root.meetsync.service.NotificationService;
 import com.root.meetsync.service.UserService;
 import jakarta.servlet.http.HttpSession;
@@ -48,16 +49,26 @@ public class GlobalUserControllerAdvice {
         }
 
         // Fetch user from DB
-        CurrentUserDTO currentUser = userService.findByEmail(email)
-                .map(user -> CurrentUserDTO.builder()
-                        .id(user.getId())
-                        .name(user.getName())
-                        .email(user.getEmail())
-                        .googleId(user.getGoogleId())
-                        .profilePic(user.getProfilePic())
-                        .timezone(user.getTimezone())
-                        .build())
-                .orElse(null);
+        User user = userService.findByEmail(email).orElse(null);
+        if (user == null) {
+            return null;
+        }
+        
+        // Check if user is pending and store in session
+        if (user.getStatus() == UserStatus.PENDING) {
+            session.setAttribute("userStatus", "PENDING");
+        }
+        
+        CurrentUserDTO currentUser = CurrentUserDTO.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .googleId(user.getGoogleId())
+                .profilePic(user.getProfilePic())
+                .timezone(user.getTimezone())
+                .status(user.getStatus())
+                .role(user.getRole())
+                .build();
 
         // Store DTO in session
         session.setAttribute("currentUserDTO", currentUser);

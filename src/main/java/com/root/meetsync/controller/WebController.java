@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -26,10 +27,10 @@ import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 import com.root.meetsync.dto.CurrentUserDTO;
 import com.root.meetsync.entity.User;
+import com.root.meetsync.entity.UserStatus;
 import com.root.meetsync.service.UserService;
 import com.root.meetsync.service.impl.GoogleCalendarServiceImpl;
 
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -69,6 +70,11 @@ public class WebController {
         return "userinfo";
     }
 
+    @GetMapping("/pending-approval")
+    public String pendingApprovalPage() {
+        return "pending-approval";
+    }
+
     @PostMapping("/profile/update")
     public String updateProfile(
             @RequestParam String name,
@@ -95,7 +101,8 @@ public class WebController {
         Authentication authentication,
         Model model,
         @RequestParam(name = "year", required = false) Integer paramYear,
-        @RequestParam(name = "month", required = false) Integer paramMonth) {
+        @RequestParam(name = "month", required = false) Integer paramMonth,
+        HttpSession session) {
 
     User user = getAuthenticatedUser(authentication);
 
