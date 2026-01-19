@@ -1,106 +1,48 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <body>
     <!-- Hero Section Fragment -->
-    <section th:fragment="hero" class="pt-24 pb-16 px-6">
-        <div class="max-w-7xl mx-auto">
+    <section th:fragment="hero" class="  pt-24 pb-16 px-6">
+        <div class="max-w-7xl  mx-auto">
             <div class="grid md:grid-cols-2 gap-12 items-center">
-                
+
                 <!-- Left Content -->
                 <div class="space-y-6">
                     <h1 class="text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
                         Schedule meetings without the back-and-forth.
                     </h1>
-                    
+
                     <p class="text-lg text-gray-600 leading-relaxed">
-                        MeetSync is the modern scheduling platform that makes finding time a breeze. 
+                        MeetSync is the modern scheduling platform that makes finding time a breeze.
                         Whether for 1:1 catch-ups or group sessions, streamline your calendar today.
                     </p>
-                    
+
                     <div>
                         <th:block th:if="${currentUser == null}">
-                        <a th:href="@{/oauth2/authorization/google}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg transition transform hover:scale-105">
-                            Get Started 
-                        </a>
+                            <a th:href="@{/oauth2/authorization/google}"
+                                class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg transition transform hover:scale-105">
+                                Get Started
+                            </a>
                         </th:block>
 
                         <th:block th:if="${currentUser != null}">
-                            <a th:href="@{/dashboard}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg  transform hover:scale-105">
+                            <a th:href="@{/dashboard}"
+                                class="inline-block my-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg  transform hover:scale-105">
                                 Go to Dashboard
                             </a>
                         </th:block>
                     </div>
                 </div>
-                
-                <!-- Right Content - Demo Calendar -->
-<!--                <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">-->
-<!--                    &lt;!&ndash; Calendar Header &ndash;&gt;-->
-<!--                    <div class="flex items-center justify-between mb-6">-->
-<!--                        <h3 class="text-lg font-semibold text-gray-900">January <span th:text="${currentYear}"> </span> </h3>-->
-<!--                    </div>-->
 
-<!--                    &lt;!&ndash; Calendar Grid &ndash;&gt;-->
-<!--                    <div class="grid grid-cols-7 gap-2 mb-6">-->
-<!--                        &lt;!&ndash; Day Headers &ndash;&gt;-->
-<!--                        <div class="text-center text-xs font-semibold text-gray-600">S</div>-->
-<!--                        <div class="text-center text-xs font-semibold text-gray-600">M</div>-->
-<!--                        <div class="text-center text-xs font-semibold text-gray-600">T</div>-->
-<!--                        <div class="text-center text-xs font-semibold text-gray-600">W</div>-->
-<!--                        <div class="text-center text-xs font-semibold text-gray-600">T</div>-->
-<!--                        <div class="text-center text-xs font-semibold text-gray-600">F</div>-->
-<!--                        <div class="text-center text-xs font-semibold text-gray-600">S</div>-->
-
-<!--                        &lt;!&ndash; Empty cells for alignment &ndash;&gt;-->
-<!--                        <div class="text-center py-2 text-sm text-gray-400">28</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-400">29</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-400">30</div>-->
-
-<!--                        &lt;!&ndash; October days &ndash;&gt;-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">1</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">2</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">3</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">4</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">5</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">6</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">7</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">8</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">9</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">10</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">11</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">12</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">13</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">14</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">15</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">16</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">17</div>-->
-<!--                        <div class="text-center py-2 text-sm text-gray-700 rounded cursor-pointer ">18</div>-->
-<!--                    </div>-->
-
-<!--                    &lt;!&ndash; Time Slots &ndash;&gt;-->
-<!--                    <div class="grid grid-cols-2 gap-3">-->
-<!--                        <button class="border border-blue-300 text-blue-600 py-3 rounded-lg font-medium">-->
-<!--                            09:00 AM-->
-<!--                        </button>-->
-<!--                        <button class="border border-blue-300 text-blue-600 py-3 rounded-lg font-medium">-->
-<!--                            09:30 AM-->
-<!--                        </button>-->
-<!--                        <button class="border border-blue-300 text-blue-600 py-3 rounded-lg font-medium">-->
-<!--                            10:00 AM-->
-<!--                        </button>-->
-<!--                        <button class="border border-blue-300 text-blue-600 py-3 rounded-lg font-medium">-->
-<!--                            01:00 PM-->
-<!--                        </button>-->
-<!--                        <button class="border border-blue-300 text-blue-600 py-3 rounded-lg font-medium">-->
-<!--                            02:30 PM-->
-<!--                        </button>-->
-<!--                        <button class="border border-blue-300 text-blue-600 py-3 rounded-lg font-medium">-->
-<!--                            04:00 PM-->
-<!--                        </button>-->
-<!--                    </div>-->
-<!--                </div>-->
+                <!-- Right Content - Banner -->
+                <div>
+                    <img src="/assets/events.png" alt="Demo Calendar" class="w-3/5 h-auto rounded-lg">
+                </div>
 
             </div>
         </div>
     </section>
 </body>
+
 </html>
