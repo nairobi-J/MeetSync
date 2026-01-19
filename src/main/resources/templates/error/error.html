@@ -3,17 +3,72 @@
 <head>
     <title>Error</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%);
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1.5rem;
+        }
+        .error-title {
+            font-size: 2.3rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 0.8rem;
+        }
+        .error-message {
+            color: #4a5568;
+            font-size: 1.15rem;
+            margin-bottom: 2rem;
+        }
+        .home-btn {
+            display: inline-block;
+            padding: 0.8rem 2.5rem;
+            background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.08rem;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 2px 8px 0 rgba(59,130,246,0.10);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .home-btn:hover {
+            background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
+            box-shadow: 0 4px 16px 0 rgba(59,130,246,0.18);
+        }
+        @media (max-width: 600px) {
+            .error-title {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
-    
-    <main class="container">
-        <h1>Oops! Something went wrong</h1>
-        <p th:text="${error}">An unexpected error occurred.</p>
-        <a th:href="@{/}">Return to Home</a>
+    <main>
+        <svg class="error-icon" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="32" fill="#f87171" opacity="0.12"/><path d="M32 18v18" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/><circle cx="32" cy="44" r="2.5" fill="#ef4444"/></svg>
+        <div class="error-title">Oops! Something went wrong</div>
+        <div class="error-message" th:text="${error}">An unexpected error occurred.</div>
+        <a class="home-btn" th:href="@{/}">Return to Home</a>
     </main>
-    
     <div th:replace="~{fragments/footer :: footer}"></div>
-
 </body>
 </html>

@@ -42,26 +42,27 @@ public class WebController {
     private final UserService userService;
     private final GoogleCalendarServiceImpl googleCalendarService;
 
-    @GetMapping("/login")
-    public String showLoginPage(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            return "redirect:/";
-        }
-        return "login";
-    }
+    // @GetMapping("/login")
+    // public String showLoginPage(Authentication authentication) {
 
-    @GetMapping("/signup")
-    public String showSignupPage(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            return "redirect:/";
-        }
-        return "signup";
-    }
+    //     if (authentication != null && authentication.isAuthenticated()) {
+    //         return "redirect:/";
+    //     }
+    //     return "login";
+    // }
 
-    @GetMapping("/set-password")
-    public String showSetPasswordPage() {
-        return "set-password";
-    }
+    // @GetMapping("/signup")
+    // public String showSignupPage(Authentication authentication) {
+    //     if (authentication != null && authentication.isAuthenticated()) {
+    //         return "redirect:/";
+    //     }
+    //     return "signup";
+    // }
+
+    // @GetMapping("/set-password")
+    // public String showSetPasswordPage() {
+    //     return "set-password";
+    // }
 
     @GetMapping("/profile")
     public String showProfilePage(Model model) {
@@ -82,7 +83,7 @@ public class WebController {
 
         CurrentUserDTO currentUser = (CurrentUserDTO) session.getAttribute("currentUserDTO");
         if (currentUser == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
 
         userService.updateProfile(currentUser.getId(), name, timezone);
@@ -105,9 +106,9 @@ public class WebController {
 
     User user = getAuthenticatedUser(authentication);
 
-    if (user.getPassword() == null || user.getPassword().isEmpty()) {
-        return "redirect:/set-password";
-    }
+    // if (user.getPassword() == null || user.getPassword().isEmpty()) {
+    //     return "redirect:/set-password";
+    // }
 
     LocalDate now = LocalDate.now();
     int displayYear  = (paramYear != null) ? paramYear : now.getYear();
