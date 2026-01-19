@@ -19,12 +19,12 @@ public class AuthController {
         this.userService = userService;
     }
 
-    @PostMapping("/api/register")
-    public String registerUser(@ModelAttribute UserRegistrationDto registrationDto) {
-        userService.registerNewUser(registrationDto);
-        // After successful signup, redirect to login page
-        return "redirect:/login?success";
-    }
+    // @PostMapping("/api/register")
+    // public String registerUser(@ModelAttribute UserRegistrationDto registrationDto) {
+    //     userService.registerNewUser(registrationDto);
+    //     // After successful signup, redirect to login page
+    //     return "redirect:/login?success";
+    // }
 
     // @PostMapping("/api/users/set-password")
     // public String handleSetPassword(@RequestParam("password") String password,

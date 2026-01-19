@@ -28,7 +28,7 @@ public class AvailabilityPageController {
     public String showAvailabilitySetup(Authentication authentication, Model model) {
 
         if (authentication == null || !authentication.isAuthenticated()) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
 
         User user = getAuthenticatedUser(authentication);
@@ -82,7 +82,7 @@ public class AvailabilityPageController {
             RedirectAttributes redirectAttributes) {
 
         if (authentication == null || !authentication.isAuthenticated()) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
 
         User user = getAuthenticatedUser(authentication);
@@ -112,7 +112,7 @@ public class AvailabilityPageController {
     public String showBookingLink(Authentication authentication, Model model) {
 
         if (authentication == null || !authentication.isAuthenticated()) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
 
         User user = getAuthenticatedUser(authentication);

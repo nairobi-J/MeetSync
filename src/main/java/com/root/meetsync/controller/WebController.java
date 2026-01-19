@@ -41,27 +41,27 @@ public class WebController {
     private final UserService userService;
     private final GoogleCalendarServiceImpl googleCalendarService;
 
-    @GetMapping("/login")
-    public String showLoginPage(Authentication authentication) {
+    // @GetMapping("/login")
+    // public String showLoginPage(Authentication authentication) {
 
-        if (authentication != null && authentication.isAuthenticated()) {
-            return "redirect:/";
-        }
-        return "login";
-    }
+    //     if (authentication != null && authentication.isAuthenticated()) {
+    //         return "redirect:/";
+    //     }
+    //     return "login";
+    // }
 
-    @GetMapping("/signup")
-    public String showSignupPage(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            return "redirect:/";
-        }
-        return "signup";
-    }
+    // @GetMapping("/signup")
+    // public String showSignupPage(Authentication authentication) {
+    //     if (authentication != null && authentication.isAuthenticated()) {
+    //         return "redirect:/";
+    //     }
+    //     return "signup";
+    // }
 
-    @GetMapping("/set-password")
-    public String showSetPasswordPage() {
-        return "set-password";
-    }
+    // @GetMapping("/set-password")
+    // public String showSetPasswordPage() {
+    //     return "set-password";
+    // }
 
     @GetMapping("/profile")
     public String showProfilePage(Model model) {
@@ -77,7 +77,7 @@ public class WebController {
 
         CurrentUserDTO currentUser = (CurrentUserDTO) session.getAttribute("currentUserDTO");
         if (currentUser == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
 
         userService.updateProfile(currentUser.getId(), name, timezone);
