@@ -185,6 +185,28 @@ public class WebController {
         eventMap.put("day", eventDate.getDayOfMonth());
         eventMap.put("title", e.getSummary() != null ? e.getSummary() : "Untitled");
         eventMap.put("description", e.getDescription() != null ? e.getDescription() : "");
+        
+        // Extract start time
+        if (start.getDateTime() != null) {
+            java.time.Instant startInstant = java.time.Instant.ofEpochMilli(start.getDateTime().getValue());
+            java.time.LocalTime startTime = java.time.LocalTime.ofInstant(startInstant, ZoneId.systemDefault());
+            eventMap.put("startTime", startTime.toString());
+        } else if (start.getDate() != null) {
+            eventMap.put("startTime", "All day");
+        }
+        
+        // Extract end time
+        EventDateTime end = e.getEnd();
+        if (end != null) {
+            if (end.getDateTime() != null) {
+                java.time.Instant endInstant = java.time.Instant.ofEpochMilli(end.getDateTime().getValue());
+                java.time.LocalTime endTime = java.time.LocalTime.ofInstant(endInstant, ZoneId.systemDefault());
+                eventMap.put("endTime", endTime.toString());
+            } else if (end.getDate() != null) {
+                eventMap.put("endTime", "All day");
+            }
+        }
+        
         String color = "blue";
         String summary = e.getSummary() != null ? e.getSummary().toLowerCase() : "";
         if (summary.contains("birthday")) color = "orange";

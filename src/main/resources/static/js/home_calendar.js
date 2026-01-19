@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('nextMainMonth')?.addEventListener('click', () => changeMonth(1));
 
     document.getElementById('todayBtn')?.addEventListener('click', goToToday);
-    document.getElementById('refreshBtn')?.addEventListener('click', refreshCurrentYear);
 
     document.getElementById('prevMonth')?.addEventListener('click', () => {
         miniCalendarDate.setMonth(miniCalendarDate.getMonth() - 1);
@@ -99,11 +98,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    async function refreshCurrentYear() {
-        eventCache.delete(currentYear);
-        await loadYearIfNeeded(currentYear);
-        renderMainCalendar();
-    }
 
     function goToToday() {
         const today = new Date();
@@ -184,7 +178,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         const badge = document.createElement('div');
         badge.className = `text-xs px-2 py-0.5 rounded border ${colors[event.color] || colors.blue} truncate`;
-        badge.textContent = event.title;
+        
+        // Show start time + title
+        const startTime = event.startTime ? event.startTime.substring(0, 5) : '';
+        badge.textContent = startTime ? `${startTime} ${event.title}` : `${event.title}`;
+        
         return badge;
     }
 
@@ -199,14 +197,47 @@ document.addEventListener('DOMContentLoaded', async function () {
     function showEventModal(dayEvents, day) {
         if (dayEvents.length === 0) return;
 
-        // For now show first event – you can extend to list all
-        const ev = dayEvents[0];
+        const modal = document.getElementById('eventModal');
+        const modalContent = modal.querySelector('[id^="modal"]')?.parentElement;
+        
+        // Clear previous content
+        let container = document.getElementById('eventsList');
+        if (!container) {
+            // Create container if it doesn't exist
+            container = document.createElement('div');
+            container.id = 'eventsList';
+            container.className = 'max-h-96 overflow-y-auto';
+            modal.querySelector('.modal-body')?.appendChild(container) || modal.appendChild(container);
+        }
+        container.innerHTML = '';
 
-        document.getElementById('modalTitle').textContent = ev.title;
-        document.getElementById('modalDate').textContent = `${ev.date}`;
-        document.getElementById('modalDesc').textContent = ev.description || 'No additional details';
+        // Show all events for the day
+        dayEvents.forEach((ev, index) => {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'p-4 mb-3 border border-gray-200 rounded-lg bg-gray-50';
+            
+            const startTime = ev.startTime ? ev.startTime.substring(0, 5) : 'N/A';
+            const endTime = ev.endTime ? ev.endTime.substring(0, 5) : 'N/A';
+            
+            eventDiv.innerHTML = `
+                <div class="flex items-center space-x-2 mb-2">
+                    <h4 class="font-bold text-gray-900">${ev.title}</h4>
+                </div>
+                <div class="text-sm text-gray-600 space-y-1">
+                    <div><i class="far fa-calendar w-4"></i> ${ev.date}</div>
+                    <div><i class="far fa-clock w-4"></i> ${startTime} - ${endTime}</div>
+                    ${ev.description ? `<div class="text-gray-500 italic mt-2">${ev.description}</div>` : ''}
+                </div>
+            `;
+            
+            container.appendChild(eventDiv);
+        });
 
-        document.getElementById('eventModal').classList.remove('hidden');
+        // Update modal title with day info
+        document.getElementById('modalTitle').textContent = `Events on ${day}`;
+        document.getElementById('modalDate').textContent = `Total: ${dayEvents.length} event${dayEvents.length > 1 ? 's' : ''}`;
+        
+        modal.classList.remove('hidden');
     }
 
     // Mini calendar functions (keep your original ones, just ensure sync)
