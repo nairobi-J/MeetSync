@@ -43,6 +43,7 @@ public class WebController {
 
     @GetMapping("/login")
     public String showLoginPage(Authentication authentication) {
+
         if (authentication != null && authentication.isAuthenticated()) {
             return "redirect:/";
         }
@@ -98,9 +99,9 @@ public class WebController {
 
     User user = getAuthenticatedUser(authentication);
 
-    if (user.getPassword() == null || user.getPassword().isEmpty()) {
-        return "redirect:/set-password";
-    }
+    // if (user.getPassword() == null || user.getPassword().isEmpty()) {
+    //     return "redirect:/set-password";
+    // }
 
     LocalDate now = LocalDate.now();
     int displayYear  = (paramYear != null) ? paramYear : now.getYear();
