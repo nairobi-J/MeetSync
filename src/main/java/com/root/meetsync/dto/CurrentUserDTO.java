@@ -1,6 +1,9 @@
 package com.root.meetsync.dto;
 
+import com.root.meetsync.entity.UserRole;
+import com.root.meetsync.entity.UserStatus;
 import lombok.*;
+
 @Data
 @Getter
 @Setter
@@ -14,4 +17,6 @@ public class CurrentUserDTO {
     private String googleId;
     private String profilePic;
     private String timezone;
+    private UserStatus status;
+    private UserRole role;
 }

@@ -32,6 +32,14 @@ public class User {
     private String timezone;
     private String password;
     
+    
+     @Enumerated(EnumType.STRING)
+     @Column(name = "status")
+     private UserStatus status = UserStatus.ACTIVE; // Default to ACTIVE for existing users
+
+      @Enumerated(EnumType.STRING) 
+      @Column(name = "role")
+      private UserRole role = UserRole.USER;
    
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
