@@ -1,5 +1,6 @@
 package com.root.meetsync;
 
+import com.fasterxml.jackson.annotation.JsonCreator.Mode;
 import com.root.meetsync.entity.*;
 import com.root.meetsync.repository.*;
 import com.root.meetsync.service.NotificationService;
@@ -47,7 +48,8 @@ public class RootController {
     }
 
     @GetMapping("/event-create")
-    public String showCreateEventPage() {
+    public String showCreateEventPage(Model model) {
+        model.addAttribute("activePage", "events");
         return "create-event";
     }
 
