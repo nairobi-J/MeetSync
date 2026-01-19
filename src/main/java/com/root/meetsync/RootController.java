@@ -1,6 +1,5 @@
 package com.root.meetsync;
 
-
 import com.root.meetsync.entity.*;
 import com.root.meetsync.repository.*;
 import com.root.meetsync.service.impl.GoogleCalendarServiceImpl;
@@ -29,8 +28,9 @@ public class RootController {
     private final GoogleCalendarServiceImpl googleCalendarServiceImpl;
 
     public RootController(EventRepository eventRepository, EventSlotRepository eventSlotRepository,
-                          HostAvailabilityRepository hostAvailabilityRepository, UserRepository userRepository,
-                          ParticipantAvailabilityRepository participantAvailabilityRepository, ConfirmedEventRepository confirmedEventRepository, GoogleCalendarServiceImpl googleCalendarServiceImpl) {
+            HostAvailabilityRepository hostAvailabilityRepository, UserRepository userRepository,
+            ParticipantAvailabilityRepository participantAvailabilityRepository,
+            ConfirmedEventRepository confirmedEventRepository, GoogleCalendarServiceImpl googleCalendarServiceImpl) {
         this.eventRepository = eventRepository;
         this.eventSlotRepository = eventSlotRepository;
         this.hostAvailabilityRepository = hostAvailabilityRepository;
@@ -39,6 +39,7 @@ public class RootController {
         this.confirmedEventRepository = confirmedEventRepository;
         this.googleCalendarServiceImpl = googleCalendarServiceImpl;
     }
+
     @GetMapping("/event-create")
     public String showCreateEventPage() {
         return "create-event";
@@ -53,7 +54,7 @@ public class RootController {
         LocalTime current = event.getEarliestTime();
         while (current.isBefore(event.getLatestTime())) {
             hours.add(current);
-            current = current.plusHours(1);
+            current = current.plusMinutes(event.getSlotDuration());
         }
 
         String email = getEmailFromAuth(auth);
@@ -79,10 +80,12 @@ public class RootController {
             jsonBuilder.append("\"").append(entry.getKey()).append("\":[");
             for (int j = 0; j < entry.getValue().size(); j++) {
                 jsonBuilder.append("\"").append(entry.getValue().get(j)).append("\"");
-                if (j < entry.getValue().size() - 1) jsonBuilder.append(",");
+                if (j < entry.getValue().size() - 1)
+                    jsonBuilder.append(",");
             }
             jsonBuilder.append("]");
-            if (i < map.size() - 1) jsonBuilder.append(",");
+            if (i < map.size() - 1)
+                jsonBuilder.append(",");
             i++;
         }
         jsonBuilder.append("}");
@@ -101,9 +104,10 @@ public class RootController {
 
     @Transactional
     @PostMapping("/event/{shareLink}/host-availability")
-    public String saveHostAvailability(@PathVariable String shareLink, @RequestParam(required = false) List<Long> slotIds, Authentication auth) {
-Event event = eventRepository.findByShareLink(shareLink)
-              .orElseThrow(() -> new RuntimeException("Event not found"));
+    public String saveHostAvailability(@PathVariable String shareLink,
+            @RequestParam(required = false) List<Long> slotIds, Authentication auth) {
+        Event event = eventRepository.findByShareLink(shareLink)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
         String email = getEmailFromAuth(auth);
         User host = userRepository.findByEmail(email).orElseThrow();
 
@@ -128,49 +132,72 @@ Event event = eventRepository.findByShareLink(shareLink)
         return "redirect:/event/" + shareLink;
     }
 
-
-@GetMapping("/event/{shareLink}/confirm")
-public String showConfirmEventPage(@PathVariable String shareLink, Model model){
-        Event event = eventRepository.findByShareLink(shareLink).orElseThrow(() -> new RuntimeException("event not found"));
+    @GetMapping("/event/{shareLink}/confirm")
+    public String showConfirmEventPage(@PathVariable String shareLink, Model model) {
+        Event event = eventRepository.findByShareLink(shareLink)
+                .orElseThrow(() -> new RuntimeException("event not found"));
         model.addAttribute("event", event);
         return "confirm-event";
-}
-
-
-@Transactional
-@PostMapping("event/{shareLink}/confirm")
-public String finalizeEvent(@PathVariable String shareLink, @RequestParam Long slotId){
-    Event event = eventRepository.findByShareLink(shareLink).orElseThrow(()-> new RuntimeException("vai event e nai"));
-    EventSlot selectedSlot = eventSlotRepository.findById(slotId).orElseThrow();
-
-    ConfirmedEvent confirmed = new ConfirmedEvent();
-    confirmed.setEvent(event);
-    confirmed.setSelectedSlots(selectedSlot);
-    confirmed.setConfirmedAt(java.time.LocalDateTime.now());
-    confirmedEventRepository.save(confirmed);
-    // TRIGGER SYNC
-    try {
-        googleCalendarServiceImpl.createGoogleEventFromHeatmap(confirmed);
-    } catch (Exception e) {
-        e.printStackTrace(); // Log error but don't stop the user
     }
-    return "redirect:/event/" + shareLink + "/overview";
-}
 
+    @Transactional
+    @PostMapping("event/{shareLink}/confirm")
+    public String finalizeEvent(@PathVariable String shareLink, @RequestParam Long slotId) {
+        Event event = eventRepository.findByShareLink(shareLink)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        EventSlot selectedSlot = eventSlotRepository.findById(slotId).orElseThrow();
 
+        // Check if this is an update to an existing confirmation
+        Optional<ConfirmedEvent> existingConfirmed = confirmedEventRepository.findByEvent_Id(event.getId());
 
+        ConfirmedEvent confirmed;
+        if (existingConfirmed.isPresent()) {
+            // Update existing confirmed event
+            confirmed = existingConfirmed.get();
+            confirmed.setSelectedSlots(selectedSlot);
+            confirmed.setConfirmedAt(java.time.LocalDateTime.now());
+        } else {
+            // Create new confirmed event
+            confirmed = new ConfirmedEvent();
+            confirmed.setEvent(event);
+            confirmed.setSelectedSlots(selectedSlot);
+            confirmed.setConfirmedAt(java.time.LocalDateTime.now());
+        }
+        confirmedEventRepository.save(confirmed);
+
+        // Handle Google Calendar sync
+        try {
+            String googleEventId = googleCalendarServiceImpl.createGoogleEventFromHeatmap(confirmed);
+            if (googleEventId != null) {
+                event.setGoogleCalendarEventId(googleEventId);
+                event.setGoogleCalendarSyncStatus("SYNCED");
+                event.setLastSyncTimestamp(java.time.LocalDateTime.now());
+                System.out.println("Successfully synced to Google Calendar: " + googleEventId);
+            } else {
+                event.setGoogleCalendarSyncStatus("FAILED");
+                System.out.println("Failed to sync to Google Calendar");
+            }
+            eventRepository.save(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+            event.setGoogleCalendarSyncStatus("FAILED");
+            eventRepository.save(event);
+            System.out.println("Error syncing to Google Calendar: " + e.getMessage());
+        }
+
+        return "redirect:/event/" + shareLink + "/overview";
+    }
 
     @GetMapping("/event/{shareLink}/overview")
     public String showEventOverview(@PathVariable String shareLink, Model model, Authentication auth) {
-        Event event = eventRepository.findByShareLink(shareLink)
-                .orElseThrow();
+        Event event = eventRepository.findByShareLink(shareLink).orElseThrow();
         Optional<ConfirmedEvent> confirmedEvent = confirmedEventRepository.findByEvent_Id(event.getId());
         // 1. Setup Time Headers for the grid
         List<LocalTime> hours = new ArrayList<>();
         LocalTime current = event.getEarliestTime();
         while (current.isBefore(event.getLatestTime())) {
             hours.add(current);
-            current = current.plusHours(1);
+            current = current.plusMinutes(event.getSlotDuration());
         }
 
         // 2. Prepare Combined Heatmap Data (Host + Participants);
@@ -186,7 +213,8 @@ public String finalizeEvent(@PathVariable String shareLink, @RequestParam Long s
         }
 
         // Add Participant Selections
-        List<ParticipantAvailability> guestVotes = participantAvailabilityRepository.findByEventSlot_Event_Id(event.getId());
+        List<ParticipantAvailability> guestVotes = participantAvailabilityRepository
+                .findByEventSlot_Event_Id(event.getId());
         for (ParticipantAvailability pa : guestVotes) {
             combinedHeatmap.get(pa.getEventSlot().getId()).add(pa.getParticipantName());
         }
@@ -211,37 +239,64 @@ public String finalizeEvent(@PathVariable String shareLink, @RequestParam Long s
         model.addAttribute("bestSlot", bestSlot);
         model.addAttribute("totalParticipants", uniqueGuests + 1);
         model.addAttribute("confirmedEvent", confirmedEvent.orElse(null));
+        model.addAttribute("activePage", "events");
         return "event-overview";
     }
+
     @Transactional
     @PostMapping("/event/{shareLink}/reschedule")
-    public String rescheduledEvent(@PathVariable String shareLink){
+    public String rescheduledEvent(@PathVariable String shareLink) {
         Event event = eventRepository.findByShareLink(shareLink).orElseThrow();
+
+        // Delete Google Calendar event first if it exists
+        if (event.getGoogleCalendarEventId() != null && !event.getGoogleCalendarEventId().isEmpty()) {
+            try {
+                boolean deleted = googleCalendarServiceImpl.deleteGoogleEvent(event.getHost(),
+                        event.getGoogleCalendarEventId());
+                if (deleted) {
+                    System.out.println("Successfully deleted Google Calendar event during reschedule: "
+                            + event.getGoogleCalendarEventId());
+                } else {
+                    System.out.println("Failed to delete Google Calendar event during reschedule: "
+                            + event.getGoogleCalendarEventId());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("Error deleting Google Calendar event during reschedule: " + e.getMessage());
+            }
+
+            // Clear the Google Calendar event ID so we'll create a new one
+            event.setGoogleCalendarEventId(null);
+            event.setGoogleCalendarSyncStatus("PENDING");
+            eventRepository.save(event);
+        }
+
+        // Delete the confirmed event record
         confirmedEventRepository.deleteByEvent_Id(event.getId());
         return "redirect:/event/" + shareLink + "/overview";
-
     }
+
     @Transactional
     @PostMapping("/event/{shareLink}/toggle-cell")
-    public ResponseEntity<Void>toggleHostCell(@PathVariable String shareLink,
-                                              @RequestParam Long slotId,
-                                              Authentication auth){
-        Event event = eventRepository.findByShareLink(shareLink).orElseThrow(()-> new RuntimeException("EVent nai vai"));
+    public ResponseEntity<Void> toggleHostCell(@PathVariable String shareLink, @RequestParam Long slotId,
+            Authentication auth) {
+        // Validate that the event exists
+        eventRepository.findByShareLink(shareLink).orElseThrow(() -> new RuntimeException("Event not found"));
+
         String email = getEmailFromAuth(auth);
-        User host = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("Host na tumi bro"));
-        Optional<HostAvailability>existing = hostAvailabilityRepository.findByHostAndEventSlot_Id(host, slotId);
-        if(existing.isPresent()){
+        User host = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Host not found"));
+        Optional<HostAvailability> existing = hostAvailabilityRepository.findByHostAndEventSlot_Id(host, slotId);
+        if (existing.isPresent()) {
             hostAvailabilityRepository.delete(existing.get());
-        }else{
+        } else {
             HostAvailability ha = new HostAvailability();
             ha.setHost(host);
             ha.setEventSlot(eventSlotRepository.getReferenceById(slotId));
             hostAvailabilityRepository.save(ha);
         }
-     return ResponseEntity.ok().build();
-        
-    }
+        return ResponseEntity.ok().build();
 
+    }
 
     private String convertMapToJson(Map<Long, List<String>> map) {
         StringBuilder sb = new StringBuilder("{");
@@ -252,17 +307,19 @@ public String finalizeEvent(@PathVariable String shareLink, @RequestParam Long s
             List<String> names = entry.getValue();
             for (int j = 0; j < names.size(); j++) {
                 sb.append("\"").append(names.get(j)).append("\"");
-                if (j < names.size() - 1) sb.append(",");
+                if (j < names.size() - 1)
+                    sb.append(",");
             }
             sb.append("]");
-            if (it.hasNext()) sb.append(",");
+            if (it.hasNext())
+                sb.append(",");
         }
         return sb.append("}").toString();
     }
 
-
     private String getEmailFromAuth(Authentication auth) {
-        if (auth instanceof OAuth2AuthenticationToken oauth) return (String) oauth.getPrincipal().getAttributes().get("email");
+        if (auth instanceof OAuth2AuthenticationToken oauth)
+            return (String) oauth.getPrincipal().getAttributes().get("email");
         return auth != null ? auth.getName() : null;
     }
 }

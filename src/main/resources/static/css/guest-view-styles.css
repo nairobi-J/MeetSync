@@ -1,0 +1,62 @@
+/* Guest View Styles - Extracted from guest-view.html */
+
+/* Personal Selection (Left Grid) */
+.personal-cell.selected { 
+    background-color: #3b82f6 !important; 
+    border: 1px solid #1d4ed8; 
+}
+
+/* Heatmap Colors (Right Grid) */
+.heat-0 { background-color: #ffffff; }
+.heat-1 { background-color: #dcfce7; border: 1px solid #bbf7d0; }
+.heat-2 { background-color: #86efac; border: 1px solid #4ade80; } 
+.heat-3 { background-color: #22c55e; border: 1px solid #16a34a; } 
+
+/* Preview mode enhancements */
+.heat-cell {
+    transition: all 0.2s ease-in-out;
+}
+
+.tooltip {
+    visibility: hidden; 
+    position: absolute; 
+    z-index: 50;
+    background: #1e293b; 
+    color: white; 
+    padding: 6px 10px;
+    border-radius: 6px; 
+    font-size: 11px; 
+    pointer-events: none;
+    white-space: pre-line;
+}
+
+.has-tooltip:hover .tooltip { 
+    visibility: visible; 
+}
+
+
+.viewport-scroll {
+    scroll-behavior: smooth;
+    -ms-overflow-style: none;
+    scrollbar-width: none; 
+}
+
+.viewport-scroll::-webkit-scrollbar { 
+    display: none; 
+}
+
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+#previewIndicator {
+    animation: slideInRight 0.3s ease-out;
+}

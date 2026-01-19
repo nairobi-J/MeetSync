@@ -1,29 +1,34 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Settings - MeetSync</title>
     <!-- FontAwesome for icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f3f4f6;
             margin: 0;
             display: flex;
-            justify-content: center; /* Centers horizontally */
-            align-items: center;     /* Centers vertically */
+            justify-content: center;
+            /* Centers horizontally */
+            align-items: center;
+            /* Centers vertically */
             min-height: 100vh;
         }
 
         .profile-card {
-            background: white;
+
             width: 100%;
-            max-width: 450px; /* Professional width */
+            max-width: 450px;
+            /* Professional width */
             padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             text-align: center;
         }
 
@@ -71,7 +76,9 @@
             transition: 0.3s;
         }
 
-        .edit-photo-btn:hover { background: #2563eb; }
+        .edit-photo-btn:hover {
+            background: #2563eb;
+        }
 
 
         .form-group {
@@ -93,7 +100,8 @@
             align-items: center;
         }
 
-        .input-wrapper input, .input-wrapper select {
+        .input-wrapper input,
+        .input-wrapper select {
             width: 100%;
             padding: 10px 12px;
             border: 1px solid #d1d5db;
@@ -112,7 +120,8 @@
             padding-right: 35px;
         }
 
-        .input-wrapper input:focus, .input-wrapper select:focus {
+        .input-wrapper input:focus,
+        .input-wrapper select:focus {
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
@@ -129,7 +138,8 @@
             right: 12px;
             color: #9ca3af;
             font-size: 12px;
-            pointer-events: none; /* Icon won't block clicks */
+            pointer-events: none;
+            /* Icon won't block clicks */
         }
 
 
@@ -151,7 +161,9 @@
             transition: 0.3s;
         }
 
-        .btn-save:hover { background-color: #2563eb; }
+        .btn-save:hover {
+            background-color: #2563eb;
+        }
 
         .btn-cancel {
             flex: 1;
@@ -165,7 +177,9 @@
             transition: 0.3s;
         }
 
-        .btn-cancel:hover { background-color: #f9fafb; }
+        .btn-cancel:hover {
+            background-color: #f9fafb;
+        }
 
         /* Success Message Overlay */
         .alert-success {
@@ -179,77 +193,82 @@
         }
     </style>
 </head>
+
 <body>
 
-<div class="profile-card">
-    <h1>Account Settings</h1>
-    <p class="subtitle">Update your profile information</p>
 
-    <!-- Success Message -->
-    <div th:if="${param.success}" class="alert-success">
-        <i class="fas fa-check-circle"></i> Profile updated successfully!
+
+    <div th:replace="~{fragments/home_nav :: navbar}"></div>
+    <div class="flex">
+        <div th:replace="~{fragments/home_sidebar :: sidebar}"></div>
+
+
+
+        <div class="profile-card">
+            <h1>Account Settings</h1>
+            <p class="subtitle">Update your profile information</p>
+
+            <!-- Success Message -->
+            <div th:if="${param.success}" class="alert-success">
+                <i class="fas fa-check-circle"></i> Profile updated successfully!
+            </div>
+
+            <form th:action="@{/profile/update}" method="post">
+
+                <!-- Profile Picture Section -->
+                <div class="image-container">
+                    <img th:src="${currentUser.profilePic}" id="profilePreview" class="profile-img"
+                        referrerpolicy="no-referrer" alt="Profile">
+                </div>
+
+                <!-- Name Field -->
+                <div class="form-group">
+                    <label>FULL NAME</label>
+                    <div class="input-wrapper">
+                        <input type="text" name="name" th:value="${currentUser.name}" required>
+                        <i class="fas fa-pen pen-icon"></i>
+                    </div>
+                </div>
+
+                <!-- Email Field (Read Only) -->
+                <div class="form-group">
+                    <label>EMAIL ADDRESS</label>
+                    <div class="input-wrapper">
+                        <input type="email" th:value="${currentUser.email}" readonly>
+                    </div>
+                </div>
+
+                <!-- Timezone Field -->
+                <div class="form-group">
+                    <label>TIMEZONE</label>
+                    <div class="input-wrapper">
+                        <select name="timezone">
+                            <option th:each="tz : ${timezones}" th:value="${tz}" th:text="${tz}"
+                                th:selected="${tz == currentUser.timezone}"></option>
+                        </select>
+                        <i class="fas fa-chevron-down pen-icon"></i>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <!-- <button type="button" class="btn-cancel" onclick="window.history.back()">Back</button> -->
+                    <button type="submit" class="btn-save">Save Changes</button>
+                </div>
+            </form>
+        </div>
     </div>
-
-    <form th:action="@{/profile/update}" method="post">
-
-        <!-- Profile Picture Section -->
-        <div class="image-container">
-            <img th:src="${currentUser.profilePic}"
-                 id="profilePreview"
-                 class="profile-img"
-                 referrerpolicy="no-referrer"
-                 alt="Profile">
-        </div>
-
-        <!-- Name Field -->
-        <div class="form-group">
-            <label>FULL NAME</label>
-            <div class="input-wrapper">
-                <input type="text" name="name" th:value="${currentUser.name}" required>
-                <i class="fas fa-pen pen-icon"></i>
-            </div>
-        </div>
-
-        <!-- Email Field (Read Only) -->
-        <div class="form-group">
-            <label>EMAIL ADDRESS</label>
-            <div class="input-wrapper">
-                <input type="email" th:value="${currentUser.email}" readonly>
-            </div>
-        </div>
-
-        <!-- Timezone Field -->
-        <div class="form-group">
-            <label>TIMEZONE</label>
-            <div class="input-wrapper">
-                <select name="timezone">
-                    <option th:each="tz : ${timezones}"
-                            th:value="${tz}"
-                            th:text="${tz}"
-                            th:selected="${tz == currentUser.timezone}"></option>
-                </select>
-                <i class="fas fa-chevron-down pen-icon"></i>
-            </div>
-        </div>
-
-        <div class="button-group">
-            <button type="button" class="btn-cancel" onclick="window.history.back()">Back</button>
-            <button type="submit" class="btn-save">Save Changes</button>
-        </div>
-    </form>
-</div>
-
-<script>
-    // Live preview of the image before uploading
-    function previewImage(event) {
-        const reader = new FileReader();
-        reader.onload = function() {
-            const output = document.getElementById('profilePreview');
-            output.src = reader.result;
-        };
-        reader.readAsDataURL(event.target.files[0]);
-    }
-</script>
+    <script>
+        // Live preview of the image before uploading
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                const output = document.getElementById('profilePreview');
+                output.src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
 
 </body>
+
 </html>

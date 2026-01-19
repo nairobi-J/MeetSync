@@ -19,5 +19,9 @@ public interface  HostAvailabilityRepository extends JpaRepository<HostAvailabil
     @Modifying
     @Transactional
     void deleteByHostAndEventSlot_Event_Id(User host, Long eventId);
-
+    
+    // Delete all host availability for an event
+    @Modifying
+    @Transactional
+    void deleteByEventSlot_Event_Id(Long eventId);
 }

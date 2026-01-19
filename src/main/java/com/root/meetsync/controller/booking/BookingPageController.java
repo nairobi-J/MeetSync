@@ -1,6 +1,5 @@
 package com.root.meetsync.controller.booking;
 
-import com.root.meetsync.dto.Notification.NotificationDTO;
 import com.root.meetsync.dto.availability.AvailableSlotDTO;
 import com.root.meetsync.dto.booking.BookingRequestDTO;
 import com.root.meetsync.dto.booking.BookingResponseDTO;
@@ -14,8 +13,6 @@ import com.root.meetsync.service.booking.IBookingService;
 import com.root.meetsync.service.impl.GoogleCalendarServiceImpl;
 import lombok.RequiredArgsConstructor;
 
-import org.aspectj.weaver.ast.Not;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +20,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -101,11 +98,20 @@ public class BookingPageController {
             String prefix = response.getHostEmail().split("@")[0];
             User host = userService.getUserByEmailPrefix(prefix);
 
-            // 3. AUTO-TRIGGER GOOGLE CALENDAR
+            // 3. AUTO-TRIGGER GOOGLE CALENDAR AND STORE EVENT ID
             try {
-                googleCalendarServiceImpl.createGoogleEvent(host, response);
+                String googleEventId = googleCalendarServiceImpl.createGoogleEvent(host, response);
+                if (googleEventId != null) {
+                    // Update booking with Google Calendar event ID
+                    bookingService.updateGoogleCalendarEventId(bookingId, googleEventId);
+                    System.out.println("Successfully synced booking to Google Calendar: " + googleEventId);
+                } else {
+                    System.err.println("Google Calendar Sync Failed: No event ID returned");
+                    bookingService.markGoogleCalendarSyncFailed(bookingId);
+                }
             } catch (Exception e) {
                 System.err.println("Google Calendar Sync Failed: " + e.getMessage());
+                bookingService.markGoogleCalendarSyncFailed(bookingId);
                 // We don't throw an error here so the DB confirmation still finishes
             }
 
@@ -138,6 +144,18 @@ public class BookingPageController {
             if (response != null) {
                 String prefix = response.getHostEmail().split("@")[0];
                 User host = userService.getUserByEmailPrefix(prefix);
+                
+                // Delete the event from Google Calendar if it exists
+                if (response.getGoogleCalendarEventId() != null) {
+                    try {
+                        googleCalendarServiceImpl.deleteGoogleEvent(host, response.getGoogleCalendarEventId());
+                        System.out.println("Successfully deleted booking from Google Calendar: " + response.getGoogleCalendarEventId());
+                    } catch (Exception e) {
+                        System.err.println("Failed to delete Google Calendar event: " + e.getMessage());
+                        // Continue with the cancellation even if Google Calendar deletion fails
+                    }
+                }
+                
                 //   delete pending notification
                 notificationService.deleteNotification(notificationId);
 

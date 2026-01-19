@@ -47,4 +47,14 @@ public class Booking {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "google_calendar_event_id")
+    private String googleCalendarEventId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "google_calendar_sync_status")
+    private GoogleCalendarSyncStatus googleCalendarSyncStatus = GoogleCalendarSyncStatus.PENDING;
+
+    @Column(name = "google_calendar_sync_timestamp")
+    private LocalDateTime googleCalendarSyncTimestamp;
 }

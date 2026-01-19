@@ -34,6 +34,11 @@ public class Event {
     @Column(unique = true)
     private String shareLink;
 
+    // Google Calendar Integration
+    private String googleCalendarEventId;
+    private String googleCalendarSyncStatus = "PENDING"; // PENDING, SYNCED, FAILED, DELETED
+    private LocalDateTime lastSyncTimestamp;
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)

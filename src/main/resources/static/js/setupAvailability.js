@@ -23,6 +23,10 @@ function renderCalendar() {
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = '';
 
+    // Today's date for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     // Add empty cells for days before month starts
     for (let i = 0; i < firstDay; i++) {
         const emptyCell = document.createElement('div');
@@ -37,11 +41,19 @@ function renderCalendar() {
         dayCell.textContent = day;
         dayCell.dataset.date = dateStr;
 
-        if (selectedDates.has(dateStr)) {
-            dayCell.classList.add('selected');
+        // Disable days before today
+        const thisDate = new Date(year, month, day);
+        thisDate.setHours(0, 0, 0, 0);
+        if (thisDate < today) {
+            dayCell.classList.add('disabled', 'text-gray-300','cursor-not-allowed',);
+            dayCell.style.pointerEvents = 'none';
+        } else {
+            if (selectedDates.has(dateStr)) {
+                dayCell.classList.add('selected');
+            }
+            dayCell.onclick = () => toggleDate(dateStr, dayCell);
         }
 
-        dayCell.onclick = () => toggleDate(dateStr, dayCell);
         grid.appendChild(dayCell);
     }
 }
@@ -424,33 +436,6 @@ function loadExistingAvailability() {
     }
 }
 
-// Copy booking link
-function copyBookingLink() {
-    const input = document.getElementById('bookingLinkInput');
-    if (input) {
-        input.select();
-        input.setSelectionRange(0, 99999); // For mobile devices
-        
-        // Modern clipboard API
-        navigator.clipboard.writeText(input.value).then(() => {
-            const button = event.target.closest('button');
-            const originalHTML = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
-            button.classList.add('bg-green-600');
-            button.classList.remove('bg-blue-600');
-            
-            setTimeout(() => {
-                button.innerHTML = originalHTML;
-                button.classList.remove('bg-green-600');
-                button.classList.add('bg-blue-600');
-            }, 2000);
-        }).catch(() => {
-            // Fallback for older browsers
-            document.execCommand('copy');
-            alert('Link copied to clipboard!');
-        });
-    }
-}
 
 // Set existing data (called from template inline script)
 function setExistingData(weeklyAvailability, dateOverridesData) {
@@ -477,6 +462,15 @@ function showSaveLoadingSpinner(show) {
         saveBtn.disabled = false;
     }
 }
+
+function showPersonalLinkBlock() {
+    const block = document.getElementById('personalLinkBlock');
+    if (block) {
+        block.classList.remove('hidden');
+        block.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function () {

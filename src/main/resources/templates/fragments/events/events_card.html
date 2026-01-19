@@ -19,32 +19,69 @@
         </div>
 
         <div class="space-y-2 text-sm text-gray-600">
+            <!-- Date Section -->
             <div class="flex items-center space-x-2">
                 <i class="far fa-calendar w-4"></i>
-                <span>Mon, Oct 26, 2023 (Hardcoded)</span>
+                <!-- Show confirmed date if event is confirmed -->
+                <span th:if="${event.isConfirmed()}" th:text="${#temporals.format(event.confirmedDate, 'EEE, MMM d, yyyy')}">Mon, Oct 26, 2023</span>
+                <!-- Show TBD if event is pending -->
+                <span th:unless="${event.isConfirmed()}" class="text-gray-400 italic">Date TBD - Collecting votes</span>
             </div>
 
+            <!-- Time Section -->
             <div class="flex items-center space-x-2">
                 <i class="far fa-clock w-4"></i>
-                <span>10:00 AM - 11:00 AM (60 min)</span>
+                <!-- Show confirmed time if event is confirmed -->
+                <span th:if="${event.isConfirmed()}">
+                    <span th:text="${#temporals.format(event.confirmedStartTime, 'h:mm a')}"></span>
+                    <span> - </span>
+                    <span th:text="${#temporals.format(event.confirmedEndTime, 'h:mm a')}"></span>
+                    
+                    <span> (</span><span th:text="${event.slotDuration}"></span><span> min)</span>
+                </span>
+
+                <!-- Show time range if event is pending -->
+                <span th:unless="${event.isConfirmed()}" class="text-gray-400 italic">
+                    <span th:text="${#temporals.format(event.earliestTime, 'h:mm a')}"></span>
+                    <span> - </span>
+                    <span th:text="${#temporals.format(event.latestTime, 'h:mm a')}"></span>
+                    <span> available</span>
+                </span>
             </div>
         </div>
     </div>
 
     <div class="p-6 flex items-center justify-between">
-        <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
-            Scheduled
+        <!-- Status Badge - Dynamic based on confirmation -->
+        <span th:if="${event.isConfirmed()}" class="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+            ✓ Confirmed
+        </span>
+        <span th:unless="${event.isConfirmed()}" class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
+            ⏳ Pending
         </span>
 
-        <!--/*@thymesVar id="shareLink" type=""*/-->
-        <a th:href="@{'/event/' + ${event.shareLink} + '/overview'}"
-           class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg border border-gray-300 transition">
-            View Details
-        </a>
+        <div class="flex gap-2 items-center">
+            <!--/*@thymesVar id="shareLink" type=""*/-->
+            <a th:href="@{'/event/' + ${event.shareLink} + '/overview'}"
+               class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg border border-gray-300 transition">
+                View Details
+            </a>
+            
+            <!-- Delete Button -->
+            <form th:action="@{/events/{id}/delete(id=${event.id})}" method="post" 
+                  th:data-event-title="${event.title}"
+                  onsubmit="return confirmDelete(this);"
+                  style="display: inline;">
+                <button type="submit" 
+                        class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition"
+                        title="Delete event">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </form>
+        </div>
 
     </div>
 </div>
-
 
 </body>
 </html>

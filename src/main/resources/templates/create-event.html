@@ -1,143 +1,315 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>MeetSync - Create EVent</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
 </head>
+
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
-<div class="bg-white rounded-3xl shadow-xl p-10 max-w-5xl w-full flex flex-row gap-12">
 
-    <form th:action="@{/api/events/create}" method="POST" class="flex-1 flex flex-row gap-12 w-full">
-        <div class="flex-1">
-            <h2 class="text-2xl font-bold mb-6">Create Event</h2>
-            <div class="space-y-5">
+
+
+
+    <div th:replace="~{fragments/home_nav :: navbar}"></div>
+    <div class="flex">
+        <div th:replace="~{fragments/home_sidebar :: sidebar}"></div>
+
+
+
+        <!-- Error/Success Messages -->
+        <div th:if="${errorMessage}"
+            class="fixed top-4 right-4 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg max-w-md">
+            <div class="flex">
+                <div class="py-1">
+                    <svg class="fill-current h-6 w-6 text-red-500 mr-4" xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20">
+                        <path
+                            d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z" />
+                    </svg>
+                </div>
                 <div>
-                    <label class="block text-gray-400 text-sm mb-1">Event Name</label>
-                    <input type="text" name="title" required class="w-full border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-400">
-                </div>
-
-                <div class="flex gap-4">
-                    <div class="flex-1">
-                        <label class="block text-gray-400 text-sm mb-1">Duration</label>
-                        <select class="w-full border rounded-xl p-3 bg-white">
-                            <option value="60">60 mins</option>
-                        </select>
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-gray-400 text-sm mb-1">Time Zone</label>
-                        <select name="timezone" class="w-full border rounded-xl p-3 bg-white">
-                            <option value="GMT+6">GMT+6 BDT</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="flex gap-4">
-                    <div class="flex-1">
-                        <label class="block text-gray-400 text-sm mb-1">Not Earlier Than</label>
-                        <input type="time" name="earliestTime" value="10:00" class="w-full border rounded-xl p-3">
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-gray-400 text-sm mb-1">Not Later Than</label>
-                        <input type="time" name="latestTime" value="17:30" class="w-full border rounded-xl p-3">
-                    </div>
+                    <span class="font-bold">Error: </span>
+                    <span th:text="${errorMessage}"></span>
                 </div>
             </div>
         </div>
 
-        <div class="w-80 flex flex-col items-center border-l pl-10">
-            <div class="flex items-center justify-between w-full mb-6">
-                <button type="button" onclick="changeMonth(-1)" class="text-gray-400 hover:text-black"><i class="fas fa-chevron-left"></i></button>
-                <h3 id="month-label" class="font-bold text-xl">Select Dates</h3>
-                <button type="button" onclick="changeMonth(1)" class="text-gray-400 hover:text-black"><i class="fas fa-chevron-right"></i></button>
+        <div th:if="${successMessage}"
+            class="fixed top-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg max-w-md">
+            <div class="flex">
+                <div class="py-1">
+                    <svg class="fill-current h-6 w-6 text-green-500 mr-4" xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20">
+                        <path
+                            d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM6.7 9.29L9 11.6l4.3-4.3 1.4 1.42L9 14.4l-3.7-3.7 1.4-1.41z" />
+                    </svg>
+                </div>
+                <div>
+                    <span class="font-bold">Success: </span>
+                    <span th:text="${successMessage}"></span>
+                </div>
             </div>
-
-            <div id="calendar-grid" class="grid grid-cols-7 gap-2 text-center w-full mb-4">
-                <div class="text-xs text-gray-400">S</div><div class="text-xs text-gray-400">M</div><div class="text-xs text-gray-400">T</div>
-                <div class="text-xs text-gray-400">W</div><div class="text-xs text-gray-400">T</div><div class="text-xs text-gray-400">F</div><div class="text-xs text-gray-400">S</div>
-            </div>
-
-            <div id="date-inputs-container"></div>
-
-            <button type="submit" class="mt-auto w-full bg-blue-500 text-white font-bold py-4 rounded-2xl hover:bg-blue-600 transition shadow-lg shadow-blue-200">
-                Create Event
-            </button>
         </div>
-    </form>
-</div>
-<script>
-    let currentOffset = 0;
-    let selectedDates = new Set();
-    // const grid = document.getElementById('calendar-grid')
-    // const monthLabel = document.getElementById('month-label');
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    function changeMonth(delta){
-        if(currentOffset + delta < 0 || currentOffset + delta > 2) return;
-        currentOffset += delta;
-        createCalendar(currentOffset);
-    }
-    const currentMonth = today.getMonth();
-     const currentYear = today.getFullYear();
-    const maxDate = new Date(currentYear, currentMonth + 2, 0);
-    //calendar creation
-    function createCalendar(monthOffset = 0){
-        const grid = document.getElementById('calendar-grid')
 
-        grid.querySelectorAll(".day-cell").forEach(d => d.remove());
 
-        const displayDate= new Date(currentYear, currentMonth + monthOffset, 1);
-        document.getElementById('month-label').textContent = displayDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-        const year = displayDate.getFullYear();
-         const month = displayDate.getMonth();
-        //monthLabel.textContent = displayDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-        const firstDay = displayDate.getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        for(let i = 0; i < firstDay;i++){
-            const empty= document.createElement("div");
-            empty.className="day-cell";
-            grid.appendChild(empty);
+        <div class=" p-10 bg-white w-full flex flex-row gap-12">
+
+            <form th:action="@{/api/events/create}" method="POST" class="flex-1 flex flex-row gap-12 w-full"
+                onsubmit="return handleFormSubmit()">
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold mb-6">Create Event</h2>
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-1">Event Name</label>
+                            <input type="text" name="title" id="eventTitle" required
+                                class="w-full border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-400"
+                                maxlength="100" placeholder="Enter event name">
+                            <div id="titleError" class="text-red-500 text-xs mt-1 hidden"></div>
+                            <div id="titleSuccess" class="text-green-500 text-xs mt-1 hidden">✓ Event name is available
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="flex-1">
+                                <label class="block text-gray-400 text-sm mb-1">Duration</label>
+                                <select name="slotDuration" class="w-full border rounded-xl p-3 bg-white">
+                                    <option value="30">30 mins</option>
+                                    <option value="60" selected>60 mins</option>
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-gray-400 text-sm mb-1">Time Zone</label>
+                                <select name="timezone" class="w-full border rounded-xl p-3 bg-white">
+                                    <option value="GMT+6">GMT+6 BDT</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="flex-1">
+                                <label class="block text-gray-400 text-sm mb-1">Not Earlier Than</label>
+                                <input type="time" name="earliestTime" value="10:00"
+                                    class="w-full border rounded-xl p-3">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-gray-400 text-sm mb-1">Not Later Than</label>
+                                <input type="time" name="latestTime" value="17:30" class="w-full border rounded-xl p-3">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-80 flex flex-col items-center border-l pl-10">
+                    <div class="flex items-center justify-between w-full mb-6">
+                        <button type="button" onclick="changeMonth(-1)" class="text-gray-400 hover:text-black"><i
+                                class="fas fa-chevron-left"></i></button>
+                        <h3 id="month-label" class="font-bold text-xl">Select Dates</h3>
+                        <button type="button" onclick="changeMonth(1)" class="text-gray-400 hover:text-black"><i
+                                class="fas fa-chevron-right"></i></button>
+                    </div>
+
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-2 text-center w-full mb-4">
+                        <div class="text-xs text-gray-400">S</div>
+                        <div class="text-xs text-gray-400">M</div>
+                        <div class="text-xs text-gray-400">T</div>
+                        <div class="text-xs text-gray-400">W</div>
+                        <div class="text-xs text-gray-400">T</div>
+                        <div class="text-xs text-gray-400">F</div>
+                        <div class="text-xs text-gray-400">S</div>
+                    </div>
+
+                    <div id="date-inputs-container"></div>
+
+                    <button type="submit" id="submitBtn"
+                        class="mt-auto w-full bg-blue-500 text-white font-bold py-4 rounded-2xl hover:bg-blue-600 transition shadow-lg shadow-blue-200">
+                        Create Event
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+
+
+
+    <script>
+        let currentOffset = 0;
+        let selectedDates = new Set();
+        // const grid = document.getElementById('calendar-grid')
+        // const monthLabel = document.getElementById('month-label');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        function changeMonth(delta) {
+            if (currentOffset + delta < 0 || currentOffset + delta > 2) return;
+            currentOffset += delta;
+            createCalendar(currentOffset);
         }
-        for(let day = 1; day <= daysInMonth; day++) {
-            const cellDate = new Date(year, month, day);
-            const dateString = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
-            const dayDiv = document.createElement("div");
-            dayDiv.textContent = day;
-            dayDiv.className = "day-cell p-2 rounded-xl cursor-pointer hover:bg-blue-100";
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const maxDate = new Date(currentYear, currentMonth + 2, 0);
+        //calendar creation
+        function createCalendar(monthOffset = 0) {
+            const grid = document.getElementById('calendar-grid')
 
-            if (cellDate < today || cellDate > maxDate) {
-                dayDiv.classList.add("text-gray-300", "cursor-not-allowed");
-            } else {
-                if (selectedDates.has(dateString)) dayDiv.classList.add("bg-blue-500", "text-white");
-                dayDiv.onclick = () => toggleDate(dayDiv, dateString);
+            grid.querySelectorAll(".day-cell").forEach(d => d.remove());
+
+            const displayDate = new Date(currentYear, currentMonth + monthOffset, 1);
+            document.getElementById('month-label').textContent = displayDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+            const year = displayDate.getFullYear();
+            const month = displayDate.getMonth();
+            //monthLabel.textContent = displayDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+            const firstDay = displayDate.getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement("div");
+                empty.className = "day-cell";
+                grid.appendChild(empty);
             }
-            grid.appendChild(dayDiv)
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cellDate = new Date(year, month, day);
+                const dateString = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+                const dayDiv = document.createElement("div");
+                dayDiv.textContent = day;
+                dayDiv.className = "day-cell p-2 rounded-xl cursor-pointer hover:bg-blue-100";
 
+                if (cellDate < today || cellDate > maxDate) {
+                    dayDiv.classList.add("text-gray-300", "cursor-not-allowed");
+                } else {
+                    if (selectedDates.has(dateString)) dayDiv.classList.add("bg-blue-500", "text-white");
+                    dayDiv.onclick = () => toggleDate(dayDiv, dateString);
+                }
+                grid.appendChild(dayDiv)
+
+
+            }
 
         }
-
-    }
-    function toggleDate(element, dateString){
-        const container = document.getElementById('date-inputs-container');
-        if(selectedDates.has(dateString)){
-            selectedDates.delete(dateString);
-            element.classList.remove("bg-blue-500", "text-white");
-            document.getElementById('input-' + dateString).remove();
-        }else {
-          selectedDates.add(dateString);
-          element.classList.add("bg-blue-500", "text-white");
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'selectedDates';
-            input.id = 'input-' + dateString;
-            input.value = dateString;
-            container.appendChild(input);
+        function toggleDate(element, dateString) {
+            const container = document.getElementById('date-inputs-container');
+            if (selectedDates.has(dateString)) {
+                selectedDates.delete(dateString);
+                element.classList.remove("bg-blue-500", "text-white");
+                document.getElementById('input-' + dateString).remove();
+            } else {
+                selectedDates.add(dateString);
+                element.classList.add("bg-blue-500", "text-white");
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selectedDates';
+                input.id = 'input-' + dateString;
+                input.value = dateString;
+                container.appendChild(input);
+            }
+            updateDateValidation();
         }
-    }
 
 
-    createCalendar(0);
-</script>
+        createCalendar(0);
+
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(() => {
+            const errorMsg = document.querySelector('[class*="bg-red-100"]');
+            const successMsg = document.querySelector('[class*="bg-green-100"]');
+            if (errorMsg) errorMsg.style.display = 'none';
+            if (successMsg) successMsg.style.display = 'none';
+        }, 5000);
+
+        // Event name validation (optional - non-blocking)
+        let eventNameChecked = false;
+        let eventNameValid = true; // Default to true to not block submission
+
+        async function checkEventNameDuplicate() {
+            const titleInput = document.getElementById('eventTitle');
+            const errorDiv = document.getElementById('titleError');
+            const successDiv = document.getElementById('titleSuccess');
+            const title = titleInput.value.trim();
+
+            // Hide previous messages
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+            titleInput.classList.remove('border-red-400', 'border-green-400');
+
+            if (title.length === 0) {
+                return; // Don't validate empty fields
+            }
+
+            if (title.length < 3) {
+                errorDiv.textContent = 'Event name should be at least 3 characters long';
+                errorDiv.classList.remove('hidden');
+                titleInput.classList.add('border-red-400');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/events/check-name?title=${encodeURIComponent(title)}`);
+                if (!response.ok) {
+                    return; // Silently fail if API is not available
+                }
+
+                const data = await response.json();
+
+                if (data.exists) {
+                    errorDiv.textContent = 'An event with this name already exists. Consider choosing a different name.';
+                    errorDiv.classList.remove('hidden');
+                    titleInput.classList.add('border-red-400');
+                } else {
+                    successDiv.classList.remove('hidden');
+                    titleInput.classList.add('border-green-400');
+                }
+            } catch (error) {
+                console.log('Name validation unavailable - will be checked on server');
+                // Silently fail and let server handle validation
+            }
+        }
+
+        function handleFormSubmit() {
+            // Basic client-side validation only
+            const titleInput = document.getElementById('eventTitle');
+            const title = titleInput.value.trim();
+
+            // Check if title is provided
+            if (title.length === 0) {
+                alert('Please enter an event name.');
+                titleInput.focus();
+                return false;
+            }
+
+            // Check if at least one date is selected
+            if (selectedDates.size === 0) {
+                alert('Please select at least one date for your event.');
+                return false;
+            }
+
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Creating Event...';
+
+            // Allow form to submit - server will handle detailed validation
+            return true;
+        }
+
+        // Real-time date validation feedback
+        function updateDateValidation() {
+            const submitBtn = document.getElementById('submitBtn');
+            if (selectedDates.size === 0) {
+                submitBtn.classList.add('opacity-50');
+                submitBtn.title = 'Please select at least one date';
+            } else {
+                submitBtn.classList.remove('opacity-50');
+                submitBtn.title = 'Create your event';
+            }
+        }
+
+        // Optional: Add name checking on blur (non-blocking)
+        document.getElementById('eventTitle').addEventListener('blur', checkEventNameDuplicate);
+    </script>
 </body>
+
 </html>

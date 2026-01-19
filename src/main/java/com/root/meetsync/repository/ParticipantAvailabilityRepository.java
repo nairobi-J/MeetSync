@@ -3,9 +3,11 @@ import java.util.List;
 
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.root.meetsync.dto.SlotCountDto;
 import com.root.meetsync.entity.ParticipantAvailability;
@@ -29,5 +31,15 @@ public interface ParticipantAvailabilityRepository extends JpaRepository<Partici
 
     boolean existsByParticipantNameAndEventSlot_Event_Id(String name, Long eventId);
     
+    @Modifying
+    @Transactional
     void deleteByParticipantNameAndEventSlot_Event_Id(String participantName, Long eventId);
+    
+    // Delete all participant availability for an event
+    @Modifying
+    @Transactional
+    void deleteByEventSlot_Event_Id(Long eventId);
+    
+    // Find participant's availability for a specific event
+    List<ParticipantAvailability> findByParticipantNameAndEventSlot_Event_Id(String participantName, Long eventId);
 }

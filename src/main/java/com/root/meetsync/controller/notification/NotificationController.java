@@ -1,7 +1,6 @@
 package com.root.meetsync.controller.notification;
 
 import com.root.meetsync.dto.Notification.NotificationDTO;
-import com.root.meetsync.entity.Notification;
 import com.root.meetsync.entity.User;
 import com.root.meetsync.service.NotificationService;
 import com.root.meetsync.service.UserService;
@@ -24,7 +23,7 @@ public class NotificationController {
     
     private final NotificationService notificationService;
     private final UserService userService;
-    private final IBookingService bookingService;
+
     
     @GetMapping
     public String notificationsPage(Authentication authentication, Model model,
@@ -32,12 +31,12 @@ public class NotificationController {
                                    @RequestParam(defaultValue = "20") int size,
                                    @RequestParam(required = false) String filter) {
         if (authentication == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
         
         User user = getCurrentUser(authentication);
         if (user == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
         
         Pageable pageable = PageRequest.of(page, size);
@@ -54,6 +53,7 @@ public class NotificationController {
         model.addAttribute("totalPages", notifications.getTotalPages());
         model.addAttribute("user", user);
         model.addAttribute("filter", filter != null ? filter : "all");
+          model.addAttribute("activePage", "notifications");
         
         return "notifications";
     }
@@ -70,12 +70,12 @@ public class NotificationController {
     @PostMapping("/mark-all-read")
     public String markAllAsRead(Authentication authentication, RedirectAttributes redirectAttributes) {
         if (authentication == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
         
         User user = getCurrentUser(authentication);
         if (user == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
         
         int count = notificationService.markAllAsRead(user);
@@ -95,12 +95,12 @@ public class NotificationController {
     @PostMapping("/delete-all")
     public String deleteAllNotifications(Authentication authentication, RedirectAttributes redirectAttributes) {
         if (authentication == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
         
         User user = getCurrentUser(authentication);
         if (user == null) {
-            return "redirect:/login";
+            return "redirect:/oauth2/authorization/google";
         }
         
         notificationService.deleteAllNotifications(user);

@@ -21,7 +21,7 @@
                     <!-- Header -->
                     <div class="mt-20 mb-6">
                         <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">
-                            <i class="fas fa-calendar-check text-blue-600"></i>
+                            <!-- <i class="fas fa-calendar-check text-blue-600"></i> -->
                             <span class="hidden sm:inline">Setup Your Availability</span>
                             <span class="sm:hidden">Availability Setup</span>
                         </h1>
@@ -81,7 +81,7 @@
                                                 <select th:field="*{futureDaysAllowed}"
                                                     class="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                                                     <option value="30" selected>30 Calendar days</option>
-                                                    <option value="60" >60 Calendar days</option>
+                                                    <option value="60">60 Calendar days</option>
                                                     <option value="90">90 Calendar days</option>
                                                 </select>
                                             </div>
@@ -91,10 +91,13 @@
                                                     Notice</label>
                                                 <select th:field="*{minNoticeHours}"
                                                     class="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                                                    <option value="30" th:selected="${minNoticeHours == 30}">30 minutes before</option>
-                                                    <option value="60" th:selected="${minNoticeHours == 60}">1 hour before</option>
-                                                    <option value="120" th:selected="${minNoticeHours == 120}">2 hours before</option>
-                                                    
+                                                    <option value="30" th:selected="${minNoticeHours == 30}">30 minutes
+                                                        before</option>
+                                                    <option value="60" th:selected="${minNoticeHours == 60}">1 hour
+                                                        before</option>
+                                                    <option value="120" th:selected="${minNoticeHours == 120}">2 hours
+                                                        before</option>
+
                                                 </select>
                                             </div>
                                         </div>
@@ -174,11 +177,13 @@
 
                                             <span class="text-sm sm:text-base">
                                                 <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
-                                                <span class="hidden sm:inline">Advanced Settings (Select Specific Date & Time)</span>
+                                                <span class="hidden sm:inline">Advanced Settings (Select Specific Date &
+                                                    Time)</span>
                                                 <span class="sm:hidden">Advanced Settings</span>
                                             </span>
 
-                                            <svg id="advancedArrow" class="w-5 h-5 flex-shrink-0 transition-transform duration-300"
+                                            <svg id="advancedArrow"
+                                                class="w-5 h-5 flex-shrink-0 transition-transform duration-300"
                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 9l-7 7-7-7" />
@@ -191,7 +196,8 @@
 
                                             <!-- Calendar -->
                                             <div class="mb-6">
-                                                <div th:replace="~{availability/fragments/components :: calendar}"></div>
+                                                <div th:replace="~{availability/fragments/components :: calendar}">
+                                                </div>
                                             </div>
 
                                             <!-- Override Dates Settings -->
@@ -222,25 +228,27 @@
                                 <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                                     <button type="submit" id="saveAvailabilityBtn"
                                         class="flex-1 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold py-3 px-4 sm:px-6 rounded-lg transition duration-200 shadow-lg hover:shadow-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base">
-                                        <svg id="saveLoadingSpinner" class="hidden animate-spin -ml-1 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        <svg id="saveLoadingSpinner"
+                                            class="hidden animate-spin -ml-1 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 text-white"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
                                         </svg>
                                         <i id="saveIcon" class="fas fa-save mr-2"></i>
                                         <span id="saveBtnText">Save Availability</span>
                                     </button>
-                                    <a href="/dashboard"
-                                        class="w-full sm:w-auto text-center bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-4 sm:px-6 rounded-lg transition duration-200 text-sm sm:text-base">
-                                        <i class="fas fa-times mr-2"></i>
-                                        Cancel
-                                    </a>
+                                  
                                 </div>
                             </div>
 
                             <!-- Right Panel - Personal Link -->
-                            <div class="lg:col-span-1">
+                            <div class="lg:col-span-1" >
                                 <!-- Booking Link Section -->
-                                <div th:if="${bookingLink}" class="bg-white rounded-lg shadow-lg p-4 sm:p-6 lg:sticky lg:top-8">
+                                <div th:if="${bookingLink}"
+                                    class="bg-white rounded-lg shadow-lg p-4 sm:p-6 lg:sticky lg:top-8">
                                     <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">
                                         <i class="fas fa-link text-blue-600 mr-2"></i>
                                         Personal Link
@@ -250,20 +258,16 @@
                                             <label class="block text-xs font-semibold text-gray-500 mb-2">
                                                 Share your link to others to let them book meetings with you
                                             </label>
-                                            <input type="text" 
-                                                   th:value="${bookingLink}"
-                                                   id="bookingLinkInput"
-                                                   readonly
-                                                   class="w-full px-3 sm:px-4 py-2 text-blue-600 text-xs sm:text-sm font-mono break-all">
+                                            <input type="text" th:value="${bookingLink}" id="bookingLinkInput" readonly
+                                                class="w-full px-3 sm:px-4 py-2 text-blue-600 text-xs sm:text-sm font-mono break-all">
                                         </div>
                                         <div class="flex flex-col space-y-2">
-                                            <button type="button" onclick="copyBookingLink()" 
-                                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg text-sm sm:text-base">
+                                            <button type="button" onclick="copyBookingLink()"
+                                                class="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg text-sm sm:text-base">
                                                 <i class="fas fa-copy mr-2"></i>Copy Link
                                             </button>
-                                            <a th:href="${bookingLink}" 
-                                               target="_blank"
-                                               class="w-full bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg inline-flex items-center justify-center text-sm sm:text-base">
+                                            <a th:href="${bookingLink}" target="_blank"
+                                                class="w-full bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg transition shadow-md hover:shadow-lg inline-flex items-center justify-center text-sm sm:text-base">
                                                 <i class="fas fa-external-link-alt mr-2"></i>Preview
                                             </a>
                                         </div>
@@ -287,11 +291,14 @@
         /*<![CDATA[*/
         const weeklyAvailabilityData = /*[[${availabilityRequest.weeklyAvailability}]]*/[];
         const dateOverridesData = /*[[${availabilityRequest.dateOverrides}]]*/[];
-        
+
         // Set the data from Thymeleaf
         setExistingData(weeklyAvailabilityData, dateOverridesData);
         /*]]>*/
     </script>
+
+
+
 
 
 
@@ -304,8 +311,8 @@
             align-items: center;
             justify-content: center;
             min-height: 2.5rem;
-            
-            
+
+
         }
 
         .calendar-day:hover {
@@ -343,7 +350,7 @@
             if (input) {
                 input.select();
                 input.setSelectionRange(0, 99999); // For mobile devices
-                
+
                 // Modern clipboard API
                 navigator.clipboard.writeText(input.value).then(() => {
                     const button = event.target.closest('button');
@@ -351,7 +358,7 @@
                     button.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
                     button.classList.add('bg-green-600');
                     button.classList.remove('bg-blue-600');
-                    
+
                     setTimeout(() => {
                         button.innerHTML = originalHTML;
                         button.classList.remove('bg-green-600');
