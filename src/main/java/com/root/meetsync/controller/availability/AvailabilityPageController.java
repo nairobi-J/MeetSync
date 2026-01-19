@@ -2,10 +2,14 @@ package com.root.meetsync.controller.availability;
 
 import com.root.meetsync.dto.availability.SetupAvailabilityRequest;
 import com.root.meetsync.entity.User;
+import com.root.meetsync.entity.Notification.NotificationType;
 import com.root.meetsync.service.availability.IAvailabilityService;
+import com.root.meetsync.service.NotificationService;
 import com.root.meetsync.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.aspectj.weaver.ast.Not;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
@@ -23,6 +27,7 @@ public class AvailabilityPageController {
 
     private final IAvailabilityService availabilityService;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @GetMapping("/setup")
     public String showAvailabilitySetup(Authentication authentication, Model model) {
@@ -94,6 +99,14 @@ public class AvailabilityPageController {
 
             String bookingLink = availabilityService.getUserBookingLink(user.getId());
             redirectAttributes.addFlashAttribute("bookingLink", bookingLink);
+
+         
+			notificationService.createNotification(user, "Availability Updated", 
+            "Your availability has been updated successfully.",
+            NotificationType.SYSTEM, 
+            null, // relatedEntityId, if any
+            "Availability", "/availability/setup"
+            );
 
             return "redirect:/availability/setup";
         } catch (Exception e) {

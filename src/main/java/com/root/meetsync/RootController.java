@@ -2,8 +2,11 @@ package com.root.meetsync;
 
 import com.root.meetsync.entity.*;
 import com.root.meetsync.repository.*;
+import com.root.meetsync.service.NotificationService;
 import com.root.meetsync.service.impl.GoogleCalendarServiceImpl;
 import jakarta.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -26,6 +29,9 @@ public class RootController {
     private final ParticipantAvailabilityRepository participantAvailabilityRepository;
     private final ConfirmedEventRepository confirmedEventRepository;
     private final GoogleCalendarServiceImpl googleCalendarServiceImpl;
+
+    @Autowired
+    NotificationService notificationService;
 
     public RootController(EventRepository eventRepository, EventSlotRepository eventSlotRepository,
             HostAvailabilityRepository hostAvailabilityRepository, UserRepository userRepository,
@@ -177,6 +183,23 @@ public class RootController {
                 event.setGoogleCalendarSyncStatus("FAILED");
                 System.out.println("Failed to sync to Google Calendar");
             }
+
+            // Confirm Event Notification
+
+            User host = event.getHost();
+            String eventDate = selectedSlot.getSlotDate().toString();
+            String eventTime = selectedSlot.getStartTime().toString() + " - " + selectedSlot.getEndTime().toString();
+            String title = event.getTitle() + " – Event Confirmed";
+            String message = "Your event \"" + event.getTitle() + "\" has been confirmed for " + eventDate + " at "
+                    + eventTime + ".";
+
+            notificationService.createNotification(host, title, message, Notification.NotificationType.REMINDER, // Use
+                                                                                                                        // your
+                                                                                                                        // correct
+                                                                                                                        // enum
+                                                                                                                        // value
+                    event.getId(), "Event", "/event/" + event.getShareLink() + "/overview");
+
             eventRepository.save(event);
         } catch (Exception e) {
             e.printStackTrace();

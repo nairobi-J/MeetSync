@@ -74,9 +74,9 @@ public class BookingPageController {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' hh:mm a");
                 String bookingTime = request.getStartTime().format(formatter);
 
-                notificationService.createNotification(host, "New Scheduling Request",
+                notificationService.createNotification(host, "New Appointment Request",
                         request.getInviteeName() + " (" + request.getInviteeEmail() + ") has requested a meeting on " + bookingTime,
-                        Notification.NotificationType.BOOKING_PENDING, booking.getId(), "Booking", "/bookings");
+                        Notification.NotificationType.BOOKING_PENDING, booking.getId(), "Booking", "/dashboard");
             }
 
             redirectAttributes.addFlashAttribute("success", true);
