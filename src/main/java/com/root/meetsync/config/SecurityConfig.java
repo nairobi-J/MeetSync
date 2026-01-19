@@ -34,7 +34,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                       .requestMatchers("/", "/u/**", "/css/**", "/js/**", "/create-event", "/api/events/create", "/event/**", "/event/participant/**", "/pending-approval").permitAll()
+                       .requestMatchers("/", "/u/**", "/css/**", "/js/**","/assets/**", "/create-event", "/api/events/create", "/event/**", "/event/participant/**", "/pending-approval").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth

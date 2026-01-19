@@ -101,8 +101,6 @@ application-prod.properties
 spring-boot-devtools.properties
 
 # Environment variables
-.env
-.env.local
 /.metadata/
 
 src/main/resources/application.properties
@@ -119,3 +117,5 @@ target/
 # Documentation
 API_DOCUMENTATION.md
 uploads/
+config.bat
+node_modules
