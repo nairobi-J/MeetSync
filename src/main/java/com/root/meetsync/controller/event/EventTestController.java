@@ -33,7 +33,7 @@ public class EventTestController {
         model.addAttribute("hasEvents", !events.isEmpty());
         model.addAttribute("activePage", "events");
         return "events/EventsPage";
-        // return "fragments/events/events-list";
+        
     }
 
     /*

@@ -53,6 +53,15 @@ public class EventController {
             Event savedEvent = eventService.createEvent(request, auth);
             redirectAttributes.addFlashAttribute("successMessage", 
                 "Event '" + savedEvent.getTitle() + "' created successfully!");
+// 
+
+
+
+
+
+
+
+
             return "redirect:/event/" + savedEvent.getShareLink();
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", 

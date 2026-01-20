@@ -140,7 +140,7 @@
                                             </div>
                                         </div>
                                         <div class="space-y-2">
-                                            <div th:each="day, iterStat : ${T(java.time.DayOfWeek).values()}"
+                                            <div th:each="day, iterStat : ${daysOfWeek}"
                                                 class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
 
                                                 <div class="flex items-center w-full sm:flex-1">
@@ -240,19 +240,20 @@
                                         <i id="saveIcon" class="fas fa-save mr-2"></i>
                                         <span id="saveBtnText">Save Availability</span>
                                     </button>
-                                  
+
                                 </div>
                             </div>
 
                             <!-- Right Panel - Personal Link -->
-                            <div class="lg:col-span-1" >
+                            <div class="lg:col-span-1">
                                 <!-- Booking Link Section -->
                                 <div th:if="${bookingLink}"
-                                    class="bg-white rounded-lg shadow-lg p-4 sm:p-6 lg:sticky lg:top-8">
+                                    class="bg-white rounded-lg shadow-lg p-4 sm:p-6 lg:sticky lg:top-24">
                                     <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">
                                         <i class="fas fa-link text-blue-600 mr-2"></i>
                                         Personal Link
                                     </h3>
+                                
                                     <div class="space-y-1">
                                         <div>
                                             <label class="block text-xs font-semibold text-gray-500 mb-2">

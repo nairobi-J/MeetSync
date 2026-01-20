@@ -67,10 +67,13 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Success/Error Messages -->
-        <div th:if="${success}" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-md">
+        <div th:if="${success}"
+            class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-md">
             <div class="flex items-center">
                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd" />
                 </svg>
                 <p th:text="${message}">Success message</p>
             </div>
@@ -78,7 +81,9 @@
         <div th:if="${error}" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md shadow-md">
             <div class="flex items-center">
                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clip-rule="evenodd" />
                 </svg>
                 <p th:text="${message}">Error message</p>
             </div>
@@ -87,6 +92,7 @@
         <div class="mb-8">
             <h2 class="text-3xl font-bold text-gray-900 mb-2">Schedule a Meeting</h2>
             <p class="text-sm text-gray-500" id="timezoneDisplay"></p>
+
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -95,13 +101,9 @@
                 <div class="text-center">
                     <div class="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center overflow-hidden"
                         th:classappend="*{profilePic == null} ? ' bg-blue-100' : ''">
-                        <img th:if="*{profilePic}" th:src="*{profilePic}"
-                            class="w-full h-full object-cover"
-                            referrerpolicy="no-referrer" 
-                            alt="Profile Picture"
-                        >
-                        <span th:if="*{profilePic == null}"
-                            class="text-2xl font-bold text-blue-600"
+                        <img th:if="*{profilePic}" th:src="*{profilePic}" class="w-full h-full object-cover"
+                            referrerpolicy="no-referrer" alt="Profile Picture">
+                        <span th:if="*{profilePic == null}" class="text-2xl font-bold text-blue-600"
                             th:text="${name != null ? name.substring(0,1).toUpperCase() : 'U'}">
                             U
                         </span>
@@ -119,10 +121,11 @@
                                 </svg>
                                 <div>
                                     <p class="text-xs font-medium text-gray-700">Duration</p>
-                                    <p th:text="${Preferences.meetingDurationMinutes} + ' minutes'" class="text-sm text-gray-900">30 minutes</p>
+                                    <p th:text="${Preferences.meetingDurationMinutes} + ' minutes'"
+                                        class="text-sm text-gray-900">30 minutes</p>
                                 </div>
                             </div>
-            
+
                         </div>
                     </div>
                 </div>
@@ -155,35 +158,35 @@
 
             <!-- Times + booking form -->
             <div class="lg:col-span-4 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="mb-4">
-                    <p class="text-xs text-gray-500 mb-1">Selected date</p>
-                    <p class="text-base font-semibold text-gray-900" id="selectedDateLabel">Choose a date</p>
-                </div>
+                <div>
+                    <div class="mb-4">
+                        <p class="text-xs text-gray-500 mb-1">Selected date</p>
+                        <p class="text-base font-semibold text-gray-900" id="selectedDateLabel">Choose a date</p>
+                    </div>
 
-                <div class="mb-4">
-                    <p class="text-xs font-medium text-gray-700 mb-3">Available times</p>
-                    <div id="timesContainer" class="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto"></div>
-                    <p id="noTimes" class="text-sm text-gray-400 text-center py-4 hidden">No times available</p>
+                    <div class="mb-4">
+                        <p class="text-xs font-medium text-gray-700 mb-3">Available times</p>
+                        <div id="timesContainer" class="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto"></div>
+                        <p id="noTimes" class="text-sm text-gray-400 text-center py-4 hidden">No times available</p>
+                    </div>
                 </div>
+                <form  th:action="@{/u/{emailPrefix}(emailPrefix=${emailPrefix})}" method="post"
+                    id="bookingForm">
+                    <div class="border-t border-gray-100 pt-4 space-y-3 ">
 
-                <form th:action="@{/u/{emailPrefix}(emailPrefix=${emailPrefix})}" method="post" id="bookingForm">
-                    <div class="border-t border-gray-100 pt-4 space-y-3">
-                        
-                        <div class=" p-3 mb-4">
+                        <div class=" p-3 mb-4" th:if="${!isOwner}">
                             <p class="text-sm text-blue-900 font-medium">Request a time slot</p>
                             <p class="text-xs text-blue-700 mt-1">Select your preferred date and time above</p>
                         </div>
-                        <div>
+                        <div th:if="${!isOwner}">
                             <label class="block text-xs font-medium text-gray-700 mb-1.5">Your Name</label>
                             <input name="inviteeName" id="inviteeName" type="text" required
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
-                        <div>
+                        <div th:if="${!isOwner}" >
                             <label class="block text-xs font-medium text-gray-700 mb-1.5">Your Email</label>
                             <input name="inviteeEmail" id="inviteeEmail" type="email" required
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1.5">Timezone</label>
@@ -191,16 +194,28 @@
                                 class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                                 placeholder="Timezone">
                         </div>
+
+
                         <input type="hidden" name="bookingDate" id="bookingDateInput">
                         <input type="hidden" name="bookingTime" id="bookingTimeInput">
-                        <button type="submit" id="bookBtn"
+
+                        <button type="submit" id="bookBtn" th:if="${!isOwner}"
                             class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex items-center justify-center">
-                            <svg id="loadingSpinner" class="hidden animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+
+                            <svg id="loadingSpinner" class="hidden animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
                             </svg>
-                            <span id="btnText">Confirm Schedule</span>
+
+                            <span id="btnText">Request an Appointment</span>
                         </button>
+
+
+
                         <p id="status" class="text-xs text-center"></p>
                     </div>
                 </form>
@@ -213,7 +228,7 @@
 
     <!-- Initialize booking schedule with Thymeleaf data -->
     <script th:inline="javascript">
-      
+
         const emailPrefixData = /*[[${emailPrefix}]]*/ '';
         const availableSlotsData = /*[[${availableSlots}]]*/[];
 

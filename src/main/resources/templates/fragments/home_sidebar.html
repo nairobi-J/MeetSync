@@ -23,16 +23,15 @@
                     <i id="scheduleDropdownIcon"
                         class="fas fa-chevron-down ml-2 text-xs transition-transform duration-200"></i>
                 </button>
-                <div id="scheduleDropdownMenu"
-                    class="overflow-hidden transition-all duration-300 max-h-0 mt-2    z-0">
+                <div id="scheduleDropdownMenu" class="overflow-hidden transition-all duration-300 max-h-0 mt-2    z-0">
                     <a href="/event-create"
                         class="block px-4 py-3 text-gray-700 hover:bg-blue-50   flex items-center space-x-2">
-                        <i class="fas fa-users mr-2 text-blue-600"></i>
+                        <i class="fas fa-users mr-2 "></i>
                         <span>Event Poll Scheduling</span>
                     </a>
                     <a href="/availability/setup"
-                        class="block px-4 py-3 text-gray-700 hover:bg-blue-50  flex items-center space-x-2">
-                        <i class="fas fa-user-check mr-2 text-blue-600"></i>
+                        class="block px-4 py-3 text-gray-700 text-base hover:bg-blue-50  flex items-center space-x-2">
+                        <i class="fas fa-user-check mr-2 "></i>
                         <span>One-to-One Appointment</span>
                     </a>
                 </div>
@@ -51,7 +50,7 @@
                                     menu.classList.remove('max-h-0');
 
                                     menu.classList.add('max-h-40');
-                                   
+
 
                                     icon.classList.add('rotate-180');
                                 } else {
@@ -64,7 +63,7 @@
                                 if (expanded && !btn.contains(e.target) && !menu.contains(e.target)) {
                                     expanded = false;
                                     menu.classList.remove('max-h-40');
-                    
+
                                     menu.classList.add('max-h-0');
                                     icon.classList.remove('rotate-180');
                                 }
@@ -111,21 +110,18 @@
                     <a th:href="@{/dashboard}"
                         th:classappend="${activePage == 'dash'} ? 'bg-blue-100 text-blue-600' : 'text-gray-700'"
                         class="flex items-center space-x-3 px-3 py-2 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-calendar w-5" th:classappend="${activePage == 'dash'} ? 'text-blue-600' : ''"></i>
+                        <i class="fas fa-calendar w-5"
+                            th:classappend="${activePage == 'dash'} ? 'text-blue-600' : ''"></i>
                         <span>Calendar</span>
                     </a>
                     <a th:href="@{/events}"
                         th:classappend="${activePage == 'events'} ? 'bg-blue-100 text-blue-600' : 'text-gray-700'"
                         class="flex items-center space-x-3 px-3 py-2 hover:bg-gray-100 rounded-lg">
-                        <i class="far fa-calendar-alt w-5" th:classappend="${activePage == 'events'} ? 'text-blue-600' : ''"></i>
+                        <i class="far fa-calendar-alt w-5"
+                            th:classappend="${activePage == 'events'} ? 'text-blue-600' : ''"></i>
                         <span>Events</span>
                     </a>
-                    <a th:href="@{/availability/setup}"
-                        th:classappend="${activePage == 'availability'} ? 'bg-blue-100 text-blue-600' : 'text-gray-700'"
-                        class="flex items-center space-x-3 px-3 py-2 hover:bg-gray-100 rounded-lg">
-                        <i class="fa-solid fa-clock" th:classappend="${activePage == 'availability'} ? 'text-blue-600' : ''"></i>
-                        <span>Availability</span>
-                    </a>
+
                 </nav>
             </div>
 
@@ -133,29 +129,22 @@
             <div class="mb-6">
                 <h4 class="text-xs font-semibold text-gray-500 uppercase mb-3">SETTINGS</h4>
                 <nav class="space-y-1">
-                    <a th:href="@{/notifications}"
-                        th:classappend="${activePage == 'notifications'} ? 'bg-blue-100 text-blue-600' : 'text-gray-700'"
-                        class="flex items-center justify-between px-3 py-2 hover:bg-gray-100 rounded-lg"
-                        th:data-mark-read-url="@{/notifications/mark-all-read}"
-                        onclick="markAllNotificationsRead(event)">
-                        <div class="flex items-center space-x-3">
-                            <i class="far fa-bell w-5" th:classappend="${activePage == 'notifications'} ? 'text-blue-600' : ''"></i>
-                            <span>Notifications</span>
-                        </div>
-                        <span th:if="${unreadNotificationCount != null && unreadNotificationCount > 0}"
-                            class="px-2 py-0.5 bg-red-500 text-white rounded-full text-xs font-semibold"
-                            th:text="${unreadNotificationCount}">0</span>
+                    <a th:href="@{/availability/setup}"
+                        th:classappend="${activePage == 'availability'} ? 'bg-blue-100 text-blue-600' : 'text-gray-700'"
+                        class="flex items-center space-x-3 px-3 py-2 hover:bg-gray-100 rounded-lg">
+                        <i class="fa-solid fa-clock"
+                            th:classappend="${activePage == 'availability'} ? 'text-blue-600' : ''"></i>
+                        <span>Availability</span>
                     </a>
-                    <script>
-                        function markAllNotificationsRead(event) {
-                            event.preventDefault();
-                            const url = event.currentTarget.getAttribute('data-mark-read-url');
-                            const notificationsUrl = event.currentTarget.getAttribute('href');
-                            fetch(url, { method: 'POST' })
-                                .then(() => window.location.href = notificationsUrl)
-                                .catch(() => window.location.href = notificationsUrl);
-                        }
-                    </script>
+
+                    <a th:href="@{/profile}"
+                        th:classappend="${activePage == 'profile'} ? 'bg-blue-100 text-blue-600' : 'text-gray-700'"
+                        class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">
+                        <i class="fa-solid fa-user"
+                            th:classappend="${activePage == 'profile'} ? 'text-blue-600' : ''"></i>
+                        <span th:classappend="${activePage == 'profile'} ? 'text-blue-600' : ''">Profile</span>
+                    </a>
+
 
 
                     <!-- <button
@@ -168,6 +157,21 @@
                     </button> -->
                 </nav>
             </div>
+
+
+
+            <form th:action="@{/logout}" method="post"
+      class="absolute bottom-0 left-0 w-full p-4 bg-white border-t border-gray-200">
+    <button type="submit"
+        class="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 font-medium py-3 px-4 rounded-lg transition">
+        <!-- Logout SVG Icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"/>
+        </svg>
+        Sign out
+    </button>
+</form>
         </div>
     </aside>
     <script>

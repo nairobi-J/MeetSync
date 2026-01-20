@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const calendarData = document.getElementById('calendarData');
     const urlParams = new URLSearchParams(window.location.search);
 
-    let currentMonth = parseInt(urlParams.get('month')) -1 || 
+    let currentMonth = parseInt(urlParams.get('month')) - 1 ||
                        parseInt(localStorage.getItem('calendarMonth')) || 
                        (parseInt(calendarData?.dataset.currentMonth) || new Date().getMonth());
 
@@ -170,20 +170,33 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function createEventBadge(event) {
-        const colors = {
-            blue:   'bg-blue-100 text-blue-800 border-blue-300',
-            orange: 'bg-orange-100 text-orange-800 border-orange-300',
-            red:    'bg-red-100 text-red-800 border-red-300'
+     const colors = {
+            blue: 'bg-blue-500 text-white border-blue-300',
+            orange: 'bg-orange-500 text-white border-orange-300',
+            red: 'bg-red-100 text-red-800 border-red-300'
         };
 
         const badge = document.createElement('div');
         badge.className = `text-xs px-2 py-0.5 rounded border ${colors[event.color] || colors.blue} truncate`;
         
         // Show start time + title
-        const startTime = event.startTime ? event.startTime.substring(0, 5) : '';
-        badge.textContent = startTime ? `${startTime} ${event.title}` : `${event.title}`;
+        const startTime = event.startTime
+            ? toAmPm(event.startTime.substring(0, 5))
+            : '';
+
+
+        badge.textContent = startTime ? ` ${event.title} | ${startTime}` : `${event.title}`;
         
         return badge;
+    }
+
+    function toAmPm(time24) {
+        if (!time24) return '';
+        const [hourStr, minute] = time24.split(':');
+        let hour = parseInt(hourStr, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12 || 12; // 0 -> 12
+        return `${hour}:${minute} ${ampm}`;
     }
 
     function getEventsForDay(day) {
@@ -201,11 +214,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         const modalContent = modal.querySelector('[id^="modal"]')?.parentElement;
         
         // Clear previous content
-        let container = document.getElementById('eventsList');
+        let container = document.getElementById('eventList');
         if (!container) {
             // Create container if it doesn't exist
             container = document.createElement('div');
-            container.id = 'eventsList';
+            container.id = 'eventList';
             container.className = 'max-h-96 overflow-y-auto';
             modal.querySelector('.modal-body')?.appendChild(container) || modal.appendChild(container);
         }
