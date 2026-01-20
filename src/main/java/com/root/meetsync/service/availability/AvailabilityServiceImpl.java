@@ -12,7 +12,12 @@ import com.root.meetsync.repository.availability.UserAvailabilityRepository;
 import com.root.meetsync.repository.availability.UserDateOverrideAvailabilityRepository;
 import com.root.meetsync.repository.availability.UserMeetingPreferenceRepository;
 import com.root.meetsync.repository.booking.BookingRepository;
+import com.root.meetsync.service.impl.GoogleCalendarServiceImpl;
+import com.google.api.services.calendar.model.Event;
+
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,14 +35,15 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
     private final UserAvailabilityRepository availabilityRepository;
     private final UserDateOverrideAvailabilityRepository overrideRepository;
     private final BookingRepository bookingRepository;
+    @Autowired
+    private GoogleCalendarServiceImpl googleCalendarService;
 
     @Value("${meetsync.base-url:https://base_url_missing}")
     private String bookingBaseUrl;
 
     @Transactional
     public void setupAvailability(Long userId, SetupAvailabilityRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         // Setup or update meeting preferences
         UserMeetingPreference preference = preferenceRepository.findByUserId(userId)
@@ -81,14 +87,11 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
             }
         }
 
-
-
-        
     }
 
     public SetupAvailabilityRequest getUserAvailability(Long userId) {
         SetupAvailabilityRequest request = new SetupAvailabilityRequest();
-        
+
         // Fetch user's meeting preferences
         UserMeetingPreference preference = preferenceRepository.findByUserId(userId).orElse(null);
         if (preference != null) {
@@ -98,7 +101,7 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
             request.setBufferTimeMinutes(preference.getBufferTimeMinutes());
             request.setTimezone(preference.getTimezone());
         }
-        
+
         // Fetch weekly availability
         List<UserAvailability> weeklyAvailability = availabilityRepository.findByUserId(userId);
         if (!weeklyAvailability.isEmpty()) {
@@ -112,7 +115,7 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
             }
             request.setWeeklyAvailability(weeklyDTOs);
         }
-        
+
         // Fetch date overrides
         List<UserDateOverrideAvailability> overrides = overrideRepository.findByUserId(userId);
         if (!overrides.isEmpty()) {
@@ -127,46 +130,53 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
             }
             request.setDateOverrides(overrideDTOs);
         }
-        
+
         return request;
     }
-  
 
     public List<AvailableSlotDTO> getAvailableSlots(String emailPrefix, String timezone) {
         User user = userRepository.findByEmail(emailPrefix)
                 .or(() -> userRepository.findAll().stream()
-                        .filter(u -> u.getEmail() != null && u.getEmail().startsWith(emailPrefix + "@"))
-                        .findFirst())
+                        .filter(u -> u.getEmail() != null && u.getEmail().startsWith(emailPrefix + "@")).findFirst())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        UserMeetingPreference preference = preferenceRepository.findByUserId(user.getId())
-    .orElseGet(() -> {
-        UserMeetingPreference def = new UserMeetingPreference();
-        def.setUser(user);
-        def.setMeetingDurationMinutes(30); // default 30 min
-        def.setMinNoticeHours(60); // default 1 hours
-        def.setFutureDaysAllowed(30); // default 14 days
-        def.setBufferTimeMinutes(0); // default 0 min
-        def.setTimezone("Asia/Dhaka"); // default timezone
-        return preferenceRepository.save(def);
-    });
-// ...e
+        UserMeetingPreference preference = preferenceRepository.findByUserId(user.getId()).orElseGet(() -> {
+            UserMeetingPreference def = new UserMeetingPreference();
+            def.setUser(user);
+            def.setMeetingDurationMinutes(30); // default 30 min
+            def.setMinNoticeHours(60); // default 1 hours
+            def.setFutureDaysAllowed(30); // default 14 days
+            def.setBufferTimeMinutes(0); // default 0 min
+            def.setTimezone("Asia/Dhaka"); // default timezone
+            return preferenceRepository.save(def);
+        });
+
         List<UserAvailability> weeklyAvailability = availabilityRepository.findByUserId(user.getId());
         List<UserDateOverrideAvailability> dateOverrides = overrideRepository.findByUserId(user.getId());
         List<Booking> existingBookings = bookingRepository.findByHostId(user.getId());
+        // Calculate the date range for Google Calendar fetch
+        ZoneId hostTimezone = ZoneId.of(preference.getTimezone());
+        LocalDate startDate = LocalDate.now(hostTimezone);
+        LocalDate endDate = startDate.plusDays(preference.getFutureDaysAllowed());
+        ZonedDateTime rangeStart = startDate.atStartOfDay(hostTimezone);
+        ZonedDateTime rangeEnd = endDate.plusDays(1).atStartOfDay(hostTimezone); // inclusive
 
-        // Use invitee's timezone if provided, otherwise use host's timezone
+        // Fetch Google Calendar events only in the relevant range
+        List<Event> googleEvents = new ArrayList<>();
+        try {
+            googleEvents = googleCalendarService.getGoogleCalendarEventsInRange(user, rangeStart, rangeEnd);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch Google Calendar events: in Range " + e.getMessage());
+        }
+
         String displayTimezone = (timezone != null && !timezone.isEmpty()) ? timezone : preference.getTimezone();
-
-        return generateAvailableSlots(preference, weeklyAvailability, dateOverrides, existingBookings, displayTimezone);
+        return generateAvailableSlots(preference, weeklyAvailability, dateOverrides, existingBookings, displayTimezone,
+                googleEvents);
     }
 
-    private List<AvailableSlotDTO> generateAvailableSlots(
-            UserMeetingPreference preference,
-            List<UserAvailability> weeklyAvailability,
-            List<UserDateOverrideAvailability> dateOverrides,
-            List<Booking> existingBookings,
-            String displayTimezone) {
+    private List<AvailableSlotDTO> generateAvailableSlots(UserMeetingPreference preference,
+            List<UserAvailability> weeklyAvailability, List<UserDateOverrideAvailability> dateOverrides,
+            List<Booking> existingBookings, String displayTimezone, List<Event> googleEvents) {
 
         List<AvailableSlotDTO> slots = new ArrayList<>();
         ZoneId hostTimezone = ZoneId.of(preference.getTimezone());
@@ -179,10 +189,8 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
             DayOfWeek dayOfWeek = date.getDayOfWeek();
 
             // Check for date override
-            UserDateOverrideAvailability override = dateOverrides.stream()
-                    .filter(o -> o.getDate().equals(date))
-                    .findFirst()
-                    .orElse(null);
+            UserDateOverrideAvailability override = dateOverrides.stream().filter(o -> o.getDate().equals(date))
+                    .findFirst().orElse(null);
 
             LocalTime startTime;
             LocalTime endTime;
@@ -196,9 +204,7 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
             } else {
                 // Use weekly availability
                 UserAvailability dayAvailability = weeklyAvailability.stream()
-                        .filter(a -> a.getDayOfWeek() == dayOfWeek)
-                        .findFirst()
-                        .orElse(null);
+                        .filter(a -> a.getDayOfWeek() == dayOfWeek).findFirst().orElse(null);
 
                 if (dayAvailability == null) {
                     continue; // No availability for this day
@@ -227,20 +233,43 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
                 final LocalDateTime currentSlotStart = slotStart;
                 LocalDateTime slotEnd = currentSlotStart.plusMinutes(slotDuration);
 
-                // Check if slot is in the future with minimum notice
                 boolean isOverride = (override != null);
-                if ((isOverride && !Boolean.TRUE.equals(override.getUnavailable())) || currentSlotStart.isAfter(minBookingTime)) {
+                if ((isOverride && !Boolean.TRUE.equals(override.getUnavailable()))
+                        || currentSlotStart.isAfter(minBookingTime)) {
                     // Check if slot is not already booked
                     boolean isBooked = false;
                     for (Booking b : existingBookings) {
-                        if (b.getStatus() != BookingStatus.CANCELLED &&
-                                (currentSlotStart.isBefore(b.getEndTime()) && slotEnd.isAfter(b.getStartTime()))) {
+                        if (b.getStatus() != BookingStatus.CANCELLED
+                                && (currentSlotStart.isBefore(b.getEndTime()) && slotEnd.isAfter(b.getStartTime()))) {
                             isBooked = true;
                             break;
                         }
                     }
 
-                    if (!isBooked) {
+                    // Check if slot is not already booked in Google Calendar
+                    boolean isGoogleBooked = false;
+                    for (Event event : googleEvents) {
+                        com.google.api.client.util.DateTime eventStart = event.getStart().getDateTime();
+                        com.google.api.client.util.DateTime eventEnd = event.getEnd().getDateTime();
+                        if (eventStart == null || eventEnd == null)
+                            continue;
+                        ZonedDateTime eventStartZdt = Instant.ofEpochMilli(eventStart.getValue()).atZone(hostTimezone);
+                        ZonedDateTime eventEndZdt = Instant.ofEpochMilli(eventEnd.getValue()).atZone(hostTimezone);
+
+                        // if (!slotEnd.atZone(hostTimezone).isBefore(eventStartZdt)
+                        // && !currentSlotStart.atZone(hostTimezone).isAfter(eventEndZdt)) {
+                        // isGoogleBooked = true;
+                        // break;
+                        // }
+
+                        if (currentSlotStart.atZone(hostTimezone).isBefore(eventEndZdt)
+                                && slotEnd.atZone(hostTimezone).isAfter(eventStartZdt)) {
+                            isGoogleBooked = true;
+                            break;
+                        }
+                    }
+
+                    if (!isBooked && !isGoogleBooked) {
                         // Convert to invitee's timezone if different
                         LocalDateTime displayStart = currentSlotStart;
                         LocalDateTime displayEnd = slotEnd;
@@ -268,13 +297,12 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
     }
 
     public String getUserBookingLink(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
         if (user.getEmail() == null || !user.getEmail().contains("@")) {
             throw new RuntimeException("User email is invalid");
         }
-        
+
         String emailPrefix = user.getEmail().substring(0, user.getEmail().indexOf("@"));
         String base = bookingBaseUrl != null ? bookingBaseUrl.trim() : "https:base_url_missing";
         if (base.endsWith("/")) {
@@ -283,11 +311,10 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
         return base + "/u/" + emailPrefix;
     }
 
-   public UserMeetingPreference getUserMeetingPreference(Long userId) {
+    public UserMeetingPreference getUserMeetingPreference(Long userId) {
         UserMeetingPreference preference = preferenceRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("User has not set up availability"));
         return preference;
     }
-
 
 }

@@ -8,8 +8,6 @@ import com.root.meetsync.service.NotificationService;
 import com.root.meetsync.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.aspectj.weaver.ast.Not;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
@@ -17,7 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.time.DayOfWeek;
+
 
 @Controller
 @RequestMapping("/availability")
@@ -29,6 +27,7 @@ public class AvailabilityPageController {
     private final UserService userService;
     private final NotificationService notificationService;
 
+    
     @GetMapping("/setup")
     public String showAvailabilitySetup(Authentication authentication, Model model) {
 
