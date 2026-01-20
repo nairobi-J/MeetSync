@@ -42,26 +42,26 @@ public class WebController {
     private final UserService userService;
     private final GoogleCalendarServiceImpl googleCalendarService;
 
-    @GetMapping("/login")
-    public String showLoginPage(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            return "redirect:/";
-        }
-        return "login";
-    }
+    // @GetMapping("/login")
+    // public String showLoginPage(Authentication authentication) {
+    //     if (authentication != null && authentication.isAuthenticated()) {
+    //         return "redirect:/";
+    //     }
+    //     return "login";
+    // }
 
-    @GetMapping("/signup")
-    public String showSignupPage(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            return "redirect:/";
-        }
-        return "signup";
-    }
+    // @GetMapping("/signup")
+    // public String showSignupPage(Authentication authentication) {
+    //     if (authentication != null && authentication.isAuthenticated()) {
+    //         return "redirect:/";
+    //     }
+    //     return "signup";
+    // }
 
-    @GetMapping("/set-password")
-    public String showSetPasswordPage() {
-        return "set-password";
-    }
+    // @GetMapping("/set-password")
+    // public String showSetPasswordPage() {
+    //     return "set-password";
+    // }
 
     @GetMapping("/profile")
     public String showProfilePage(Model model) {
@@ -105,9 +105,9 @@ public class WebController {
 
     User user = getAuthenticatedUser(authentication);
 
-    if (user.getPassword() == null || user.getPassword().isEmpty()) {
-        return "redirect:/set-password";
-    }
+    // if (user.getPassword() == null || user.getPassword().isEmpty()) {
+    //     return "redirect:/set-password";
+    // }
 
     LocalDate now = LocalDate.now();
     int displayYear  = (paramYear != null) ? paramYear : now.getYear();
