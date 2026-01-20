@@ -230,6 +230,7 @@ public class GoogleCalendarServiceImpl {
         }
 
         public List<Event> getAllGoogleCalendarEvents(User user) throws Exception {
+                
 
                 // 1. Validate tokens
                 if (user.getOauthToken() == null || user.getOauthToken().getRefreshToken() == null) {
@@ -258,5 +259,41 @@ public class GoogleCalendarServiceImpl {
                 // 5. Return event list
                 return events.getItems();
         }
+
+
+
+
+public List<Event> getGoogleCalendarEventsInRange(User user, ZonedDateTime start, ZonedDateTime end) throws Exception {
+    if (user.getOauthToken() == null || user.getOauthToken().getRefreshToken() == null) {
+        throw new IllegalStateException("No Google refresh token found for user: " + user.getEmail());
+    }
+
+    GoogleTokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new GsonFactory(),
+            user.getOauthToken().getRefreshToken(), clientId, clientSecret).execute();
+
+    String accessToken = response.getAccessToken();
+
+    Calendar service = new Calendar.Builder(GoogleNetHttpTransport.newTrustedTransport(),
+            GsonFactory.getDefaultInstance(), null).setApplicationName("MeetSync")
+            .setHttpRequestInitializer(request -> request.getHeaders()
+                    .setAuthorization("Bearer " + accessToken))
+            .build();
+
+    DateTime timeMin = new DateTime(Date.from(start.toInstant()));
+    DateTime timeMax = new DateTime(Date.from(end.toInstant()));
+
+    com.google.api.services.calendar.model.Events events = service.events().list("primary")
+            .setTimeMin(timeMin)
+            .setTimeMax(timeMax)
+            .setMaxResults(100)
+            .setSingleEvents(true)
+            .setOrderBy("startTime")
+            .execute();
+
+    return events.getItems();
+}
+
+
+
 
 }
