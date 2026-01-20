@@ -140,8 +140,17 @@ public class AvailabilityServiceImpl implements IAvailabilityService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         UserMeetingPreference preference = preferenceRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("User has not set up availability"));
-
+    .orElseGet(() -> {
+        UserMeetingPreference def = new UserMeetingPreference();
+        def.setUser(user);
+        def.setMeetingDurationMinutes(30); // default 30 min
+        def.setMinNoticeHours(60); // default 1 hours
+        def.setFutureDaysAllowed(30); // default 14 days
+        def.setBufferTimeMinutes(0); // default 0 min
+        def.setTimezone("Asia/Dhaka"); // default timezone
+        return preferenceRepository.save(def);
+    });
+// ...e
         List<UserAvailability> weeklyAvailability = availabilityRepository.findByUserId(user.getId());
         List<UserDateOverrideAvailability> dateOverrides = overrideRepository.findByUserId(user.getId());
         List<Booking> existingBookings = bookingRepository.findByHostId(user.getId());

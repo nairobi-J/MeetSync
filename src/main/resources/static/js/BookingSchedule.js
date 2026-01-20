@@ -208,7 +208,23 @@ function renderCalendar() {
 
      if (availableDates.length === 0) {
         monthLabel.textContent = '';
-        grid.innerHTML = '<div class="  border border-blue-600 font-semibold flex justify-center items-center text-gray-500 py-8 w-full">No dates are available</div>';
+        grid.innerHTML = `
+  <div class="flex flex-col items-center justify-center w-full py-12">
+    <div class="flex items-center justify-center mb-4">
+      <svg class="w-10 h-10 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.5 9.5l5 5m0-5l-5 5" />
+      </svg>
+    </div>
+    <div class="text-lg font-semibold text-red-600 mb-2 text-center">
+      Host is Unavailable
+    </div>
+    <div class="text-sm text-gray-500 text-center max-w-xs">
+      There are no available dates right now.<br>
+      Please check back later or contact the host for more information.
+    </div>
+  </div>
+`;
         updateNavigationButtons(); 
         return;
     }

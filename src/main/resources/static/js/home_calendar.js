@@ -180,10 +180,23 @@ document.addEventListener('DOMContentLoaded', async function () {
         badge.className = `text-xs px-2 py-0.5 rounded border ${colors[event.color] || colors.blue} truncate`;
 
         // Show start time + title
-        const startTime = event.startTime ? event.startTime.substring(0, 5) : '';
-        badge.textContent = startTime ? `${startTime} ${event.title}` : `${event.title}`;
+        const startTime = event.startTime
+            ? toAmPm(event.startTime.substring(0, 5))
+            : '';
+
+
+        badge.textContent = startTime ? ` ${event.title} | ${startTime}` : `${event.title}`;
 
         return badge;
+    }
+
+    function toAmPm(time24) {
+        if (!time24) return '';
+        const [hourStr, minute] = time24.split(':');
+        let hour = parseInt(hourStr, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12 || 12; // 0 -> 12
+        return `${hour}:${minute} ${ampm}`;
     }
 
     function getEventsForDay(day) {
@@ -262,7 +275,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function renderMiniCalendar() {
         const container = document.getElementById('miniCalendarDays');
-        if (!container) return;
+        if (!container) return;No
         container.innerHTML = '';
 
         const y = miniCalendarDate.getFullYear();

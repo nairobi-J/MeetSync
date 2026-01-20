@@ -59,6 +59,7 @@ public class AvailabilityPageController {
 
         model.addAttribute("availabilityRequest", request);
         model.addAttribute("user", user);
+        model.addAttribute("isisAvailable", true);
 
         model.addAttribute("activePage", "availability");
         // Add booking link to the model
@@ -99,7 +100,7 @@ public class AvailabilityPageController {
 
             String bookingLink = availabilityService.getUserBookingLink(user.getId());
             redirectAttributes.addFlashAttribute("bookingLink", bookingLink);
-
+            redirectAttributes.addFlashAttribute("isAvailable", true);
          
 			notificationService.createNotification(user, "Availability Updated", 
             "Your availability has been updated successfully.",

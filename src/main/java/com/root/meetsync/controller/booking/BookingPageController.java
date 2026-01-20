@@ -1,5 +1,6 @@
 package com.root.meetsync.controller.booking;
 
+import com.root.meetsync.dto.CurrentUserDTO;
 import com.root.meetsync.dto.availability.AvailableSlotDTO;
 import com.root.meetsync.dto.booking.BookingRequestDTO;
 import com.root.meetsync.dto.booking.BookingResponseDTO;
@@ -12,7 +13,9 @@ import com.root.meetsync.service.availability.IAvailabilityService;
 import com.root.meetsync.service.booking.IBookingService;
 import com.root.meetsync.service.impl.GoogleCalendarServiceImpl;
 import lombok.RequiredArgsConstructor;
-
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,12 +30,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-
 @Controller
 @RequiredArgsConstructor
 
 public class BookingPageController {
-   
+
     private final IAvailabilityService availabilityService;
     private final UserService userService;
     private final IBookingService bookingService;
@@ -41,7 +43,7 @@ public class BookingPageController {
 
     @GetMapping("/u/{emailPrefix}")
     public String showPublicBookingPage(@PathVariable String emailPrefix,
-            @RequestParam(required = false) String timezone, Model model) {
+            @RequestParam(required = false) String timezone, Model model,@ModelAttribute(value="currentUser" ,binding = false) CurrentUserDTO currentUser) {
 
         try {
             // Fetch available slots
@@ -56,6 +58,10 @@ public class BookingPageController {
             model.addAttribute("emailPrefix", emailPrefix);
             model.addAttribute("availableSlots", slots);
             model.addAttribute("timezone", timezone != null ? timezone : "UTC");
+           
+            boolean isOwner = currentUser != null && currentUser.getEmail().equalsIgnoreCase(user.getEmail());
+            model.addAttribute("isOwner", isOwner);
+
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
         }
@@ -75,7 +81,8 @@ public class BookingPageController {
                 String bookingTime = request.getStartTime().format(formatter);
 
                 notificationService.createNotification(host, "New Appointment Request",
-                        request.getInviteeName() + " (" + request.getInviteeEmail() + ") has requested a meeting on " + bookingTime,
+                        request.getInviteeName() + " (" + request.getInviteeEmail() + ") has requested a meeting on "
+                                + bookingTime,
                         Notification.NotificationType.BOOKING_PENDING, booking.getId(), "Booking", "/dashboard");
             }
 
@@ -92,7 +99,8 @@ public class BookingPageController {
     }
 
     @PutMapping("/{bookingId}/confirm/{notificationId}")
-    public String confirmBooking(@PathVariable Long bookingId, @PathVariable Long notificationId, RedirectAttributes redirectAttributes) {
+    public String confirmBooking(@PathVariable Long bookingId, @PathVariable Long notificationId,
+            RedirectAttributes redirectAttributes) {
         try {
             BookingResponseDTO response = bookingService.confirmBooking(bookingId);
             String prefix = response.getHostEmail().split("@")[0];
@@ -115,20 +123,19 @@ public class BookingPageController {
                 // We don't throw an error here so the DB confirmation still finishes
             }
 
-        //   delete pending notification
-           notificationService.deleteNotification(notificationId);
-
-
+            // delete pending notification
+            notificationService.deleteNotification(notificationId);
 
             if (response != null) {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' hh:mm a");
                 String bookingTime = response.getStartTime().format(formatter);
-                
+
                 notificationService.createNotification(host, "Schedule Confirmed",
                         "You have confirmed the booking with " + response.getInviteeName() + " on " + bookingTime,
                         Notification.NotificationType.BOOKING_CONFIRMED, response.getId(), "Booking", "/bookings");
             }
-            redirectAttributes.addFlashAttribute("success", "Schedule confirmed successfully & synced to Google Calendar!");
+            redirectAttributes.addFlashAttribute("success",
+                    "Schedule confirmed successfully & synced to Google Calendar!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
@@ -137,29 +144,30 @@ public class BookingPageController {
     }
 
     @PutMapping("/{bookingId}/cancel/{notificationId}")
-    public String cancelBooking(@PathVariable Long bookingId, @PathVariable Long notificationId, RedirectAttributes redirectAttributes) {
+    public String cancelBooking(@PathVariable Long bookingId, @PathVariable Long notificationId,
+            RedirectAttributes redirectAttributes) {
         try {
             BookingResponseDTO response = bookingService.cancelBooking(bookingId);
 
             if (response != null) {
                 String prefix = response.getHostEmail().split("@")[0];
                 User host = userService.getUserByEmailPrefix(prefix);
-                
+
                 // Delete the event from Google Calendar if it exists
                 if (response.getGoogleCalendarEventId() != null) {
                     try {
                         googleCalendarServiceImpl.deleteGoogleEvent(host, response.getGoogleCalendarEventId());
-                        System.out.println("Successfully deleted booking from Google Calendar: " + response.getGoogleCalendarEventId());
+                        System.out.println("Successfully deleted booking from Google Calendar: "
+                                + response.getGoogleCalendarEventId());
                     } catch (Exception e) {
                         System.err.println("Failed to delete Google Calendar event: " + e.getMessage());
                         // Continue with the cancellation even if Google Calendar deletion fails
                     }
                 }
-                
-                //   delete pending notification
+
+                // delete pending notification
                 notificationService.deleteNotification(notificationId);
 
-                
                 notificationService.createNotification(host, "Schedule Cancelled",
                         "The booking with " + response.getInviteeName() + " has been cancelled",
                         Notification.NotificationType.BOOKING_CANCELLED, response.getId(), "Booking", "/bookings");

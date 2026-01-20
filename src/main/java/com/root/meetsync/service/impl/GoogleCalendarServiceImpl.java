@@ -45,7 +45,7 @@ public class GoogleCalendarServiceImpl {
 
         // 2. Prepare Google Event Info
         String summary = "MeetSync: " + confirmed.getEvent().getTitle();
-        String description = "Meeting finalized via MeetSync Heatmap.";
+        String description = "Meeting finalized via MeetSync Poll ";
 
         // 3. Call the common helper to push to Google and return event ID
         return pushToGoogle(host, summary, description, startZoned, endZoned);
@@ -82,7 +82,7 @@ public class GoogleCalendarServiceImpl {
 
         // 4. Build the Event
         Event event = new Event()
-                .setSummary("MeetSync: " + booking.getInviteeName())
+                .setSummary("Appointment with: " + booking.getInviteeName())
                 .setDescription("Meeting confirmed via MeetSync with " + booking.getInviteeEmail())
                 ;
            
