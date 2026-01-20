@@ -21,14 +21,14 @@
                     <div>
                         <th:block th:if="${currentUser == null}">
                             <a th:href="@{/oauth2/authorization/google}"
-                                class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg transition transform hover:scale-105">
+                                class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-full transition transform hover:scale-105">
                                 Get Started
                             </a>
                         </th:block>
 
                         <th:block th:if="${currentUser != null}">
                             <a th:href="@{/dashboard}"
-                                class="inline-block my-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg  transform hover:scale-105">
+                                class="inline-block my-12 animate-bounce bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-full  transform hover:scale-105">
                                 Go to Dashboard
                             </a>
                         </th:block>

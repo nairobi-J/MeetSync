@@ -67,6 +67,7 @@ public class WebController {
     @GetMapping("/profile")
     public String showProfilePage(Model model) {
         model.addAttribute("timezones", ZoneId.getAvailableZoneIds());
+        model.addAttribute("activePage", "profile");
         return "userinfo";
     }
 

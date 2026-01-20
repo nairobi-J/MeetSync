@@ -75,27 +75,7 @@ public class HomeController {
         return "MainHome";
     }
     
-    @GetMapping("/schedules")
-    public String schedules(Model model) {
-        return "schedules";
-    }
-    
-    @GetMapping("/availability")
-    public String availability(Model model) {
-        return "availability";
-    }
-    
-    @GetMapping("/settings")
-    public String settings(Model model) {
-        return "settings";
-    }
-    
-    // @GetMapping("/notifications")
-    // public String notifications(Model model) {
-    //     return "notifications";
-    // }
-    
-
+   
 
     // Convert Google Calendar Events to our calendar format
     private List<Map<String, Object>> convertGoogleEventsToCalendarEvents(List<Event> googleEvents) {

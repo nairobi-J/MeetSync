@@ -2,13 +2,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     const calendarData = document.getElementById('calendarData');
     const urlParams = new URLSearchParams(window.location.search);
 
-    let currentMonth = parseInt(urlParams.get('month')) -1 || 
-                       parseInt(localStorage.getItem('calendarMonth')) || 
-                       (parseInt(calendarData?.dataset.currentMonth) || new Date().getMonth());
+    let currentMonth = parseInt(urlParams.get('month')) - 1 ||
+        parseInt(localStorage.getItem('calendarMonth')) ||
+        (parseInt(calendarData?.dataset.currentMonth) || new Date().getMonth());
 
-    let currentYear = parseInt(urlParams.get('year')) || 
-                      parseInt(localStorage.getItem('calendarYear')) || 
-                      (parseInt(calendarData?.dataset.currentYear) || new Date().getFullYear());
+    let currentYear = parseInt(urlParams.get('year')) ||
+        parseInt(localStorage.getItem('calendarYear')) ||
+        (parseInt(calendarData?.dataset.currentYear) || new Date().getFullYear());
 
     // Cache: year → array of all events in that year
     const eventCache = new Map();
@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('closeModal')?.addEventListener('click', () => {
         document.getElementById('eventModal').classList.add('hidden');
     });
+
 
     async function changeMonth(delta) {
         currentMonth += delta;
@@ -110,7 +111,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const grid = document.getElementById('calendarGrid');
         const title = document.getElementById('currentMonthYear');
 
-        const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         title.textContent = `${monthNames[currentMonth]} ${currentYear}`;
 
         grid.innerHTML = '';
@@ -157,9 +158,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function createDayCell(day, otherMonth) {
         const div = document.createElement('div');
-        div.className = `min-h-[110px] p-2 border-r border-b border-gray-200 ${
-            otherMonth ? 'bg-gray-50 text-gray-400' : 'bg-white hover:bg-gray-50'
-        }`;
+        div.className = `min-h-[110px] p-2 border-r border-b border-gray-200 ${otherMonth ? 'bg-gray-50 text-gray-400' : 'bg-white hover:bg-gray-50'
+            }`;
 
         const num = document.createElement('div');
         num.className = `text-sm font-medium ${otherMonth ? 'text-gray-400' : 'text-gray-800'}`;
@@ -171,19 +171,32 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function createEventBadge(event) {
         const colors = {
-            blue:   'bg-blue-100 text-blue-800 border-blue-300',
-            orange: 'bg-orange-100 text-orange-800 border-orange-300',
-            red:    'bg-red-100 text-red-800 border-red-300'
+            blue: 'bg-blue-500 text-white border-blue-300',
+            orange: 'bg-orange-500 text-white border-orange-300',
+            red: 'bg-red-100 text-red-800 border-red-300'
         };
 
         const badge = document.createElement('div');
         badge.className = `text-xs px-2 py-0.5 rounded border ${colors[event.color] || colors.blue} truncate`;
-        
+
         // Show start time + title
-        const startTime = event.startTime ? event.startTime.substring(0, 5) : '';
-        badge.textContent = startTime ? `${startTime} ${event.title}` : `${event.title}`;
-        
+        const startTime = event.startTime
+            ? toAmPm(event.startTime.substring(0, 5))
+            : '';
+
+
+        badge.textContent = startTime ? ` ${event.title} | ${startTime}` : `${event.title}`;
+
         return badge;
+    }
+
+    function toAmPm(time24) {
+        if (!time24) return '';
+        const [hourStr, minute] = time24.split(':');
+        let hour = parseInt(hourStr, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12 || 12; // 0 -> 12
+        return `${hour}:${minute} ${ampm}`;
     }
 
     function getEventsForDay(day) {
@@ -199,14 +212,14 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         const modal = document.getElementById('eventModal');
         const modalContent = modal.querySelector('[id^="modal"]')?.parentElement;
-        
+
         // Clear previous content
-        let container = document.getElementById('eventsList');
+        let container = document.getElementById('eventList');
         if (!container) {
             // Create container if it doesn't exist
             container = document.createElement('div');
-            container.id = 'eventsList';
-            container.className = 'max-h-96 overflow-y-auto';
+            container.id = 'eventList';
+            container.className = 'max-h-auto overflow-y-auto';
             modal.querySelector('.modal-body')?.appendChild(container) || modal.appendChild(container);
         }
         container.innerHTML = '';
@@ -214,29 +227,35 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Show all events for the day
         dayEvents.forEach((ev, index) => {
             const eventDiv = document.createElement('div');
-            eventDiv.className = 'p-4 mb-3 border border-gray-200 rounded-lg bg-gray-50';
-            
+            eventDiv.className = 'p-4 mb-3 border m-4 border-gray-200 rounded-lg bg-gray-50';
+
             const startTime = ev.startTime ? ev.startTime.substring(0, 5) : 'N/A';
             const endTime = ev.endTime ? ev.endTime.substring(0, 5) : 'N/A';
-            
+
             eventDiv.innerHTML = `
-                <div class="flex items-center space-x-2 mb-2">
-                    <h4 class="font-bold text-gray-900">${ev.title}</h4>
-                </div>
-                <div class="text-sm text-gray-600 space-y-1">
-                    <div><i class="far fa-calendar w-4"></i> ${ev.date}</div>
-                    <div><i class="far fa-clock w-4"></i> ${startTime} - ${endTime}</div>
-                    ${ev.description ? `<div class="text-gray-500 italic mt-2">${ev.description}</div>` : ''}
-                </div>
-            `;
-            
+    <div class="flex justify-between items-center">
+        <div>
+            <div class="font-bold text-gray-900">${ev.title}</div>
+            <div class="text-sm text-gray-600">Time: ${startTime} - ${endTime}</div>
+            ${ev.description ? `<div class="text-xs text-gray-500">${ev.description}</div>` : ''}
+        </div>
+        <form method="post" action="/api/events/${ev.id}/delete" onsubmit="return confirm('Delete this event?');">
+            <button type="submit" class="text-red-600 hover:text-red-800">
+                <i class="fas fa-trash"></i>
+            </button>
+        </form>
+    </div>
+`;
+
             container.appendChild(eventDiv);
+
+
         });
 
         // Update modal title with day info
         document.getElementById('modalTitle').textContent = `Events on ${day}`;
         document.getElementById('modalDate').textContent = `Total: ${dayEvents.length} event${dayEvents.length > 1 ? 's' : ''}`;
-        
+
         modal.classList.remove('hidden');
     }
 
@@ -248,7 +267,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     function updateMiniCalendar() {
         const monthDisplay = document.getElementById('miniCalendarMonth');
         if (monthDisplay) {
-            const names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            const names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
             monthDisplay.textContent = `${names[miniCalendarDate.getMonth()]} ${miniCalendarDate.getFullYear()}`;
         }
         renderMiniCalendar();
@@ -256,7 +275,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function renderMiniCalendar() {
         const container = document.getElementById('miniCalendarDays');
-        if (!container) return;
+        if (!container) return;No
         container.innerHTML = '';
 
         const y = miniCalendarDate.getFullYear();
@@ -288,9 +307,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function createMiniCell(day, other, isToday = false) {
         const cell = document.createElement('div');
-        cell.className = `py-1.5 text-center text-sm rounded hover:bg-gray-100 cursor-pointer ${
-            other ? 'text-gray-400' : 'text-gray-700'
-        } ${isToday ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`;
+        cell.className = `py-1.5 text-center text-sm rounded hover:bg-gray-100 cursor-pointer ${other ? 'text-gray-400' : 'text-gray-700'
+            } ${isToday ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`;
 
         cell.textContent = day;
 
