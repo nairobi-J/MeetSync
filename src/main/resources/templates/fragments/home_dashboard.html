@@ -1,16 +1,20 @@
 <main th:fragment="dashboard" class="flex-1 ml-64 mt-16 p-8">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center space-x-4">
-            <button id="prevMainMonth" class="p-2 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-100">
-                <i class="fas fa-chevron-left"></i>
+        <div class="flex items-center justify-between gap-4 w-full max-w-3xl mx-auto">
+            <button id="todayBtn" class="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-lg font-medium">
+                Today
             </button>
-            <h2 id="currentMonthYear" class="text-3xl font-bold text-gray-900"></h2>
+            <div class="flex items-center space-x-3">
+                <button id="prevMainMonth" class="p-2 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-100">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+            <h2 id="currentMonthYear" class="text-3xl font-bold text-gray-900 text-center min-w-[260px] md:min-w-[320px]">
+                <!-- month year -->
+            </h2>
             <button id="nextMainMonth" class="p-2 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-100">
                 <i class="fas fa-chevron-right"></i>
-            </button>
-            <button id="todayBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                Today
             </button>
         </div>
 

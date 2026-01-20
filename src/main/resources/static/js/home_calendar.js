@@ -37,12 +37,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     document.getElementById('prevMonth')?.addEventListener('click', () => {
         miniCalendarDate.setMonth(miniCalendarDate.getMonth() - 1);
-        changeMonthFromMini();
+        updateMiniCalendar();
     });
 
     document.getElementById('nextMonth')?.addEventListener('click', () => {
         miniCalendarDate.setMonth(miniCalendarDate.getMonth() + 1);
-        changeMonthFromMini();
+        updateMiniCalendar();
     });
 
     document.getElementById('closeModal')?.addEventListener('click', () => {
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (!other) {
                 currentMonth = miniCalendarDate.getMonth();
                 currentYear = miniCalendarDate.getFullYear();
-                updateCalendar();
+                navigateToMonth();
             }
         });
 
