@@ -99,19 +99,17 @@
     </h3>
     
     <div class="space-y-2">
-        <div th:each="day : ${T(java.time.DayOfWeek).values()}" 
+        <div th:each="day : ${daysOfWeek}" 
              class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-            <div class="flex items-center flex-1">
-                <input type="checkbox" 
-                       th:id="'day-' + ${day}"
-                       th:name="'weeklyAvailability[' + ${day} + '].enabled'"
-                       class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                       onchange="toggleDayFields(this)">
-                <label th:for="'day-' + ${day}" 
-                       class="ml-3 text-sm font-medium text-gray-700 w-24"
-                       th:text="${#strings.capitalize(#strings.toLowerCase(day))}">Monday</label>
-            </div>
-            
+         <div class="flex items-center w-full sm:flex-1">
+        <input type="checkbox" th:id="'day-' + ${day}" th:data-day="${day}"
+            th:data-index="${iterStat.index}"
+            class="day-checkbox w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+            onchange="toggleDayFields(this)">
+        <label th:for="'day-' + ${day}"
+            class="ml-3 text-sm font-medium text-gray-700 w-24"
+            th:text="${#strings.capitalize(#strings.toLowerCase(day))}">Sunday</label>
+    </div>
             <div class="flex items-center space-x-2 flex-1">
                 <input type="time" 
                        th:name="'weeklyAvailability[' + ${day} + '].startTime'"

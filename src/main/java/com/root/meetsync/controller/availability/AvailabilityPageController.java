@@ -71,7 +71,9 @@ public class AvailabilityPageController {
         }
 
         // days of week for form
-        model.addAttribute("daysOfWeek", DayOfWeek.values());
+        String[] daysOfWeek = { "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY" };
+       
+        model.addAttribute("daysOfWeek", daysOfWeek);
 
         // Timezone options
         model.addAttribute("timezones", new String[] { "Asia/Dhaka", "Asia/Kolkata", "UTC", "America/New_York",
@@ -101,13 +103,11 @@ public class AvailabilityPageController {
             String bookingLink = availabilityService.getUserBookingLink(user.getId());
             redirectAttributes.addFlashAttribute("bookingLink", bookingLink);
             redirectAttributes.addFlashAttribute("isAvailable", true);
-         
-			notificationService.createNotification(user, "Availability Updated", 
-            "Your availability has been updated successfully.",
-            NotificationType.SYSTEM, 
-            null, // relatedEntityId, if any
-            "Availability", "/availability/setup"
-            );
+
+            notificationService.createNotification(user, "Availability Updated",
+                    "Your availability has been updated successfully.", NotificationType.SYSTEM, null, // relatedEntityId,
+                                                                                                       // if any
+                    "Availability", "/availability/setup");
 
             return "redirect:/availability/setup";
         } catch (Exception e) {
