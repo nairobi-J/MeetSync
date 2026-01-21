@@ -16,12 +16,11 @@ function initializeBookingSchedule(prefix, availableSlotsData) {
     
     currentMonth.setDate(1);
 
-    document.getElementById('timezoneDisplay').textContent = `Times shown in ${localeTz}`;
+    document.getElementById('timezoneDisplay').textContent = `${localeTz}`;
     document.getElementById('prevMonth').onclick = goToPrevMonthWithSlots;
     document.getElementById('nextMonth').onclick = goToNextMonthWithSlots;
     
-    // Set timezone value
-    document.getElementById('timezoneInput').value = localeTz;
+  
     
     // Form submission handler
     document.getElementById('bookingForm').onsubmit = function(e) {
