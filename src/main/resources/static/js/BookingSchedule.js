@@ -8,23 +8,49 @@ let selectedDate = null;
 let selectedTime = null;
 let emailPrefix = '';
 let localeTz = '';
+let step = 1;
 
 // Initialize booking schedule
 function initializeBookingSchedule(prefix, availableSlotsData) {
+        // Attach navigation handlers after DOM is ready
+        const backBtn = document.getElementById('backbtn');
+        const nextBtn = document.getElementById('nextbtn');
+        if (backBtn) {
+            backBtn.onclick = function () {
+                if (step > 1) step--;
+                updateStepUI();
+            };
+        }
+        if (nextBtn) {
+            nextBtn.onclick = function () {
+                // If moving from step 1 -> 2, ensure a date and time are selected
+                if (step === 1) {
+                    if (!selectedDate || !selectedTime) {
+                        setStatus('Please pick a date and time.', true);
+                        return;
+                    }
+                    step = 2;
+                    updateStepUI();
+                    return;
+                }
+                if (step < 2) step++;
+                updateStepUI();
+            };
+        }
+        updateStepUI();
     emailPrefix = prefix;
     localeTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    
+
     currentMonth.setDate(1);
 
-    document.getElementById('timezoneDisplay').textContent = `Times shown in ${localeTz}`;
+    document.getElementById('timezoneDisplay').textContent = `${localeTz}`;
     document.getElementById('prevMonth').onclick = goToPrevMonthWithSlots;
     document.getElementById('nextMonth').onclick = goToNextMonthWithSlots;
-    
-    // Set timezone value
-    document.getElementById('timezoneInput').value = localeTz;
-    
+
+
+
     // Form submission handler
-    document.getElementById('bookingForm').onsubmit = function(e) {
+    document.getElementById('bookingForm').onsubmit = function (e) {
         if (!selectedDate || !selectedTime) {
             e.preventDefault();
             setStatus('Please pick a date and time.', true);
@@ -32,20 +58,58 @@ function initializeBookingSchedule(prefix, availableSlotsData) {
         }
         document.getElementById('bookingDateInput').value = selectedDate;
         document.getElementById('bookingTimeInput').value = selectedTime;
-        
+
         // Show loading spinner
         showLoadingSpinner(true);
-        
+
         return true;
     };
+
 
     // Load from server-side data
     hydrateSlots(availableSlotsData);
     setToFirstAvailableMonth();
+
     renderCalendar();
+
     autoSelectFirstAvailable();
     renderSlotList(availableSlotsData);
+
+ 
+
+   
+
+
+   
+   
 }
+
+
+function updateStepUI() {
+    // Show/hide sections based on step
+    const calendarDiv = document.getElementById('calendarDiv');
+    const timesDiv = document.getElementById('timesDiv');
+    const bookingDiv = document.getElementById('bookingDiv');
+    const backBtn = document.getElementById('backbtn');
+    const nextBtn = document.getElementById('nextbtn');
+    if (calendarDiv && timesDiv && bookingDiv) {
+        if (step === 1) {
+            calendarDiv.classList.remove('hidden');
+            timesDiv.classList.remove('hidden');
+            bookingDiv.classList.add('hidden');
+            if (backBtn) backBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = '';
+        } else if (step === 2) {
+            calendarDiv.classList.add('hidden');
+            timesDiv.classList.add('hidden');
+            bookingDiv.classList.remove('hidden');
+            if (backBtn) backBtn.style.display = '';
+            if (nextBtn) nextBtn.style.display = 'none';
+        }
+    }
+}
+
+
 
 // Hydrate slots from data
 function hydrateSlots(data) {
@@ -206,7 +270,7 @@ function renderCalendar() {
 
 
 
-     if (availableDates.length === 0) {
+    if (availableDates.length === 0) {
         monthLabel.textContent = '';
         grid.innerHTML = `
   <div class="flex flex-col items-center justify-center w-full py-12">
@@ -225,10 +289,10 @@ function renderCalendar() {
     </div>
   </div>
 `;
-        updateNavigationButtons(); 
+        updateNavigationButtons();
         return;
     }
-     
+
     // add grid cols and rows
     grid.className = 'grid grid-cols-7 gap-2';
 
@@ -325,10 +389,16 @@ function formatTime(timeStr) {
 function setStatus(msg, isError = false, isSuccess = false) {
     const el = document.getElementById('status');
     el.textContent = msg || '';
+    // Reset base classes and apply warning/success styles
     el.className = 'text-xs text-center';
-    if (isError) el.classList.add('text-red-600');
-    else if (isSuccess) el.classList.add('text-green-600');
-    else el.classList.add('text-gray-500');
+    if (isError) {
+        // Show as warning (amber)
+        el.classList.add('border', 'border-red-200', 'bg-red-50', 'text-red-800', 'px-3', 'py-2', 'rounded');
+    } else if (isSuccess) {
+        el.classList.add('border', 'border-green-200', 'bg-green-50', 'text-green-700', 'px-3', 'py-2', 'rounded');
+    } else {
+        el.classList.add('text-gray-500');
+    }
 }
 
 // Show/hide loading spinner
@@ -336,7 +406,7 @@ function showLoadingSpinner(show) {
     const spinner = document.getElementById('loadingSpinner');
     const btnText = document.getElementById('btnText');
     const bookBtn = document.getElementById('bookBtn');
-    
+
     if (show) {
         spinner.classList.remove('hidden');
         btnText.textContent = 'Processing...';
