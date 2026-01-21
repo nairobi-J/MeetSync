@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book a Meeting</title>
+    <title>Book an Appointment</title>
     <!-- fontawesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -69,35 +69,41 @@
     </header>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Success/Error Messages -->
-        <div th:if="${success}"
-            class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-md">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clip-rule="evenodd" />
-                </svg>
-                <p th:text="${message}">Success message</p>
-            </div>
-        </div>
-        <div th:if="${error}" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md shadow-md">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                        clip-rule="evenodd" />
-                </svg>
-                <p th:text="${message}">Error message</p>
+
+        <p id="status" class="text-xs text-center"></p>
+        <!-- Modal popup for Success/Error -->
+        <div id="resultModal" th:if="${success} or ${error}" class="fixed inset-0 z-50 flex items-center justify-center">
+            <div class="absolute inset-0 bg-black opacity-40"></div>
+            <div class="relative bg-white rounded-2xl shadow-lg max-w-md w-full mx-4 p-6 z-10">
+                <div class="text-center">
+                    <div th:if="${success}" class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-green-50 mx-auto">
+                        <svg class="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
+                        </svg>
+                    </div>
+                    <div th:if="${error}" class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-red-50 mx-auto">
+                        <svg class="h-10 w-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+
+                    <h3 class="mt-4 text-xl font-semibold text-gray-800" th:text="${success} ? 'Request Sent' : 'Error'">Result</h3>
+                    <p class="mt-2 text-sm text-gray-600" th:text="${message}">Message goes here</p>
+
+                    <div class="mt-6 flex items-center justify-center gap-3">
+                      
+                        <button id="closeModal" class="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200">X Close </button>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="mb-8">
-            <h2 class="text-3xl font-bold text-gray-900 mb-2">Schedule an Appointment</h2>
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Book an Appointment</h2>
             <p class="text-gray-600 mb-4 max-w-2xl">
-             
+
                 <span class="inline-flex items-center mt-2">
-                    <i class="fa-solid fa-calendar-check mr-2 text-blue-500"></i>
+                   
                     <span>
                         Select a date and time that works for you.
                     </span>
@@ -116,13 +122,15 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <!-- Host Info -->
-                   <div th:object="${user}" class="lg:col-span-3 bg-white rounded-2xl shadow-lg border border-gray-100 p-8 flex flex-col items-center">
+            <div th:object="${user}"
+                class="lg:col-span-3 bg-white rounded-2xl shadow-lg border border-gray-100 p-8 flex flex-col items-center">
                 <!-- Profile Picture or Initial -->
                 <div class="w-24 h-24 mb-5 rounded-full flex items-center justify-center overflow-hidden border-4 border-blue-200 shadow"
-                     th:classappend="*{profilePic == null} ? ' bg-blue-50' : ''">
-                    <img th:if="*{profilePic}" th:src="*{profilePic}" class="w-full h-full object-cover" referrerpolicy="no-referrer" alt="Profile Picture">
+                    th:classappend="*{profilePic == null} ? ' bg-blue-50' : ''">
+                    <img th:if="*{profilePic}" th:src="*{profilePic}" class="w-full h-full object-cover"
+                        referrerpolicy="no-referrer" alt="Profile Picture">
                     <span th:if="*{profilePic == null}" class="text-3xl font-extrabold text-blue-600"
-                          th:text="${name != null ? name.substring(0,1).toUpperCase() : 'U'}">
+                        th:text="${name != null ? name.substring(0,1).toUpperCase() : 'U'}">
                         U
                     </span>
                 </div>
@@ -138,12 +146,13 @@
                         <div class="flex-shrink-0 bg-blue-100 p-2 rounded-full">
                             <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
                         <div>
                             <p class="text-xs font-semibold text-gray-600">Duration</p>
-                            <p th:text="${Preferences.meetingDurationMinutes} + ' minutes'" class="text-base text-gray-900 font-medium">30 minutes</p>
+                            <p th:text="${Preferences.meetingDurationMinutes} + ' minutes'"
+                                class="text-base text-gray-900 font-medium">30 minutes</p>
                         </div>
                     </div>
                     <!-- Timezone -->
@@ -160,7 +169,7 @@
             </div>
 
             <!-- Calendar -->
-            <div class="lg:col-span-5 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div id="calendarDiv" class="col-span-5 bg-white rounded-lg shadow-lg border border-gray-200 p-6">
                 <div class="flex items-center justify-between mb-6">
                     <button type="button" id="prevMonth" class="px-3 py-2 rounded-lg text-sm font-medium transition">
                         ← Prev
@@ -184,8 +193,8 @@
                 <div id="calendarGrid" class=" gap-2"></div>
             </div>
 
-            <!-- Times + booking form -->
-            <div class="lg:col-span-4 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <!-- Times -->
+            <div id="timesDiv" class="lg:col-span-4 bg-white rounded-lg shadow-lg border border-gray-200 p-6">
                 <div>
                     <div class="mb-4">
                         <p class="text-xs text-gray-500 mb-1">Selected date</p>
@@ -198,12 +207,20 @@
                         <p id="noTimes" class="text-sm text-gray-400 text-center py-4 hidden">No times available</p>
                     </div>
                 </div>
-                <form th:action="@{/u/{emailPrefix}(emailPrefix=${emailPrefix})}" method="post" id="bookingForm">
-                    <div class="border-t border-gray-100 pt-4 space-y-3 ">
+
+
+            </div>
+
+
+            <!-- Booking form -->
+            <div id="bookingDiv" class=" lg:col-span-6 bg-white rounded-lg shadow-lg ">
+                <form class="w-full" th:action="@{/u/{emailPrefix}(emailPrefix=${emailPrefix})}" method="post"
+                    id="bookingForm">
+                    <div class="w-full border-gray-100  space-y-3 p-8">
 
                         <div class=" p-3 mb-4" th:if="${!isOwner}">
-                            <p class="text-sm text-blue-900 font-medium">Request a time slot</p>
-                            <p class="text-xs text-blue-700 mt-1">Select your preferred date and time above</p>
+                            <p class="text-sm text-blue-900 font-medium">Request an Appointment</p>
+                            <p class="text-xs text-blue-700 mt-1">Provide Your Information</p>
                         </div>
                         <div th:if="${!isOwner}">
                             <label class="block text-xs font-medium text-gray-700 mb-1.5">Name</label>
@@ -215,7 +232,7 @@
                             <input name="inviteeEmail" id="inviteeEmail" type="email" required
                                 class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
-                       
+
 
 
                         <input type="hidden" name="bookingDate" id="bookingDateInput">
@@ -238,15 +255,37 @@
 
 
 
-                        <p id="status" class="text-xs text-center"></p>
+                        
                     </div>
                 </form>
             </div>
-        </div>
+
+     
+    </div>
+    <div class="mt-6 flex justify-end items-center gap-3">
+        <button id="backbtn" class="px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm">
+            <i class="fa-solid fa-arrow-left mr-2"></i>
+            Back
+        </button>
+        <button id="nextbtn" class="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow-sm">
+            Confirm
+            
+        </button>
     </div>
 
     <!-- Load external JavaScript file -->
     <script th:src="@{/js/BookingSchedule.js}"></script>
+
+    <script>
+        // Close modal handler
+        document.addEventListener('click', function (e) {
+            const modal = document.getElementById('resultModal');
+            if (!modal) return;
+            if (e.target && (e.target.id === 'closeModal' || e.target.id === 'resultModal')) {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
 
     <!-- Initialize booking schedule with Thymeleaf data -->
     <script th:inline="javascript">

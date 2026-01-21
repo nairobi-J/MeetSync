@@ -87,14 +87,14 @@ public class BookingPageController {
             }
 
             redirectAttributes.addFlashAttribute("success", true);
-            redirectAttributes.addFlashAttribute("message",
-                    "Scheduling request sent to Host! Check your email for confirmation.");
+            redirectAttributes.addFlashAttribute("message", "Scheduling request sent to Host! Check your email for confirmation.");
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", true);
             redirectAttributes.addFlashAttribute("message", e.getMessage());
         }
 
+        redirectAttributes.addFlashAttribute("emailPrefix", emailPrefix);
         return "redirect:/u/" + emailPrefix;
     }
 
