@@ -37,14 +37,8 @@ public class SecurityConfig {
                        .requestMatchers("/", "/u/**", "/css/**", "/js/**", "/assets/**", "/create-event", "/api/events/create", "/event/**", "/event/participant/**", "/pending-approval").permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/dashboard", true)
-                        .permitAll()
-                )
                 .oauth2Login(oauth -> oauth
-                        .loginPage("/login")
+                        .loginPage("/oauth2/authorization/google")
                         // for Refresh token surity
                         .authorizationEndpoint(authorization -> authorization
                                 .authorizationRequestResolver(authorizationRequestResolver(this.clientRegistrationRepository))
