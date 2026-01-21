@@ -44,7 +44,6 @@ public class WebController {
 
     // @GetMapping("/login")
     // public String showLoginPage(Authentication authentication) {
-
     //     if (authentication != null && authentication.isAuthenticated()) {
     //         return "redirect:/";
     //     }
@@ -84,7 +83,7 @@ public class WebController {
 
         CurrentUserDTO currentUser = (CurrentUserDTO) session.getAttribute("currentUserDTO");
         if (currentUser == null) {
-            return "redirect:/oauth2/authorization/google";
+            return "redirect:/login";
         }
 
         userService.updateProfile(currentUser.getId(), name, timezone);

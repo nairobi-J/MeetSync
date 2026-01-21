@@ -30,7 +30,15 @@ public class EventController {
                             Authentication auth,
                             RedirectAttributes redirectAttributes) {
         
-        // Check for validation errors
+        // Custom time range validation
+        if (request.getEarliestTime() != null && request.getLatestTime() != null) {
+            if (!request.getEarliestTime().isBefore(request.getLatestTime())) {
+                bindingResult.rejectValue("latestTime", "time.range.invalid", 
+                    "Latest time must be after earliest time. Please adjust your time range.");
+            }
+        }
+        
+        // Check for validation errors (including our custom validation)
         if (bindingResult.hasErrors()) {
             StringBuilder errorMessage = new StringBuilder("Please fix the following errors: ");
             bindingResult.getFieldErrors().forEach(error -> 
