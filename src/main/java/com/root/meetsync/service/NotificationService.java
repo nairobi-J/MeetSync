@@ -29,6 +29,8 @@ public interface NotificationService {
     
     Long getUnreadCount(User user);
     
+    Long getPendingCount(User user);
+    
     boolean markAsRead(Long notificationId);
     
     int markAllAsRead(User user);

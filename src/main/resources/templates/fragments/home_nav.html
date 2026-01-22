@@ -55,21 +55,42 @@
 
             <div class="relative flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
 
-                <!-- Notification Icon with Dynamic Badge -->
-                <div class="relative ml-4">
-                    <a th:href="@{/notifications}" class="relative focus:outline-none" aria-label="Notifications">
-                        <!-- Bell Icon -->
-                        <svg class="w-8 h-8 text-gray-600 hover:text-blue-600 transition" fill="none"
-                            stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                        <!-- Dynamic Badge -->
-                        <span th:if="${unreadNotificationCount > 0}"
-                            class="absolute -top-2 -right-2 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full"
-                            th:text="${unreadNotificationCount}">0</span>
+
+
+                <!-- Pending Appointments request -->
+
+
+                <div class="relative ml-4" th:if="${PendingAppoindtmentsCount > 0}">
+                    <a th:href="@{/notifications}"
+                        class="relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 focus:outline-none"
+                        aria-label="Pending Appointments">
+
+
+                        <!-- Notification Badge -->
+                        <div class="relative ml-2">
+
+                            <!-- Outer Pulse Circle -->
+                            <span
+                                class="absolute text-center inset-0 w-[30px] h-[30px] rounded-full bg-red-400 opacity-50 animate-ping"></span>
+
+                            <!-- Inner Solid Circle -->
+                            <span th:if="${PendingAppoindtmentsCount > 0}" class="relative flex items-center justify-center w-[24px] h-[24px]
+               rounded-full bg-red-600 text-white text-xs font-bold" th:text="${PendingAppoindtmentsCount}">
+                                0
+                            </span>
+
+                        </div>
+
+                        <!-- Text -->
+                        <span class="text-sm font-medium text-gray-700">
+                            Pending Appointment Requests
+                        </span>
+
+
+
                     </a>
                 </div>
+
 
 
 

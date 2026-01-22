@@ -121,6 +121,22 @@
                             th:classappend="${activePage == 'events'} ? 'text-blue-600' : ''"></i>
                         <span>Events</span>
                     </a>
+                    <!-- Notification Icon with Dynamic Badge -->
+                    <a th:href="@{/notifications}"
+                        th:classappend="${activePage == 'notifications'} ? 'bg-blue-100 text-blue-600' : 'text-gray-700'"
+                        class="flex items-center space-x-3 px-3 py-2 hover:bg-gray-100 rounded-lg relative">
+                        <svg class="w-5 h-5 text-gray-600 hover:text-blue-600 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <span>Notifications</span>
+                        <span th:if="${unreadNotificationCount > 0}"
+                            class="flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full"
+                            th:text="${unreadNotificationCount}">0</span>
+                    </a>
+
+
 
                 </nav>
             </div>
@@ -161,17 +177,18 @@
 
 
             <form th:action="@{/logout}" method="post"
-      class="absolute bottom-0 left-0 w-full p-4 bg-white border-t border-gray-200">
-    <button type="submit"
-        class="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 font-medium py-3 px-4 rounded-lg transition">
-        <!-- Logout SVG Icon -->
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"/>
-        </svg>
-        Sign out
-    </button>
-</form>
+                class="absolute bottom-0 left-0 w-full p-4 bg-white border-t border-gray-200">
+                <button type="submit"
+                    class="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 font-medium py-3 px-4 rounded-lg transition">
+                    <!-- Logout SVG Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" />
+                    </svg>
+                    Sign out
+                </button>
+            </form>
         </div>
     </aside>
     <script>

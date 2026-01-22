@@ -3,6 +3,7 @@ package com.root.meetsync.advice;
 import com.root.meetsync.dto.CurrentUserDTO;
 import com.root.meetsync.entity.User;
 import com.root.meetsync.entity.UserStatus;
+import com.root.meetsync.entity.Notification.NotificationType;
 import com.root.meetsync.service.NotificationService;
 import com.root.meetsync.service.UserService;
 import jakarta.servlet.http.HttpSession;
@@ -95,5 +96,30 @@ public class GlobalUserControllerAdvice {
         }
         
         return notificationService.getUnreadCount(user);
+    }
+
+
+
+
+
+    @ModelAttribute("PendingAppoindtmentsCount")
+    public Long getPendingAppoindtmentsCount(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return 0L;
+        }
+        
+        String email;
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            email = oauthToken.getPrincipal().getAttribute("email");
+        } else {
+            email = authentication.getName();
+        }
+        
+        User user = userService.findByEmail(email).orElse(null);
+        if (user == null) {
+            return 0L;
+        }
+        
+        return notificationService.getPendingCount(user);
     }
 }

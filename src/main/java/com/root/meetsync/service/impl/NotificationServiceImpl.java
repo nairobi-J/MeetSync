@@ -104,6 +104,26 @@ public class NotificationServiceImpl implements NotificationService {
         return notificationRepository.countByUserAndIsReadFalse(user);
     }
     
+
+  
+    @Override
+@Transactional(readOnly = true)
+public Long getPendingCount(User user) {
+    return notificationRepository.countPendingUnaccepted(
+    user, Notification.NotificationType.BOOKING_PENDING
+);
+}
+
+
+
+
+
+
+
+
+
+
+
     @Override
     @Transactional
     public boolean markAsRead(Long notificationId) {
