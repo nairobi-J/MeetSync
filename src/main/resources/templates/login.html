@@ -124,6 +124,9 @@
     <!-- Alert messages for login error or signup success -->
     <div th:if="${param.error}" class="msg error">Invalid email or password.</div>
     <div th:if="${param.success}" class="msg success">Log In successful!</div>
+    <div th:if="${param.deleted}" class="msg" style="background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b;">
+        Your account has been successfully deleted. Thank you for using MeetSync.
+    </div>
 
     <form th:action="@{/login}" method="post">
         <div class="form-group">

@@ -1,11 +1,14 @@
 package com.root.meetsync.service.impl;
 
 import com.root.meetsync.dto.UserRegistrationDto;
+import com.root.meetsync.entity.DeletionReason;
 import com.root.meetsync.entity.User;
+import com.root.meetsync.entity.UserDeletion;
 import com.root.meetsync.entity.UserOAuthToken;
 import com.root.meetsync.entity.UserStatus;
 import com.root.meetsync.repository.UserRepository;
 import com.root.meetsync.service.AccessControlService;
+import com.root.meetsync.service.AccountDeletionService;
 import com.root.meetsync.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,12 +32,14 @@ public class UserServiceImpl implements UserService {
     private final OAuth2AuthorizedClientService authorizedClientService;
     private final PasswordEncoder passwordEncoder;
     private final AccessControlService accessControlService;
+    private final AccountDeletionService accountDeletionService;
 
-    public UserServiceImpl(UserRepository userRepository, OAuth2AuthorizedClientService authorizedClientService, PasswordEncoder passwordEncoder, AccessControlService accessControlService) {
+    public UserServiceImpl(UserRepository userRepository, OAuth2AuthorizedClientService authorizedClientService, PasswordEncoder passwordEncoder, AccessControlService accessControlService, AccountDeletionService accountDeletionService) {
         this.userRepository = userRepository;
         this.authorizedClientService = authorizedClientService;
         this.passwordEncoder = passwordEncoder;
         this.accessControlService = accessControlService;
+        this.accountDeletionService = accountDeletionService;
     }
 
 
@@ -60,13 +65,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+        // Use exclude-deleted version by default for security
+        return userRepository.findByEmailExcludeDeleted(email);
     }
 
     @Override
     @Transactional
     public void updatePassword(String email, String rawPassword) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailExcludeDeleted(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
         // Encode the password before saving
@@ -115,6 +121,11 @@ public class UserServiceImpl implements UserService {
             user.setStatus(accessControlService.determineUserStatus(email));
             user.setRole(accessControlService.determineUserRole(email));
         } else {
+            // Check if existing user is deleted
+            if (UserStatus.DELETED.equals(user.getStatus())) {
+                throw new RuntimeException("This account has been deleted and cannot be accessed. If you believe this is an error, please contact support.");
+            }
+            
             // Update existing user info
             user.setName(name);
             user.setProfilePic(picture);
@@ -197,5 +208,48 @@ public class UserServiceImpl implements UserService {
         // For now, we'll just delete the user. 
         // In the future, you might want to store rejected users with a REJECTED status
         userRepository.delete(user);
+    }
+    
+    // New methods for deleted user handling
+    @Override
+    public Optional<User> findByEmailExcludeDeleted(String email) {
+        return userRepository.findByEmailExcludeDeleted(email);
+    }
+    
+    @Override
+    public User getUserByEmailPrefixExcludeDeleted(String prefix) {
+        return userRepository.findByExactEmailPrefixExcludeDeleted(prefix)
+                .orElseThrow(() -> new RuntimeException("User not found with email prefix: " + prefix));
+    }
+    
+    @Override
+    public List<User> findAllUsersExcludeDeleted() {
+        return userRepository.findAllExcludeDeleted();
+    }
+    
+    @Override
+    public Page<User> findAllUsersPaginated(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+    
+    // Account deletion methods
+    @Override
+    @Transactional
+    public UserDeletion deleteOwnAccount(Long userId, DeletionReason reason, String notes) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        
+        return accountDeletionService.deleteUserAccount(user, reason, notes);
+    }
+    
+    @Override
+    @Transactional
+    public UserDeletion deleteUserByAdmin(Long userId, Long adminId, DeletionReason reason, String notes) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        User admin = userRepository.findById(adminId)
+                .orElseThrow(() -> new RuntimeException("Admin not found with ID: " + adminId));
+        
+        return accountDeletionService.deleteUserAccountByAdmin(user, admin, reason, notes);
     }
 }

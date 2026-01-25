@@ -250,6 +250,27 @@
                     </div>
                 </div>
 
+                <!-- Danger Zone -->
+                <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #fee2e2;">
+                    <h3 style="color: #dc2626; font-size: 18px; margin-bottom: 15px; display: flex; align-items: center;">
+                        <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                        Danger Zone
+                    </h3>
+                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="color: #991b1b; margin: 0 0 10px 0; font-size: 16px;">Delete Account</h4>
+                        <p style="color: #7f1d1d; font-size: 14px; margin: 0 0 15px 0; line-height: 1.5;">
+                            Permanently delete your account and all associated data. This action cannot be undone.
+                        </p>
+                        <a href="/account/delete" 
+                           onclick="return confirm('Are you sure you want to proceed to account deletion? This action cannot be undone.')"
+                           style="display: inline-block; background-color: #dc2626; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500; transition: background-color 0.2s;"
+                           onmouseover="this.style.backgroundColor='#b91c1c'" 
+                           onmouseout="this.style.backgroundColor='#dc2626'">
+                            Delete Account
+                        </a>
+                    </div>
+                </div>
+
                 <div class="button-group">
                     <!-- <button type="button" class="btn-cancel" onclick="window.history.back()">Back</button> -->
                     <button type="submit" class="btn-save">Save Changes</button>
