@@ -51,4 +51,18 @@ public interface AccountDeletionService {
      * @return UserDeletion record if exists
      */
     UserDeletion getDeletionRecord(Long userId);
+    
+    /**
+     * Cancel all active bookings for a deleted user
+     * @param user The deleted user
+     * @return Number of bookings cancelled
+     */
+    int cancelUserBookings(User user);
+    
+    /**
+     * Clean up Google Calendar events for cancelled bookings
+     * @param user The deleted user
+     * @return true if cleanup was successful, false otherwise
+     */
+    boolean cleanupBookingCalendarEvents(User user);
 }
