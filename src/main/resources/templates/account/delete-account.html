@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Account - MeetSync</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <div th:replace="~{fragments/home_nav :: nav}"></div>
+
+    <div class="container mx-auto px-4 py-8 max-w-2xl">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <!-- Warning Header -->
+            <div class="bg-red-50 border-b border-red-200 px-6 py-4">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L5.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <div>
+                        <h1 class="text-lg font-semibold text-red-900">Delete Your Account</h1>
+                        <p class="text-sm text-red-700">This action cannot be undone</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6">
+                <!-- Warning Information -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <h2 class="font-semibold text-yellow-900 mb-2">⚠️ Important Information</h2>
+                    <ul class="text-sm text-yellow-800 space-y-1">
+                        <li>• Your account and personal data will be permanently deleted</li>
+                        <li>• Your events will remain accessible to participants but your name will be anonymized</li>
+                        <li>• We will attempt to remove events from your Google Calendar</li>
+                        <li>• This action cannot be reversed</li>
+                    </ul>
+                </div>
+
+                <!-- Deletion Form -->
+                <form id="deleteAccountForm" class="space-y-6">
+                    <!-- Reason Selection -->
+                    <div>
+                        <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
+                            Why are you deleting your account? <span class="text-red-500">*</span>
+                        </label>
+                        <select id="reason" name="reason" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Please select a reason...</option>
+                            <option th:each="reason : ${deletionReasons}" 
+                                    th:value="${reason}" 
+                                    th:text="${reason.description}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Additional Notes -->
+                    <div>
+                        <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+                            Additional notes (optional)
+                        </label>
+                        <textarea id="notes" name="notes" rows="3" 
+                                  placeholder="Tell us more about your reason for leaving..."
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+                    </div>
+
+                    <!-- Email Confirmation -->
+                    <div>
+                        <label for="confirmEmail" class="block text-sm font-medium text-gray-700 mb-2">
+                            Confirm your email address <span class="text-red-500">*</span>
+                        </label>
+                        <input type="email" id="confirmEmail" name="confirmEmail" required 
+                               th:placeholder="${user.email}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Type your email address to confirm deletion</p>
+                    </div>
+
+                    <!-- Confirmation Checkbox -->
+                    <div class="flex items-start">
+                        <input type="checkbox" id="confirmDeletion" name="confirmDeletion" required
+                               class="mt-1 w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                        <label for="confirmDeletion" class="ml-3 text-sm text-gray-700">
+                            I understand that this action is permanent and cannot be undone. I want to delete my account and all associated data.
+                        </label>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+                        <a href="/home" 
+                           class="px-6 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </a>
+                        <button type="submit" id="deleteButton"
+                                class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            Delete My Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
+            <div class="flex items-center justify-center">
+                <svg class="animate-spin h-8 w-8 text-blue-600 mr-3" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-gray-900 font-medium">Deleting account...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('deleteAccountForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const formData = new FormData(form);
+            const deleteButton = document.getElementById('deleteButton');
+            const loadingModal = document.getElementById('loadingModal');
+            
+            // Show loading state
+            deleteButton.disabled = true;
+            loadingModal.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/account/delete', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show success message and redirect
+                    alert(result.message);
+                    window.location.href = result.redirectUrl || '/login?deleted=true';
+                } else {
+                    // Show error message
+                    alert('Error: ' + result.error);
+                    deleteButton.disabled = false;
+                    loadingModal.classList.add('hidden');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An unexpected error occurred. Please try again.');
+                deleteButton.disabled = false;
+                loadingModal.classList.add('hidden');
+            }
+        });
+        
+        // Email validation
+        const confirmEmailInput = document.getElementById('confirmEmail');
+        const userEmail = /*[[${user.email}]]*/ '';
+        
+        confirmEmailInput.addEventListener('input', function() {
+            const deleteButton = document.getElementById('deleteButton');
+            if (this.value === userEmail) {
+                this.classList.remove('border-red-300');
+                this.classList.add('border-green-300');
+            } else {
+                this.classList.remove('border-green-300');
+                this.classList.add('border-red-300');
+            }
+        });
+    </script>
+</body>
+</html>

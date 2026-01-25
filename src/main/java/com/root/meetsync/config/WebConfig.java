@@ -16,6 +16,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Autowired
     private PendingUserSecurityInterceptor pendingUserSecurityInterceptor;
     
+    @Autowired
+    private DeletedUserSecurityInterceptor deletedUserSecurityInterceptor;
+    
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/**")
@@ -24,6 +27,13 @@ public class WebConfig implements WebMvcConfigurer {
     
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // Deleted user interceptor - applies first to block deleted users immediately
+        registry.addInterceptor(deletedUserSecurityInterceptor)
+                .addPathPatterns("/**")
+                .excludePathPatterns("/logout", "/css/**", "/js/**", "/images/**", 
+                                   "/favicon.ico", "/login", "/signup", "/", "/oauth2/**", 
+                                   "/static/**", "/error");
+        
         // Pending user interceptor - applies to all authenticated routes
         registry.addInterceptor(pendingUserSecurityInterceptor)
                 .addPathPatterns("/**")
